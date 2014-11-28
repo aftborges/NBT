@@ -170,17 +170,17 @@ if (DFA_Plot ~=0)
     try
         axes(DFA_Plot)
     catch
-        figure(DFA_Plot)
+%       figure(DFA_Plot)
         axes(gca)
     end
     hold on
     plot(log10(DFA_x(DFA_SmallTimeFit_LogSample:DFA_LargeTimeFit_LogSample)/Fs),log10(DFA_y(DFA_SmallTimeFit_LogSample:DFA_LargeTimeFit_LogSample)),'ro')
-    delete(findobj(DFA_Plot,'Type','Line','-not','Marker','o')) % delete any redundant lines
+%   delete(findobj(DFA_Plot,'Type','Line','-not','Marker','o')) % delete any redundant lines
     LineHandle=lsline;
     try % delete any fits to the black points if they exist
         BlackHandle=findobj(DFA_Plot,'Color','k');
         for i=1:length(BlackHandle)
-            delete(LineHandle(LineHandle == BlackHandle(i)))
+%           delete(LineHandle(LineHandle == BlackHandle(i)))
         end
     catch
     end
@@ -188,9 +188,9 @@ if (DFA_Plot ~=0)
     grid on
 %     zoom on
     axis([log10(min(DFA_x/Fs))-0.1 log10(max(DFA_x/Fs))+0.1 log10(min(DFA_y(3:end)))-0.1 log10(max(DFA_y))+0.1])
-    xlabel('log_{10}(time), [Seconds]','Fontsize',12)
-    ylabel('log_{10} F(time)','Fontsize',12)
-    title(['DFA-exp=', num2str(DFAobject.MarkerValues(GetChannelID,1))],'Fontsize',12)
+    xlabel('log_{10}(time), [Seconds]','Fontsize',10)   % Font sizes changed from 12
+    ylabel('log_{10} F(time)','Fontsize',10)
+    title(['DFA = ', num2str(DFAobject.MarkerValues(GetChannelID,1), '%0.2f')],'Fontsize',10)
 end
 
 %% Nested functions part
