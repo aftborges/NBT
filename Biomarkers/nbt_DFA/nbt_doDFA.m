@@ -76,6 +76,10 @@ else
     DFAobject.res_logbin = res_logbin;
 end
 
+% force fixed values for FitInterval and CalcInterval
+% FitInterval=[1 20];
+% CalcInterval=[0.1 110];
+
 % get parameters from Signalobject
 Fs = InfoObject.converted_sample_frequency;
 DFAobject.Condition = InfoObject.condition;
@@ -89,6 +93,7 @@ DFAobject.ReseacherID = InfoObject.researcherID;
 DFAobject.ProjectID = InfoObject.projectID;
 DFAobject.SubjectID = InfoObject.subjectID;
 DFAobject.Condition = InfoObject.condition;
+
 
 
 %******************************************************************************************************************
