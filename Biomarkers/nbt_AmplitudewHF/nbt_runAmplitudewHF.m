@@ -66,10 +66,10 @@ function nbt_runAmplitudewHF(Signal, SignalInfo, SaveDir)
 % save biomarkers
 
 
-nbt_SaveClearObject('amplitude_1_4_Hz_cmbgrad',SignalInfo,SaveDir);
-nbt_SaveClearObject('amplitude_4_8_Hz_cmbgrad',SignalInfo,SaveDir);
-nbt_SaveClearObject('amplitude_8_13_Hz_cmbgrad',SignalInfo,SaveDir);
-nbt_SaveClearObject('amplitude_13_30_Hz_cmbgrad',SignalInfo,SaveDir);
-nbt_SaveClearObject('amplitude_30_45_Hz_cmbgrad',SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_1_4_Hz',SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_4_8_Hz',SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_8_13_Hz',SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_13_30_Hz',SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_30_45_Hz',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_55_125_Hz' ,SignalInfo,SaveDir);
 
