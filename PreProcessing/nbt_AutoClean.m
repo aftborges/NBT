@@ -93,7 +93,9 @@ if(exist('ResampleFS','var'))
 end
 
 % 1. Filter Data
-[Signal] = nbt_filter_fir(Signal,0.5,45,SignalInfo.converted_sample_frequency,2/0.5,1);
+%Let's not bandpass filter the data for now! - check functioning of FASTER
+%and ADJUST without it;
+%[Signal] = nbt_filter_fir(Signal,0.5,45,SignalInfo.converted_sample_frequency,2/0.5,1);
 % 2. Mark Bad Channels
 [Signal, SignalInfo] = nbt_EEGLABwrp(@nbt_FindBadChannels, Signal, SignalInfo, [] , 0, 's', NonEEGCh);
 SignalInfo.BadChannels(NonEEGCh) = 1;
