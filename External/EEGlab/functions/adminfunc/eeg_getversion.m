@@ -45,5 +45,5 @@ fclose(fid);
 tmpvers = vers; if isempty(str2num(tmpvers(end))), tmpvers(end) = [];
 end; indsDot = find(tmpvers == '.' ); tmpvers(indsDot(2:end)) = [];
 versnum = str2num(tmpvers);
-vers = '13.0.3.2b with NBT';
+vers = '13.0.4.3b with NBT';
 end

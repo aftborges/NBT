@@ -77,7 +77,37 @@ switch Method
                     NewDataMatrix(:,Bid) = nanmedian(DataMatrix(:,(ChannelsToUse(:) + NRofChannels*(Bid-1))),2);
                     BiomarkersToUse{:,Bid} =  (ChannelsToUse(:) + NRofChannels*(Bid-1));
                 end
-               
+            end
+        end
+    case 'ttest2-MCP'
+        if(isempty(ChannelsToUse)) %we prune accross all channles, without taking into account unique biomarkers.
+            BiomarkersToUse = cell(1,1);
+            p = NaN(size(DataMatrix,2),1);
+            for iotta=1:size(DataMatrix,2)
+                [h,p(iotta)] = ttest2(DataMatrix(outcome==1,iotta),DataMatrix(outcome==0,iotta),[],[],'unequal');
+            end
+              p = nbt_MCcorrect(p,'bino');
+            NewDataMatrix = DataMatrix(:, p);
+            BiomarkersToUse{1,1} = p;
+        else
+            BiomarkersToUse = cell(1,UniqueBiomarkers);
+            p = NaN(length(ChannelsToUse), 1);
+            BBid = 0;
+            for Bid=1:UniqueBiomarkers
+                for iotta=1:length(ChannelsToUse)
+                    [h,p(iotta)] = ttest2(DataMatrix(outcome==1,(ChannelsToUse(iotta) + NRofChannels*(Bid-1))), DataMatrix(outcome==0,(ChannelsToUse(iotta) + NRofChannels*(Bid-1))));
+                end
+                p = nbt_MCcorrect(p,'bino');
+                if(~isempty(p))
+                    BBid = BBid +1;
+                    NewDataMatrix(:,BBid) = nanmedian(DataMatrix(:,(ChannelsToUse(p) + NRofChannels*(Bid-1))),2);
+                    BiomarkersToUse{:,BBid} =  (ChannelsToUse(p) + NRofChannels*(Bid-1));
+                        
+                    if (sum(isnan(NewDataMatrix(:,BBid)))) %if nan we average across all channels
+                        NewDataMatrix(:,BBid) = nanmedian(DataMatrix(:,(ChannelsToUse(:) + NRofChannels*(Bid-1))),2);
+                        BiomarkersToUse{:,BBid} =  (ChannelsToUse(:) + NRofChannels*(Bid-1));
+                    end
+                end
             end
         end
     case 'ttest'

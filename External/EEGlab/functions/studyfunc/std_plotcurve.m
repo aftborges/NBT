@@ -48,6 +48,7 @@
 %                  panel. Note: 'plotgroups' and 'plotconditions' arguments 
 %                  cannot both be 'together' {default: 'apart'}
 %  'legend'      - ['on'|'off'] turn plot legend on/off {default: 'off'}
+%  'colors'      - [cell] cell array of colors
 %  'plotdiff'    - ['on'|'off'] plot difference between two groups
 %                  or conditions plotted together. 
 %  'plotstderr'  - ['on'|'off'|'diff'|'nocurve'|'diffnocurve'] plots in 
@@ -93,6 +94,7 @@ opt = finputcheck( varargin, { 'ylim'          'real'   []              [];
                                'condstats'     'cell'   []              {};
                                'interstats'    'cell'   []              {};
                                'titles'        'cell'   []              {};
+                               'colors'        'cell'   []              {};
                                'figure'        'string' { 'on','off' }   'on';
                                'plottopo'      'string' { 'on','off' }   'off';
                                'plotstderr'    'string' { 'on','off','diff','nocurve' }   'off';
@@ -136,9 +138,10 @@ if strcmpi(opt.plotgroups, 'together') || strcmpi(opt.plotconditions, 'together'
      col = manycol;
 else col = onecol;
 end;
+if ~isempty(opt.colors), col = opt.colors; end;
+
 nonemptycell = find(~cellfun(@isempty, data));
 maxdim = max(length(data(:)), size(data{nonemptycell(1)}, ndims(data{nonemptycell(1)})));
-tmpcol = col;
 if strcmpi(opt.plotsubjects, 'off')
     
     % both group and conditions together
@@ -262,8 +265,10 @@ end;
 
 tmplim = [Inf -Inf];
 colcount = 1; % only when plotting all conditions on the same figure
+tmpcol = col;
 for c = 1:ncplot
     for g = 1:ngplot
+        if strcmpi(opt.figure, 'off'), tmpcol(1) = []; end; % knock off colors
         if strcmpi(opt.plotgroups, 'together'),         hdl(c,g)=mysubplot(ncplot+addr, ngplot+addc, 1 + (c-1)*(ngplot+addc), opt.subplot); ci = g;
         elseif strcmpi(opt.plotconditions, 'together'), hdl(c,g)=mysubplot(ncplot+addr, ngplot+addc, g, opt.subplot); ci = c;
         else                                            hdl(c,g)=mysubplot(ncplot+addr, ngplot+addc, g + (c-1)*(ngplot+addc), opt.subplot); ci = 1;
@@ -521,8 +526,25 @@ function hdl = mysubplot(nr,nc,ind,subplottype);
 
 % rapid filtering for ERP
 % -----------------------
-function tmpdata2 = myfilt(tmpdata, srate, lowpass, highpass)
-
+function tmpdata2 = myfilt(tmpdata, srate, lowpass, highpass); 
+    bscorrect = 1;
+    if bscorrect
+        % Getting initial baseline
+        bs_val1  =  mean(tmpdata,1);
+        bs1      = repmat(bs_val1, size(tmpdata,1), 1);
+    end
+    
+    % Filtering
     tmpdata2 = reshape(tmpdata, size(tmpdata,1), size(tmpdata,2)*size(tmpdata,3)*size(tmpdata,4));
     tmpdata2 = eegfiltfft(tmpdata2',srate, lowpass, highpass)';
     tmpdata2 = reshape(tmpdata2, size(tmpdata,1), size(tmpdata,2), size(tmpdata,3), size(tmpdata,4));
+    
+    if bscorrect
+        % Getting after-filter baseline
+        bs_val2  =  mean(tmpdata2,1);
+        bs2      = repmat(bs_val2, size(tmpdata2,1), 1);
+        
+        % Correcting the baseline
+        realbs = bs1-bs2;
+        tmpdata2 = tmpdata2 + realbs;
+    end

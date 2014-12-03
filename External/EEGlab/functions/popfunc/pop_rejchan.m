@@ -3,7 +3,7 @@
 %
 % Usage:
 %   >> pop_rejchan( INEEG ) % pop-up interative window mode
-%   >> [OUTEEG, locthresh, globthresh, nrej] = ...
+%   >> [EEG, indelec, measure, com] = ...
 %		= pop_rejchan( INEEG, 'key', 'val');
 %
 % Inputs:
@@ -30,6 +30,7 @@
 %   OUTEEG    - output dataset with updated joint probability array
 %   indelec   - indices of rejected electrodes
 %   measure   - measure value for each electrode
+%   com       - executed command
 %
 % Author: Arnaud Delorme, CERCO, UPS/CNRS, 2008-
 %
@@ -84,7 +85,7 @@ if nargin < 2
                { 'style' 'text' 'string' 'Z-score threshold [max] or [min max]' 'tag' 'normlab' } ...
                { 'style' 'edit' 'string' '5' } ...
                { 'style' 'text' 'string' 'Spectrum freq. range' 'enable' 'off' 'tag' 'spec' } ...
-               { 'style' 'edit' 'string' '1 8'  'enable' 'off' 'tag' 'spec' } };
+               { 'style' 'edit' 'string' num2str([1 EEG.srate/2])  'enable' 'off' 'tag' 'spec' } }; % 7/16/2014 Ramon
     geom = { [2 1.3] [2 1.3] [2 0.4 0.9] [2 1.3] [2 1.3] };
     result = inputgui( 'uilist', uilist, 'geometry', geom, 'title', 'Reject channel -- pop_rejchan()', ...
         'helpcom', 'pophelp(''pop_rejchan'')');
@@ -96,9 +97,13 @@ if nargin < 2
     else options = { options{:} 'norm', 'off' }; 
     end;
     
-    if result{2} == 1,     options = { options{:} 'measure', 'prob' };
-    elseif result{2} == 2, options = { options{:} 'measure', 'kurt' }; 
-    else                   options = { options{:} 'measure', 'spec' }; 
+    if result{2} == 1
+        options = { options{:} 'measure', 'prob' };
+    elseif result{2} == 2 
+        options = { options{:} 'measure', 'kurt' }; 
+    else
+        options = { options{:} 'measure', 'spec' };
+        options = { options{:} 'freqrange', str2double(result{5})}; % 7/16/2014 Ramon
     end;
 
 else
@@ -128,8 +133,15 @@ elseif strcmpi(opt.measure, 'kurt')
     [ measure indelec ] = rejkurt( reshape(EEG.data(opt.elec,:,:), length(opt.elec), size(EEG.data,2)*size(EEG.data,3)), opt.threshold, opt.precomp, normval);
 else
     fprintf('Computing spectrum for channels...\n');
-    measure = pop_spectopo(EEG, 1, [], 'EEG' , 'freqrange', opt.freqrange, 'plot','off');
+    [measure freq] = pop_spectopo(EEG, 1, [], 'EEG' , 'plot','off');
 
+    % select frequency range
+    if ~isempty(opt.freqrange)
+        [tmp fBeg] = min(abs(freq-opt.freqrange(1)));
+        [tmp fEnd] = min(abs(freq-opt.freqrange(2)));
+        measure = measure(:, fBeg:fEnd);
+    end;
+    
     % consider that data below 20 db has been filtered and remove it
     indFiltered = find(mean(measure) < -20);
     if ~isempty(indFiltered) && indFiltered(1) > 11, measure = measure(:,1:indFiltered(1)-10); disp('Removing spectrum data below -20dB (most likelly filtered out)'); end;

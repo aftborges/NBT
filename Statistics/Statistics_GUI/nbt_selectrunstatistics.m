@@ -138,6 +138,7 @@ saveGroupButton = uicontrol(StatSelection,'Style','pushbutton','String','Save Gr
 % export bioms
 ExportBio = uicontrol(StatSelection,'Style','pushbutton','String','Export Biomarker(s) to .txt','Position',[5 10 150 30],'fontsize',8,'callback',@export_bioms);
 PrintVisualize = uicontrol(StatSelection,'Style','pushbutton','String','NBT Print Visualizaiton','Position',[230 10 150 30],'fontsize',8,'callback',@Print_Visualize);
+
 % move up
 upButton = uicontrol(StatSelection,'Style','pushbutton','String','/\','Position',[370 165 25 25],'fontsize',8,'callback',@up_group);
 % move down
@@ -169,18 +170,20 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
         group_name = get(ListGroup,'String');
         group_name = group_name(group_ind);
         
-         %% ---- adding grand average hack in here - let's structure better in the new format
-        if(statTest == 1) % Grand average PSD
-            figure; hold on;
-            nbt_plotGrandAveragePSD(G(group_ind(1)).fileslist,G(group_ind(1)).chansregs.channel_nr,'b');
-            nbt_plotGrandAveragePSD(G(group_ind(2)).fileslist,G(group_ind(2)).chansregs.channel_nr,'r');
-            
-            return %just breaking here..
-        end
 %         save bioms_name bioms_name
 %         clear bioms_name
 %         load bioms_name 
         
+     %% ---- adding grand average hack in here - let's structure better in the new format
+        if(statTest == 1) % Grand average PSD		
+            figure; hold on;		
+            nbt_plotGrandAveragePSD(G(group_ind(1)).fileslist,G(group_ind(1)).chansregs.channel_nr,'b');		
+            nbt_plotGrandAveragePSD(G(group_ind(2)).fileslist,G(group_ind(2)).chansregs.channel_nr,'r');		
+            		
+            return %just breaking here..		
+        end
+
+
         if strcmp(regs_or_chans_name,'Regions') && ~isempty(strfind(nameTest{1}, 'Classification'))
            
                 hreg = figure('Units','pixels', 'name','Define region classification' ,'numbertitle','off','Position',[573  137  402  165],...
@@ -505,13 +508,15 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
             %     stat_results = strcut([]);
             %     assignin('base','stat_results',stat_results);
             % compute statistics and plot biomarkers which have values for all the channels
+            
             if ~isempty(biomPerChans)
                 B_values1 = nbt_extractBiomPerChans(biomPerChans,B_values1_cell);
                 %B_values1(:,:,1) = nbt_FindAbnormalData(B_values1(:,:,1));
                 B_values2 = nbt_extractBiomPerChans(biomPerChans,B_values2_cell);
                 %B_values2(:,:,1) = nbt_FindAbnormalData(B_values2(:,:,1));
                 %warning('Abnormal data removed')
-                % select channels or regions
+                % select channels or regions  
+                
                 if strcmp(regs_or_chans_name,'Channels')
                     ChannelsToUse = Group1.chansregs.channel_nr;
                     if(strcmp(s.statType,'Classification'))
@@ -645,7 +650,11 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
                             B2(:,:) = dim_B_values2(:,:,dim2);
                             %                 unit{1,dim2} = 'tmpset';
                             
+                            if ~strcmp(s.statType,'Classification')
+                                
                             [stat_results(dimBio(dim2))] = nbt_run_stat2_noChansBiom(Group1,Group2,B1,B2,s,bioms_name2{dim2},unit{1,dim2});
+                            
+                            end
                             %----------------------
                             % Plot Statistics
                             %----------------------
@@ -675,6 +684,16 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
                             end
                             end
                         end
+                        
+                        if strcmp(s.statType,'Classification')
+                            
+                            Bcell{1}=dim_B_values1;
+                            Bcell{2}=dim_B_values2;
+                            Bcell=Bcell';
+                            stat_results = nbt_Classify(Bcell, [], s, 'CrossValidate',[]);
+                            
+                        end
+                            
                     end
                     try
                         B=evalin('base','stat_results');
@@ -1535,6 +1554,7 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
                     'Name',['Table with all items and their numbering that have a p-value lower than 0.05' ],...
                     'Position',[100   200  1000   500]);
                 h5=nbt_move_gui(h5);
+
                 Notsign = find(s.p>=0.05);
                 for i = 1:length(s.p)
                     strp{i} = (sprintf('%.4f',s.p(i)));

@@ -6,7 +6,7 @@
 % NBT is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of % the License, or (at your option) any later version.
 % NBT is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the % GNU General Public License for more details.
 % NBT is designed and distributed for research purposes only. NBT should not be used for medical purposes. The authors accept no responsibility for its use in this manner. 
-% test
+
 
 function NBT()
 nbt_gui

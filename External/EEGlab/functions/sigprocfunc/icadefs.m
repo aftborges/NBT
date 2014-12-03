@@ -39,6 +39,13 @@ YDIR  = 1;                  % positive potential up = 1; negative up = -1
 
 HZDIR = 'up';               % ascending freqs = 'up'; descending = 'down' 
                             % (e.g., timef/newtimef frequency direction)
+                            
+% Checking MATLAB version
+vers = version;
+indp = find(vers == '.');
+if str2num(vers(indp(1)+1)) > 1, vers = [ vers(1:indp(1)) '0' vers(indp(1)+1:end) ]; end;
+indp = find(vers == '.');
+VERS = str2num(vers(1:indp(2)-1));                            
 
 % font size
 tmpComputer   = computer;
@@ -57,12 +64,51 @@ if retinaDisplay && strcmpi(tmpComputer(1:3), 'MAC')
     GUI_FONTSIZE  = 18; % graphic interface font size
     AXES_FONTSIZE = 18; % Axis labels and legend font size
     TEXT_FONTSIZE = 18; % Miscellaneous font sizes
-else
-    GUI_FONTSIZE  = 10; % graphic interface font size
-    AXES_FONTSIZE = 10; % Axis labels and legend font size
-    TEXT_FONTSIZE = 10; % Miscellaneous font sizes
+end
+
+% Graph Definitions
+DEFAULT_COLORMAP = 'jet';
+
+if VERS < 8.04
+    PLOT_LINEWIDTH   = 2;
+    PLOT_LINEWIDTH_S = 1;
+    
+    % AXES FONTSIZE
+    AXES_FONTSIZE   = 10;                % Axis labels and legend font size
+    AXES_FONTSIZE_S = AXES_FONTSIZE - 2; % Axis labels and legend font size Small
+    AXES_FONTSIZE_L = 16;                % Axis labels and legend font size Large
+    
+    % GUI FONTSIZE
+    GUI_FONTSIZE    = 10;               % graphic interface font size
+    GUI_FONTSIZE_S  = GUI_FONTSIZE - 2; % graphic interface font size Small
+    GUI_FONTSIZE_L  = GUI_FONTSIZE + 2; % graphic interface font size Large
+   
+    % TEXT FONTSIZE
+    TEXT_FONTSIZE = 10;                  % Miscellaneous font sizes
+    TEXT_FONTSIZE_S = TEXT_FONTSIZE - 2; % Miscellaneous font sizes Small
+    TEXT_FONTSIZE_L = TEXT_FONTSIZE + 2; % Miscellaneous font sizes Large
+    
+elseif VERS >= 8.04
+    PLOT_LINEWIDTH   = 1;
+    PLOT_LINEWIDTH_S = 0.5;
+    
+    % AXES FONTSIZE
+    AXES_FONTSIZE   = 9;                 % Axis labels and legend font size
+    AXES_FONTSIZE_S = AXES_FONTSIZE - 2; % Axis labels and legend font size Small
+    AXES_FONTSIZE_L = 12.5;              % Axis labels and legend font size Large
+    
+    % GUI FONTSIZE
+    GUI_FONTSIZE    = 9;                % graphic interface font size
+    GUI_FONTSIZE_S  = GUI_FONTSIZE - 2; % graphic interface font size Small
+    GUI_FONTSIZE_L  = GUI_FONTSIZE + 2; % graphic interface font size Large
+   
+    % TEXT FONTSIZE
+    TEXT_FONTSIZE   = 9;                 % Miscellaneous font sizes
+    TEXT_FONTSIZE_S = TEXT_FONTSIZE - 2; % Miscellaneous font sizes Small
+    TEXT_FONTSIZE_L = TEXT_FONTSIZE + 2; % Miscellaneous font sizes Large
 end;
-clear retinaDisplay tmpScreenSize tmpComputer;
+
+clear retinaDisplay tmpScreenSize tmpComputer vers indp;
 
 % the eeg_options.m file also countains additional options
 

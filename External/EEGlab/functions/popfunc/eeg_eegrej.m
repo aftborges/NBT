@@ -121,6 +121,16 @@ end
 % it should not be necessary but a 
 % bug in eegplot makes that it sometimes is
 % ----------------------------
+% function newregions = combineregions(regions)
+% newregions = regions;
+% for index = size(regions,1):-1:2
+%     if regions(index-1,2) >= regions(index,1)
+%         disp('Warning: overlapping regions detected and fixed in eeg_eegrej');
+%         newregions(index-1,:) = [regions(index-1,1) regions(index,2) ];
+%         newregions(index,:)   = [];
+%     end;
+% end;
+
 function newregions = combineregions(regions)
 newregions = combine(combine(regions));
     function newregions=combine(regions)
@@ -149,5 +159,4 @@ newregions = combine(combine(regions));
         newregions = sortrows(newregions,1);
     end
 end
-
 

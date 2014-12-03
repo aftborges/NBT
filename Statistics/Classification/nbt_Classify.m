@@ -1,5 +1,5 @@
 function [s,ModelVars,Bioms]=nbt_Classify(BCell,Outcome,s,Type, ChannelsOrRegionsToUse)
-NCrossVals=100;
+NCrossVals=20;
 
 %% create DataMatrix from BCell:
 
@@ -31,9 +31,21 @@ DataMatrix = extract_BCell(BCell);
 Outcome = Outcome-1;
 Outcome = Outcome.';
 
-%save DataMatrix DataMatrix %sorry Sonja :(  
+
+
+% TargetNum = 2*length(find(Outcome == 0 ));
+% [Outcome, sortIndex]= sort(Outcome);
+% DataMatrix = DataMatrix(sortIndex,:);
+% DataMatrix = DataMatrix(1:TargetNum,:);
+% Outcome = Outcome(1:TargetNum);
+
+%save DataMatrix DataMatrix %sorry Sonja :(
 %save Outcome Outcome  %also not saving s further down
 
+% Outcome = Outcome(randperm(length(Outcome)));
+ DataMatrix = randn(size(DataMatrix,1),size(DataMatrix,2));
+% DataMatrix = DataMatrix(randperm(size(DataMatrix,1)),:);
+% warning('random outcome')
 
 Bioms=NaN(size(DataMatrix,2),NCrossVals);
 ModelVars=cell(NCrossVals,1);
@@ -42,40 +54,86 @@ switch lower(Type)
     case 'crossvalidate'
         % Type CrossValidate
         disp('Cross validation needs work')
-     %   DataMatrix = abs(DataMatrix);
-     %   DataMatrix = zscore(DataMatrix);
-     if ~isstruct(ChannelsOrRegionsToUse) && length(ChannelsOrRegionsToUse)>1 % using channels, not regions
-         [DataMatrix, BiomsToUse] = nbt_RemoveFeatures( DataMatrix,Outcome,'ttest2',ChannelsOrRegionsToUse, size(BCell{1},3));
-     end
-         
+        %   DataMatrix = abs(DataMatrix);
+        %   DataMatrix = zscore(DataMatrix);
+        %       if ~isstruct(ChannelsOrRegionsToUse) && length(ChannelsOrRegionsToUse)>1 % using channels, not regions
+        %           [DataMatrix, BiomsToUse] = nbt_RemoveFeatures( DataMatrix,Outcome,'all',ChannelsOrRegionsToUse, size(BCell{1},3));
+        %       end
+        
         % For this type we randomly
         TestLimit = floor(size(DataMatrix,1)*1/3); %a potential parameter!
-      tic
-      
-  %     BiomsToUse{1,1} = [1:1:length(ChannelsToUse)]'; % use all channels
-      
+        tic
+        
+        %     BiomsToUse{1,1} = [1:1:length(ChannelsToUse)]'; % use all channels
+        
         for i=1:NCrossVals % also potential parametere!
             disp(i)
+            try
+                
+                [ TrainMatrix,  TestMatrix, TrainOutcome, TestOutcome] = ...
+                    nbt_RandomSubsampler( DataMatrix,Outcome,TestLimit,'stratified');
+                %We use a stratified sample to preserve the class balance. 
+                
+                %% we first remove features
+                [TrainMatrix, BiomsToUse] = nbt_RemoveFeatures( TrainMatrix,TrainOutcome,'ttest2-MCP',ChannelsOrRegionsToUse, size(BCell{1},3));
+                
+                if(size(BiomsToUse,2) ==1 && size(BCell{1},3) ~= 1)
+                    TestMatrix = TestMatrix(:,BiomsToUse{1,1});
+                else
+                    NewTestMatrix = nan(size(TestMatrix,1),size(BCell{1},3));
+                    for ii=1:size(BCell{1},3)
+                        NewTestMatrix(:,ii) = nanmedian(TestMatrix(:,BiomsToUse{1,ii}),2);
+                    end
+                    TestMatrix = NewTestMatrix;
+                    TestMatrix=TestMatrix(:,~isnan(TestMatrix(1,:)));
+                    clear NewTestMatrix;
+                end
+                
+                %let's also balance the classes
+                             TargetNum = 2*length(find(TrainOutcome == 0 ));
+                             [TrainOutcome, sortIndex]= sort(TrainOutcome);
+                             TrainMatrix = TrainMatrix(sortIndex,:);
+                             TrainMatrix = TrainMatrix(1:TargetNum,:);
+                             TrainOutcome = TrainOutcome(1:TargetNum);
+                
+                %             TargetNum = 2*length(find(TestOutcome == 0 ));
+                %             TestMatrix = TestMatrix(1:TargetNum,:);
+                %             TestOutcome = TestOutcome(1:TargetNum);
+                
+                %              s.statfunc = 'elasticlogit';
+                %              [s] = nbt_TrainClassifier(TrainMatrix,TrainOutcome, s);
+                %              if(isempty(find(s.ModelVar(2:end))))
+                %                  [s] = nbt_TrainClassifier(TrainMatrix,TrainOutcome, s);
+                %              end
+                %              TrainMatrix = TrainMatrix(:,find(s.ModelVar(2:end)));
+                %              TestMatrix = TestMatrix(:,find(s.ModelVar(2:end)));
+                %              s.statfunc = 'lssvm';
+                [s] = nbt_TrainClassifier(TrainMatrix,TrainOutcome, s);
+                [pp, s ] = nbt_UseClassifier(TestMatrix, s);
+                [FPt, TPt, FNt, TNt, SEt, SPt, PPt, NNt, LPt, LNt, MMt, AUCt,H2] = ...
+                    nbt_evalOutcome(pp, TestOutcome);
+            catch
+                FPt = nan;
+                TPt = nan;
+                FNt = nan;
+                TNt = nan;
+                SEt = nan;
+                SPt = nan;
+                PPt = nan;
+                NNt = nan;
+                LPt = nan;
+                LNt = nan;
+                MMt = nan;
+                AUCt = nan;
+                H2 = nan;
+                s.ModelVar = [];
+            end
             
-            [ TrainMatrix,  TestMatrix, TrainOutcome, TestOutcome] = ...
-                nbt_RandomSubsampler( DataMatrix,Outcome,TestLimit,'stratified');
-            %We use a stratified sample to preserve the class balance.
             
-           %let's also balance the classes
-      %     TargetNum = 2*length(find(TrainOutcome == 0 ));
-        %   TrainMatrix = TrainMatrix(1:TargetNum,:);
-        %   TrainOutcome = TrainOutcome(1:TargetNum);
-
-            
-            [s] = nbt_TrainClassifier(TrainMatrix,TrainOutcome, s);
-            [pp, s ] = nbt_UseClassifier(TestMatrix, s);
-            [FPt, TPt, FNt, TNt, SEt, SPt, PPt, NNt, LPt, LNt, MMt, AUCt,H2] = ...
-                nbt_evalOutcome(pp, TestOutcome);
-
-% training and testing on the same data
-%             [pp, s ] = nbt_UseClassifier(TrainMatrix, s);
-%             [FPt, TPt, FNt, TNt, SEt, SPt, PPt, NNt, LPt, LNt, MMt, AUCt,H2] = ...
-%                 nbt_evalOutcome(pp, TrainOutcome);
+            % training and testing on the same data
+            %             [pp, s ] = nbt_UseClassifier(TrainMatrix, s);
+            %             [FPt, TPt, FNt, TNt, SEt, SPt, PPt, NNt, LPt, LNt, MMt, AUCt,H2] = ...
+            %                 nbt_evalOutcome(pp, TrainOutcome);
             
             ModelVars{i}=s.ModelVar;
             if(iscell(FPt))
@@ -108,7 +166,7 @@ switch lower(Type)
                 H_measure(i)=H2;
                 accuracy(i) = (TP(i)+TN(i))./(TN(i)+TP(i)+FN(i)+FP(i))*100;
             end
-           
+            
         end
         disp('CrossValidate:done')
         toc
@@ -117,10 +175,10 @@ switch lower(Type)
         % Type Validate
         TestLimit = floor(size(DataMatrix,1)*1/3); %a potential parameter!
         [ TrainMatrix,  TestMatrix, TrainOutcome, TestOutcome] = ...
-            nbt_RandomSubsampler( DataMatrix,Outcome,TestLimit,'stratified');
+            nbt_RandomSubsampler( DataMatrix,Outcome,TestLimit,'simple');
         %We use a stratified sample to preserve the class balance.
         %% Feature selction - we first prune the biomarkers given to the classsification algorithm
-       % [TrainMatrix, BiomsToUse] = nbt_RemoveFeatures( TrainMatrix,TrainOutcome,'ttest2',ChannelsToUse, size(BCell{1},3));
+        % [TrainMatrix, BiomsToUse] = nbt_RemoveFeatures( TrainMatrix,TrainOutcome,'ttest2',ChannelsToUse, size(BCell{1},3));
         
         
         % call nbt_TrainClassifier
@@ -135,7 +193,7 @@ switch lower(Type)
             end
             TestMatrix = NewTestMatrix;
             clear NewTestMatrix;
-        end   
+        end
         % call nbt_TestClassifier
         [pp, s] = nbt_UseClassifier(TestMatrix, s);
         %eval outcome
@@ -181,7 +239,7 @@ s.H_measure=H_measure;
 %                 s.HAE=HAE;
 %                 s.HE=HE;
 
-%% plotting 
+%% plotting
 %first calculate pp for the full matrix
 [pp] = nbt_UseClassifier(DataMatrix, s);
 % make pp values for each group
@@ -238,15 +296,15 @@ title('Precision (PP)')
             ChannelsOrRegionsToUse = 1:size(BCell{1},1);
         end
         
-            for ii=1:size(BCell{1},3)
-                disp(ii)
-                if isstruct(ChannelsOrRegionsToUse)
-                    ChansOrRegsToUse = [1: size(ChannelsOrRegionsToUse,2)]; % all regions
-                else 
-                    ChansOrRegsToUse = ChannelsOrRegionsToUse; % single region
-                end
-                
-                for i=ChansOrRegsToUse;
+        for ii=1:size(BCell{1},3)
+            disp(ii)
+            if isstruct(ChannelsOrRegionsToUse)
+                ChansOrRegsToUse = [1: size(ChannelsOrRegionsToUse,2)]; % all regions
+            else
+                ChansOrRegsToUse = ChannelsOrRegionsToUse; % single region
+            end
+            
+            for i=ChansOrRegsToUse;
                 if ~exist('becell');
                     becell{1,1}=BCell{1}(i,:,ii);
                     becell{2,1}=BCell{2}(i,:,ii);

@@ -866,12 +866,12 @@ if nargin > 6
                 elseif strcmpi(Arg, 'off') Showwin = NO;  a = a+1;
                 end;
             end;
-        elseif strcmp(Arg,'noplot')
-            NoShow = YES;
+        elseif strcmp(Arg,'noplot') % elseif strcmp(Arg,'NoShow') % by Luca & Ramon
+            NoShowVar = YES;
             if a < nargin,
                 Arg = eval(['arg' int2str(a+1-6)]);
-                if strcmpi(Arg, 'on'),     NoShow = YES; a = a+1;
-                elseif strcmpi(Arg, 'off') NoShow = NO;  a = a+1;
+                if strcmpi(Arg, 'on'),     NoShowVar = YES; a = a+1;
+                elseif strcmpi(Arg, 'off'), NoShowVar = NO;  a = a+1;
                 end;
             end;
         elseif strcmpi(Arg,'replace_ties')
@@ -2077,6 +2077,7 @@ if ~Allampsflag & ~exist('data2') %%%%%%%% Plot ERP image %%%%%%%%%%
             axis([min(outtrials) max(outtrials)...
                 timelimits(1) timelimits(2)]);
         end
+        try colormap(DEFAULT_COLORMAP); catch, end;
         hold on
         drawnow
     end;
@@ -2271,6 +2272,7 @@ elseif Allampsflag %%%%%%%%%%%%%%%% Plot allamps instead of data %%%%%%%%%%%%%%
             axis([min(outtrials) max(outtrials)...
                 timelimits(1) timelimits(2)]);
         end
+        try colormap(DEFAULT_COLORMAP); catch, end;
         drawnow
         hold on
     end;
@@ -2370,6 +2372,7 @@ elseif exist('data2') %%%%%% Plot allcohers instead of data %%%%%%%%%%%%%%%%%%%
             axis([min(outtrials) max(outtrials)...
                 timelimits(1) timelimits(2)]);
         end
+        try colormap(DEFAULT_COLORMAP); catch, end;
         drawnow
         hold on
     end;
@@ -3093,10 +3096,10 @@ if ~isnan(coherfreq)
             ynumoffset  = double(limit(1)-0.3*ydelta); % double for Matlab 7
         end
         
-        t=text(ynumoffset,maxampERP,num2str(maxampERP,3));
+        t=text(double(ynumoffset),double(maxampERP),num2str(maxampERP,3));
         set(t,'HorizontalAlignment','right','FontSize',TICKFONT);
         
-        t=text(ynumoffset,minampERP, num2str(minampERP,3));
+        t=text(double(ynumoffset),double(minampERP), num2str(minampERP,3));
         set(t,'HorizontalAlignment','right','FontSize',TICKFONT);
         
         ax3=axes('Position',...
@@ -3358,7 +3361,13 @@ else
     amps   = [];    % null outputs unless coherfreq specified
     cohers = [];
 end
-axhndls = [ax1 axcb ax2 ax3 ax4];
+
+if VERS >= 8.04
+    axhndls = {ax1 axcb ax2 ax3 ax4};
+else
+    axhndls = [ax1 axcb ax2 ax3 ax4];
+end
+
 if exist('ur_outsort')
     outsort = ur_outsort; % restore outsort clipped values, if any
 end
@@ -3391,7 +3400,11 @@ if (~isempty(topomap)) & strcmpi(NoShow, 'no')
         end;
     end;
     axis('square')
-    axhndls = [axhndls h(12)];
+    if VERS >= 8.04
+        axhndls = {axhndls h(12)};
+    else
+        axhndls = [axhndls h(12)];
+    end
 end
 
 %
@@ -3442,7 +3455,11 @@ if (~isempty(lospecHz)) && strcmpi(NoShow, 'no')
     if ~isnan(coherfreq)
         hold on; plot([coherfreq,coherfreq],[mingfs maxgfs],'r');
     end
-    axhndls = [axhndls h(13)];
+    if VERS >= 8.04
+        axhndls = {axhndls h(13)};
+    else
+        axhndls = [axhndls h(13)];
+    end
 end
 
 %

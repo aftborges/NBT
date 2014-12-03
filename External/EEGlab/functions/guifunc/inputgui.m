@@ -213,8 +213,12 @@ result = {};
 userdat = [];
 strhalt = '';
 resstruct = [];
-try, findobj(fig); % figure still exist ?
-catch, return; end;
+
+% Check if figure still exist (RMC) % try, findobj(fig);catch, return; end;
+ if ~(ishandle(fig))
+     return;
+ end
+ 
 strhalt = get(findobj('parent', fig, 'tag', 'ok'), 'userdata');
 
 % output parameters
@@ -225,7 +229,7 @@ for index=1:length(allobj)
     if isnumeric(allobj), currentobj = allobj(index);
     else                  currentobj = allobj{index};
     end;
-    if ishandle(currentobj)
+    if isnumeric(currentobj) | ~isprop(currentobj,'GetPropertySpecification') % To allow new object handles
         try,
           objstyle = get(currentobj, 'style');
           switch lower( objstyle )
