@@ -2,44 +2,44 @@ function nbt_importARSQStudentAHN(filename, SignalInfo, SaveDir)
 idxFilename = strfind(filename,'.');
 filename = filename(1:idxFilename(3)-1);
 MP14 = MP14importfile([filename '.csv']);
-rsq = nbt_ARSQ(125);
+rsq = nbt_ARSQ(4);
 
 ARSQData = importdata([filename '.csv']);
 %% Populate the ARSQ 
-%First we import the normal ARSQ
-    %Questions
-    for i=1:55
-        IndQ=strfind(MP14{i,1},'"');
-        rsq.Questions{i,1} = MP14{i,1}(IndQ(1)+1:IndQ(2)-1);
-    end
-    %Answers 
-    for i=1:55
-        rsq.Answers(i,1) = str2double(MP14{57,i});
-    end
-        
-
-%Add factors
-tmpQ = rsq.Answers(1:55);
-rsq.Questions{56,1} = 'Discontinuity of Mind';
-rsq.Questions{57,1} = 'Theory of Mind';
-rsq.Questions{58,1} = 'Self';
-rsq.Questions{59,1} = 'Planning';
-rsq.Questions{60,1} = 'Sleepiness';
-rsq.Questions{61,1} = 'Comfort';
-rsq.Questions{62,1} = 'Somatic Awareness';
-rsq.Questions{63,1} = 'Health Concern';
-rsq.Questions{64,1} = 'Visual Thought';
-rsq.Questions{65,1} = 'Verbal Thought';
-rsq.Answers(56,1) = nanmean(double(tmpQ([1,11,21])));
-rsq.Answers(57,1) = nanmean(double(tmpQ([2,12,22])));
-rsq.Answers(58,1) = nanmean(double(tmpQ([3,13,23])));
-rsq.Answers(59,1) = nanmean(double(tmpQ([4,14,24])));
-rsq.Answers(60,1) = nanmean(double(tmpQ([5,15,25])));
-rsq.Answers(61,1) = nanmean(double(tmpQ([6,16,26])));
-rsq.Answers(62,1) = nanmean(double(tmpQ([7,17,27])));
-rsq.Answers(63,1) = nanmean(double(tmpQ([10,20,30])));
-rsq.Answers(64,1) = nanmean(double(tmpQ([8,18,28])));
-rsq.Answers(65,1) = nanmean(double(tmpQ([9,19,29])));
+% %First we import the normal ARSQ
+%     %Questions
+%     for i=1:55
+%         IndQ=strfind(MP14{i,1},'"');
+%         rsq.Questions{i,1} = MP14{i,1}(IndQ(1)+1:IndQ(2)-1);
+%     end
+%     %Answers 
+%     for i=1:55
+%         rsq.Answers(i,1) = str2double(MP14{57,i});
+%     end
+%         
+% 
+% %Add factors
+% tmpQ = rsq.Answers(1:55);
+% rsq.Questions{56,1} = 'Discontinuity of Mind';
+% rsq.Questions{57,1} = 'Theory of Mind';
+% rsq.Questions{58,1} = 'Self';
+% rsq.Questions{59,1} = 'Planning';
+% rsq.Questions{60,1} = 'Sleepiness';
+% rsq.Questions{61,1} = 'Comfort';
+% rsq.Questions{62,1} = 'Somatic Awareness';
+% rsq.Questions{63,1} = 'Health Concern';
+% rsq.Questions{64,1} = 'Visual Thought';
+% rsq.Questions{65,1} = 'Verbal Thought';
+% rsq.Answers(56,1) = nanmean(double(tmpQ([1,11,21])));
+% rsq.Answers(57,1) = nanmean(double(tmpQ([2,12,22])));
+% rsq.Answers(58,1) = nanmean(double(tmpQ([3,13,23])));
+% rsq.Answers(59,1) = nanmean(double(tmpQ([4,14,24])));
+% rsq.Answers(60,1) = nanmean(double(tmpQ([5,15,25])));
+% rsq.Answers(61,1) = nanmean(double(tmpQ([6,16,26])));
+% rsq.Answers(62,1) = nanmean(double(tmpQ([7,17,27])));
+% rsq.Answers(63,1) = nanmean(double(tmpQ([10,20,30])));
+% rsq.Answers(64,1) = nanmean(double(tmpQ([8,18,28])));
+% rsq.Answers(65,1) = nanmean(double(tmpQ([9,19,29])));
 
 %% Then we import additional questionaire data.
 %First we identify the sorting variable (music name)
@@ -63,8 +63,9 @@ idxMusicName = nbt_searchvector(MusicName,MusicNameTemplate); %this is the sorte
 %add questions
 MusicNameTemplate = { 'BH1';'BH2';'BR1';'BR2'; 'CH1'; 'CH1R'; 'CH2'; 'GR1' ...
     ; 'GR2'; 'HD1';'HD2'; 'HD2R'; 'MZ1';'MZ2';'MZ2R'};
-startQ = 66;
-for m=1:15
+startQ = 1;
+m = nbt_searchvector(MusicNameTemplate,{SignalInfo.condition});
+%for m=1:15
     t = 0;
     for i=68:71
         IndQ=strfind(MP14{i,1},'"');
@@ -72,15 +73,15 @@ for m=1:15
         t=t+1;
     end
     startQ = startQ+4;
-end
+%end
 %and then finally we add the answers
-startQ = 65;
-for m=1:15
+startQ = 0;
+%for m=1:15
     for t=1:4
         rsq.Answers(startQ+t,1) = str2double(MP14{MusicAnswers{idxMusicName(m),1},t}(2));
     end
 startQ = startQ+4;
-end
+%end
 
 rsq = nbt_UpdateBiomarkerInfo(rsq, SignalInfo);
 nbt_SaveClearObject('rsq', SignalInfo, SaveDir)
