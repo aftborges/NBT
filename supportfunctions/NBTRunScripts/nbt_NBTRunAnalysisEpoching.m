@@ -31,7 +31,7 @@ end
 function NBTfunction_handle = NBTwrapper()
     function NBTscript(Signal, SignalInfo, SaveDir)        
         
-        epochingMP14(SignalInfo.file_name, SignalInfo, Signal)
+        nbt_epochingMP14(SignalInfo.file_name, SignalInfo, Signal)
                 
     end
 
