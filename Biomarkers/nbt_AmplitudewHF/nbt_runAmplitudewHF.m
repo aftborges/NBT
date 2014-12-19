@@ -56,7 +56,7 @@ function nbt_runAmplitudewHF(Signal, SignalInfo, SaveDir)
 
 [amplitude_1_4_Hz, ...
     amplitude_4_8_Hz,amplitude_8_13_Hz,amplitude_13_30_Hz,amplitude_30_45_Hz,...
-    amplitude_55_125_Hz] = nbt_doAmplitudewHF(Signal,SignalInfo);
+    amplitude_55_125_Hz,amplitude_1_4_Hz_Normalized,amplitude_4_8_Hz_Normalized,amplitude_8_13_Hz_Normalized,amplitude_13_30_Hz_Normalized,amplitude_30_45_Hz_Normalized,amplitude_55_125_Hz_Normalized] = nbt_doAmplitudewHF(Signal,SignalInfo);
 
 
 
@@ -72,4 +72,10 @@ nbt_SaveClearObject('amplitude_8_13_Hz',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_13_30_Hz',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_30_45_Hz',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_55_125_Hz' ,SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_1_4_Hz_Normalized',SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_4_8_Hz_Normalized',SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_8_13_Hz_Normalized',SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_13_30_Hz_Normalized',SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_30_45_Hz_Normalized',SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_55_125_Hz_Normalized' ,SignalInfo,SaveDir);
 

@@ -55,7 +55,7 @@
 %     amplitude_8_13_Hz_cmbgrad,amplitude_13_30_Hz_cmbgrad,amplitude_30_45_Hz_cmbgrad,amplitude_1_4_Hz_cmbgradN, ...
 %     amplitude_4_8_Hz_cmbgradN,amplitude_8_13_Hz_cmbgradN,amplitude_13_30_Hz_cmbgradN,amplitude_30_45_Hz_cmbgradN] = nbt_doAmplitude(Signal,Info)
 function [amplitude_1_4_Hz,amplitude_4_8_Hz,amplitude_8_13_Hz,amplitude_13_30_Hz,...
-    amplitude_30_45_Hz,amplitude_55_125_Hz] = nbt_doAmplitudewHF(Signal,Info)
+    amplitude_30_45_Hz,amplitude_55_125_Hz,amplitude_1_4_Hz_Normalized,amplitude_4_8_Hz_Normalized,amplitude_8_13_Hz_Normalized,amplitude_13_30_Hz_Normalized,amplitude_30_45_Hz_Normalized,amplitude_55_125_Hz_Normalized] = nbt_doAmplitudewHF(Signal,Info)
 %--- input checks
 % error(nargchk(4,4,nargin))
 
@@ -152,6 +152,21 @@ amplitude_8_13_Hz.FrequencyRange = interval_Hz(3,:);
 amplitude_13_30_Hz.FrequencyRange = interval_Hz(4,:);
 amplitude_30_45_Hz.FrequencyRange = interval_Hz(5,:);
 amplitude_55_125_Hz.FrequencyRange = interval_Hz(6,:);
+
+amplitude_1_4_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(1,:)*100,[],1,'%');
+amplitude_4_8_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(2,:)*100,[],1,'%');
+amplitude_8_13_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(3,:)*100,[],1,'%');
+amplitude_13_30_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(4,:)*100,[],1,'%');
+amplitude_30_45_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(5,:)*100,[],1,'%');
+amplitude_55_125_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(6,:)*100,[],1,'%');
+
+amplitude_1_4_Hz_Normalized.FrequencyRange = interval_Hz(1,:);
+amplitude_4_8_Hz_Normalized.FrequencyRange = interval_Hz(2,:);
+amplitude_8_13_Hz_Normalized.FrequencyRange = interval_Hz(3,:);
+amplitude_13_30_Hz_Normalized.FrequencyRange = interval_Hz(4,:);
+amplitude_30_45_Hz_Normalized.FrequencyRange = interval_Hz(5,:);
+amplitude_55_125_Hz_Normalized.FrequencyRange = interval_Hz(6,:);
+
 
 
 
@@ -417,6 +432,10 @@ amplitude_8_13_Hz =nbt_UpdateBiomarkerInfo(amplitude_8_13_Hz, Info);
 amplitude_13_30_Hz =nbt_UpdateBiomarkerInfo(amplitude_13_30_Hz, Info);
 amplitude_30_45_Hz =nbt_UpdateBiomarkerInfo(amplitude_30_45_Hz, Info);
 amplitude_55_125_Hz = nbt_UpdateBiomarkerInfo(amplitude_55_125_Hz, Info);
-
-
+amplitude_1_4_Hz_Normalized =nbt_UpdateBiomarkerInfo(amplitude_1_4_Hz_Normalized, Info);
+amplitude_4_8_Hz_Normalized =nbt_UpdateBiomarkerInfo(amplitude_4_8_Hz_Normalized, Info);
+amplitude_8_13_Hz_Normalized  =nbt_UpdateBiomarkerInfo(amplitude_8_13_Hz_Normalized, Info);
+amplitude_13_30_Hz_Normalized=nbt_UpdateBiomarkerInfo(amplitude_13_30_Hz_Normalized, Info);
+amplitude_30_45_Hz_Normalized=nbt_UpdateBiomarkerInfo(amplitude_30_45_Hz_Normalized, Info);
+amplitude_55_125_Hz_Normalized=nbt_UpdateBiomarkerInfo(amplitude_55_125_Hz_Normalized, Info);
 end
