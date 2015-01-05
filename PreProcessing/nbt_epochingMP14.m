@@ -44,13 +44,16 @@ end
     
 %Create a cell to store the epochs
   
-  epochs=cell(16,1);
+  epochs=cell(17,1); %ECR + trial  + 15 pieces
     
   for epochIdx=1:16;
         
   epochs{epochIdx}=Signal(event_start(epochIdx)+5000:(event_start(epochIdx+1))-1,1:129); % clipping first 5 seconds, removing PIB channels for now 130:136
   
   end
+  
+  %add last epoch
+  epochs{17}=Signal(event_start(17)+5000:end,1:129);
   
 
 %first epoch is always ECR
@@ -74,7 +77,7 @@ save(SaveFilename,'-mat','EpochedSignal');
      
      %saving
      SaveFilename=strcat(filename, '.',Condition,'.mat');
-     EpochedSignal=epochs{idx+1};
+     EpochedSignal=epochs{idx+2}; % because the first piece played is always a trial and is not labelled in the csv file 
      save(SaveFilename,'-mat','EpochedSignal');
      
      SignalInfo.condition=Condition;
