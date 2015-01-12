@@ -54,28 +54,29 @@ function nbt_runAmplitudewHF(Signal, SignalInfo, SaveDir)
 %     amplitude_8_13_Hz_cmbgrad,amplitude_13_30_Hz_cmbgrad,amplitude_30_45_Hz_cmbgrad,amplitude_1_4_Hz_cmbgradN, ...
 %     amplitude_4_8_Hz_cmbgradN,amplitude_8_13_Hz_cmbgradN,amplitude_13_30_Hz_cmbgradN,amplitude_30_45_Hz_cmbgradN] = nbt_doAmplitude(Signal,SignalInfo);
 
-[amplitude_1_4_Hz, ...
-    amplitude_4_8_Hz,amplitude_8_13_Hz,amplitude_13_30_Hz,amplitude_30_45_Hz,...
-    amplitude_55_125_Hz,amplitude_1_4_Hz_Normalized,amplitude_4_8_Hz_Normalized,amplitude_8_13_Hz_Normalized,amplitude_13_30_Hz_Normalized,amplitude_30_45_Hz_Normalized,amplitude_55_125_Hz_Normalized] = nbt_doAmplitudewHF(Signal,SignalInfo);
-
-
+[amplitude_1_4_Hz,amplitude_4_8_Hz,amplitude_8_13_Hz,amplitude_13_30_Hz,...
+    amplitude_30_45_Hz,amplitude_55_125_Hz,amplitude_60_90_Hz,...
+    amplitude_1_4_Hz_Normalized,amplitude_4_8_Hz_Normalized,...
+    amplitude_8_13_Hz_Normalized,amplitude_13_30_Hz_Normalized,...
+    amplitude_30_45_Hz_Normalized,amplitude_55_125_Hz_Normalized,...
+    amplitude_60_90_Hz_Normalized] = nbt_doAmplitudewHF(Signal,SignalInfo);
 
 
 
 
 % save biomarkers
-
-
 nbt_SaveClearObject('amplitude_1_4_Hz',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_4_8_Hz',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_8_13_Hz',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_13_30_Hz',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_30_45_Hz',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_55_125_Hz' ,SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_60_90_Hz' ,SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_1_4_Hz_Normalized',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_4_8_Hz_Normalized',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_8_13_Hz_Normalized',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_13_30_Hz_Normalized',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_30_45_Hz_Normalized',SignalInfo,SaveDir);
 nbt_SaveClearObject('amplitude_55_125_Hz_Normalized' ,SignalInfo,SaveDir);
+nbt_SaveClearObject('amplitude_60_90_Hz_Normalized' ,SignalInfo,SaveDir);
 

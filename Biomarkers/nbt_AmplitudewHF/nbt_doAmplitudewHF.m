@@ -55,7 +55,7 @@
 %     amplitude_8_13_Hz_cmbgrad,amplitude_13_30_Hz_cmbgrad,amplitude_30_45_Hz_cmbgrad,amplitude_1_4_Hz_cmbgradN, ...
 %     amplitude_4_8_Hz_cmbgradN,amplitude_8_13_Hz_cmbgradN,amplitude_13_30_Hz_cmbgradN,amplitude_30_45_Hz_cmbgradN] = nbt_doAmplitude(Signal,Info)
 function [amplitude_1_4_Hz,amplitude_4_8_Hz,amplitude_8_13_Hz,amplitude_13_30_Hz,...
-    amplitude_30_45_Hz,amplitude_55_125_Hz,amplitude_1_4_Hz_Normalized,amplitude_4_8_Hz_Normalized,amplitude_8_13_Hz_Normalized,amplitude_13_30_Hz_Normalized,amplitude_30_45_Hz_Normalized,amplitude_55_125_Hz_Normalized] = nbt_doAmplitudewHF(Signal,Info)
+    amplitude_30_45_Hz,amplitude_55_125_Hz,amplitude_60_90_Hz,amplitude_1_4_Hz_Normalized,amplitude_4_8_Hz_Normalized,amplitude_8_13_Hz_Normalized,amplitude_13_30_Hz_Normalized,amplitude_30_45_Hz_Normalized,amplitude_55_125_Hz_Normalized,amplitude_60_90_Hz_Normalized] = nbt_doAmplitudewHF(Signal,Info)
 %--- input checks
 % error(nargchk(4,4,nargin))
 
@@ -85,10 +85,11 @@ interval_Hz(3,:)=[8 13];
 interval_Hz(4,:)=[13 30];
 interval_Hz(5,:)=[30 45];
 interval_Hz(6,:)=[55 125];
+interval_Hz(7,:)=[60 90];
 
 [p,f]=pwelch(randn(1,nfft),hamming(nfft),0,nfft,FS);
 
-for i=1:6
+for i=1:7
     interval{i}=find(f>interval_Hz(i,1)&f<interval_Hz(i,2));
 end
 
@@ -111,19 +112,7 @@ for i=1:number_of_channels
     
   
    
-  
-    
-    %%%%  plot spectrum for each channel, push enter to see all
-    
-    %             intervalall=[];
-    %             for i=1:5
-    %                 intervalall=[intervalall;interval{i}];
-    %             end
-    %             plot(f(intervalall),p(intervalall))
-    %             drawnow
-    %             input('')
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
      for j=1:nr_interv
         integrated(j,i) = mean(p(interval{j})); %%so provisoriamente p calc power em metade S1 e S4
@@ -145,6 +134,7 @@ normalized(:,find(Info.BadChannels)) = NaN;
  amplitude_13_30_Hz=nbt_amplitude(number_of_channels,integrated(4,:),[],0,'\muV');
  amplitude_30_45_Hz=nbt_amplitude(number_of_channels,integrated(5,:),[],0,'\muV');
  amplitude_55_125_Hz=nbt_amplitude(number_of_channels,integrated(6,:),[],0,'\muV');
+ amplitude_60_90_Hz=nbt_amplitude(number_of_channels,integrated(7,:),[],0,'\muV');
 
 amplitude_1_4_Hz.FrequencyRange = interval_Hz(1,:);
 amplitude_4_8_Hz.FrequencyRange = interval_Hz(2,:);
@@ -152,6 +142,7 @@ amplitude_8_13_Hz.FrequencyRange = interval_Hz(3,:);
 amplitude_13_30_Hz.FrequencyRange = interval_Hz(4,:);
 amplitude_30_45_Hz.FrequencyRange = interval_Hz(5,:);
 amplitude_55_125_Hz.FrequencyRange = interval_Hz(6,:);
+amplitude_60_90_Hz.FrequencyRange = interval_Hz(7,:);
 
 amplitude_1_4_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(1,:)*100,[],1,'%');
 amplitude_4_8_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(2,:)*100,[],1,'%');
@@ -159,6 +150,7 @@ amplitude_8_13_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(3,:)*10
 amplitude_13_30_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(4,:)*100,[],1,'%');
 amplitude_30_45_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(5,:)*100,[],1,'%');
 amplitude_55_125_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(6,:)*100,[],1,'%');
+amplitude_60_90_Hz_Normalized=nbt_amplitude(number_of_channels,normalized(7,:)*100,[],1,'%');
 
 amplitude_1_4_Hz_Normalized.FrequencyRange = interval_Hz(1,:);
 amplitude_4_8_Hz_Normalized.FrequencyRange = interval_Hz(2,:);
@@ -166,15 +158,14 @@ amplitude_8_13_Hz_Normalized.FrequencyRange = interval_Hz(3,:);
 amplitude_13_30_Hz_Normalized.FrequencyRange = interval_Hz(4,:);
 amplitude_30_45_Hz_Normalized.FrequencyRange = interval_Hz(5,:);
 amplitude_55_125_Hz_Normalized.FrequencyRange = interval_Hz(6,:);
-
-
+amplitude_60_90_Hz_Normalized.FrequencyRange = interval_Hz(7,:);
 
 
 
 
 %% in case of 129-channel EEG data, compute values at 6 subregions and check plotting option
 
-if isfield(Info.Interface,'EEG') && number_of_channels==129 %%%experimentei alterar o numero,isto nao deve dar pq ? p regioes pre-definidas
+if isfield(Info.Interface,'EEG') && number_of_channels==129
     
     % integrated(:,129)=nanmedian(integrated'); % set reference channel to mean of all channels
     % normalized(:,129)=nanmedian(normalized');
@@ -193,6 +184,7 @@ if isfield(Info.Interface,'EEG') && number_of_channels==129 %%%experimentei alte
     amplitude_13_30_Hz=nbt_amplitude(number_of_channels,integrated(5,:),integrated_regions(4,:),0,'\muV');
     amplitude_30_45_Hz=nbt_amplitude(number_of_channels,integrated(6,:),integrated_regions(5,:),0,'\muV');
     amplitude_55_125_Hz=nbt_amplitude(number_of_channels,integrated(1,:),integrated_regions(6,:),0,'\muV');
+    amplitude_60_90_Hz=nbt_amplitude(number_of_channels,integrated(1,:),integrated_regions(7,:),0,'\muV');
     
     amplitude_1_4_Hz.FrequencyRange = interval_Hz(1,:);
     amplitude_4_8_Hz.FrequencyRange = interval_Hz(2,:);
@@ -200,7 +192,7 @@ if isfield(Info.Interface,'EEG') && number_of_channels==129 %%%experimentei alte
     amplitude_13_30_Hz.FrequencyRange = interval_Hz(4,:);
     amplitude_30_45_Hz.FrequencyRange = interval_Hz(5,:);
     amplitude_55_125_Hz.FrequencyRange = interval_Hz(6,:);
-    
+    amplitude_60_90_Hz.FrequencyRange = interval_Hz(7,:);
     
     
     
@@ -432,10 +424,13 @@ amplitude_8_13_Hz =nbt_UpdateBiomarkerInfo(amplitude_8_13_Hz, Info);
 amplitude_13_30_Hz =nbt_UpdateBiomarkerInfo(amplitude_13_30_Hz, Info);
 amplitude_30_45_Hz =nbt_UpdateBiomarkerInfo(amplitude_30_45_Hz, Info);
 amplitude_55_125_Hz = nbt_UpdateBiomarkerInfo(amplitude_55_125_Hz, Info);
+amplitude_60_90_Hz = nbt_UpdateBiomarkerInfo(amplitude_60_90_Hz, Info);
+
 amplitude_1_4_Hz_Normalized =nbt_UpdateBiomarkerInfo(amplitude_1_4_Hz_Normalized, Info);
 amplitude_4_8_Hz_Normalized =nbt_UpdateBiomarkerInfo(amplitude_4_8_Hz_Normalized, Info);
 amplitude_8_13_Hz_Normalized  =nbt_UpdateBiomarkerInfo(amplitude_8_13_Hz_Normalized, Info);
 amplitude_13_30_Hz_Normalized=nbt_UpdateBiomarkerInfo(amplitude_13_30_Hz_Normalized, Info);
 amplitude_30_45_Hz_Normalized=nbt_UpdateBiomarkerInfo(amplitude_30_45_Hz_Normalized, Info);
 amplitude_55_125_Hz_Normalized=nbt_UpdateBiomarkerInfo(amplitude_55_125_Hz_Normalized, Info);
+amplitude_60_90_Hz_Normalized=nbt_UpdateBiomarkerInfo(amplitude_60_90_Hz_Normalized, Info);
 end

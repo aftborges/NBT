@@ -24,7 +24,7 @@
 
 function nbt_NBTRunAnalysisAll(varargin)
 script = NBTwrapper();
-nbt_NBTcompute(script,'EpochedSignal',pwd,pwd)
+nbt_NBTcompute(script,'RawSignal',pwd,pwd)
 end
 
 
