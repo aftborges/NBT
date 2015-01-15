@@ -120,7 +120,7 @@ if(~auto)
             indelec(temp) =1;
         end
         if(~isempty(EEG.NBTinfo.BadChannels))
-            EEG.NBTinfo.BadChannels(find(indelec)) = 1;
+            EEG.NBTinfo.BadChannels(indelec) = 1;
         else
             EEG.NBTinfo.BadChannels = indelec;
         end
@@ -129,7 +129,7 @@ if(~auto)
     end
 else
     if(~isempty(EEG.NBTinfo.BadChannels))
-        EEG.NBTinfo.BadChannels(find(indelec)) = 1;
+        EEG.NBTinfo.BadChannels(indelec) = 1;
     else
         EEG.NBTinfo.BadChannels = indelec;
     end
