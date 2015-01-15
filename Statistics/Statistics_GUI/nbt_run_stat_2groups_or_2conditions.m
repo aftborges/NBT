@@ -104,7 +104,7 @@ elseif strcmp(char(statfunc),'ttest')
             warning('The subjects are not paired')
         end
     end
-    catch
+    catch MExc
         warning('Something did not work when matching subjects')
     end
         

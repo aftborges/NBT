@@ -24,7 +24,7 @@
 
 function nbt_NBTRunAnalysisAll(varargin)
 script = NBTwrapper();
-nbt_NBTcompute(script,'EpochedSignal',pwd,pwd)
+nbt_NBTcompute(script,'RawSignal',pwd,pwd)
 end
 
 
@@ -54,6 +54,9 @@ highGamma_hp = 55;
 highGamma_lp = 125;
 highGamma_fo = 2/55;
 
+noharmonicsGamma_hp = 60;
+noharmonicsGamma_lp = 90;
+noharmonicsGamma_fo = 2/60;
 
 DFAshortFit = 1;
 DFAlongFit = 20;
@@ -171,6 +174,10 @@ ChannelToPlot = 1;
         [AmplitudeEnvelope, AmplitudeEnvelopeInfo] = nbt_GetAmplitudeEnvelope(Signal,SignalInfo,highGamma_hp,highGamma_lp,highGamma_fo);
          [DFA_highGamma,DFA_exp] = nbt_doDFA( AmplitudeEnvelope, AmplitudeEnvelopeInfo, [DFAshortFit DFAlongFit], [DFAshortCalc DFAlongCalc], DFA_Overlap, DFA_Plot, ChannelToPlot, []);
         nbt_SaveClearObject('DFA_highGamma', SignalInfo, SaveDir,1)  
+        
+        [AmplitudeEnvelope, AmplitudeEnvelopeInfo] = nbt_GetAmplitudeEnvelope(Signal,SignalInfo,noharmonicsGamma_hp,noharmonicsGamma_lp,noharmonicsGamma_fo);
+         [DFA_noharmonicsGamma,DFA_exp] = nbt_doDFA( AmplitudeEnvelope, AmplitudeEnvelopeInfo, [DFAshortFit DFAlongFit], [DFAshortCalc DFAlongCalc], DFA_Overlap, DFA_Plot, ChannelToPlot, []);
+        nbt_SaveClearObject('DFA_noharmonicsGamma', SignalInfo, SaveDir,1) 
         
         %nbt_importARSQStudentAHN(SignalInfo.file_name,SignalInfo,SaveDir)
 
