@@ -368,7 +368,7 @@ else
     % call from command line or from a figure
     % ---------------------------------------
     currentpos = 0;
-    if isnumeric(chans)
+    if ishandle(chans)
         fig         = chans;
         userdata    = get(fig, 'userdata');
         chans       = userdata.chans;
