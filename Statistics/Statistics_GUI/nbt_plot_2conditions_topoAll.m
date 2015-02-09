@@ -155,47 +155,61 @@ pLog(pLog> maxPValue) = maxPValue;
 %% Nested functions part
     function plot_interpolatedTopo(ConditionNr)
         if(ConditionNr ==3)
-            CoolWarm = load('nbt_colormapContourBlueRed', 'nbt_colormapContourBlueRed');
-            coolWarm = CoolWarm.nbt_colormapContourBlueRed;
-            colormap(coolWarm);
+%             CoolWarm = load('nbt_colormapContourBlueRed', 'nbt_colormapContourBlueRed');
+%             coolWarm = CoolWarm.nbt_colormapContourBlueRed;
+%             colormap(coolWarm);
+%             CoolWarm = load('nbt_CoolWarm', 'coolWarm');
+%             coolWarm = CoolWarm.coolWarm;
+%             colormap(coolWarm);
+            Exp_redbluecmap= load('exp_redbluecmap','exp_redbluecmap');
+            exp_redbluecmap = Exp_redbluecmap.exp_redbluecmap;
+            colormap(exp_redbluecmap);
             if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'signrank')
                 topoplot(statistic(diffC2C1,2),chanloc,'headrad','rim','numcontour',0,'electrodes','on');
                 if(subplotIndex ==1)
                     textThis = sprintf('Grand average for condition %s minus incondition %s ',condition2,condition1);
                 end
-                %cmax =  max(abs([min(diffC2C1) max(diffC2C1)]));
-                %cmin = -1.*cmax;
-                
+              
+                %mudei isto 
+                 
                 cmax = max(statistic(diffC2C1,2));
                 cmin = min(statistic(diffC2C1,2));
-                
+              
+                cmax =  max(abs([cmin cmax]));
+                cmin = -1.*cmax;
+                 
                 caxis([cmin cmax])
+                
             else
                 topoplot(statistic(diffC2C1_2,2),chanloc,'headrad','rim','numcontour',0,'electrodes','on');
                 if(subplotIndex == 1)
                     textThis = sprintf('Grand average for group %s minus group %s',condition2,condition1);
                 end
-%                 cmax =  max(abs([min(diffC2C1_2) max(diffC2C1_2)]));
-%                 cmin = -1.*cmax;
+                cmax =  max(abs([min(diffC2C1_2) max(diffC2C1_2)]));
+                cmin = -1.*cmax;
                 
-                cmax = max(statistic(diffC2C1,2));
-                cmin = min(statistic(diffC2C1,2));
-                
+%                 cmax = max(statistic(diffC2C1,2));
+%                 cmin = min(statistic(diffC2C1,2));
+%                 
                 caxis([cmin cmax])
             end
             
         else
-            nbt_redwhite = load('nbt_colormapContourWhiteRed', 'nbt_colormapContourWhiteRed');
-            nbt_redwhite = nbt_redwhite.nbt_colormapContourWhiteRed;
-            colormap(nbt_redwhite);
+%             nbt_redwhite = load('nbt_colormapContourWhiteRed', 'nbt_colormapContourWhiteRed');
+%             nbt_redwhite = nbt_redwhite.nbt_colormapContourWhiteRed;
+%             colormap(nbt_redwhite);
+            Reds5 = load('Reds5','Reds5');
+            Reds5 = Reds5.Reds5;
+            colormap(Reds5);
             if(ConditionNr == 1)
 %                 topoplot(meanc1',chanloc,'headrad','rim','numcontour',NumberOfContours1,'electrodes','on');
                 topoplot(meanc1',chanloc,'headrad','rim','numcontour',0,'electrodes','on');
-                cmin = min(meanc1); cmax = max(meanc1);
+                cmin = min(min(meanc1),min(meanc2)); cmax = max(max(meanc1),max(meanc2));
             else
 %                 topoplot(meanc2',chanloc,'headrad','rim','numcontour',NumberOfContours2,'electrodes','on');
-                topoplot(meanc1',chanloc,'headrad','rim','numcontour',0,'electrodes','on');
-                cmin = min(meanc2); cmax = max(meanc2);
+                topoplot(meanc2',chanloc,'headrad','rim','numcontour',0,'electrodes','on');
+              
+                 cmin = min(min(meanc1),min(meanc2)); cmax = max(max(meanc1),max(meanc2));
             end
             caxis([cmin,cmax])
             if(subplotIndex == 1)
