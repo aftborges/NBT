@@ -213,6 +213,13 @@ end
 %-------------------------------------------------
      function [s] = nbt_plot_group(Group,s,biom,regions,unit)
             chanloc = Group.chansregs.chanloc; 
+            channel_nr = Group.chansregs.channel_nr;
+            
+         %in case chanloc does not correspond to the channels you want to plot   
+          if length(chanloc) ~= length(channel_nr)
+                
+                chanloc=chanloc(1:length(channel_nr));
+            end
 %             s.C = C;
 %             s.p = p;
 %             s.c1 = B;

@@ -1341,7 +1341,16 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
         biomarker = round(pos_cursor_unitfig(1,1));
         if  biomarker>0 && biomarker<= size(x,2)
             s = stat_results(biomarker);
-            chanloc = Group1.chansregs.chanloc;
+            
+            chanloc = Group1.chansregs.chanloc; %chanloc is the same for Group 1 and 2
+             channel_nr = Group1.chansregs.channel_nr;
+            
+         %in case chanloc does not correspond to the channels you want to plot   
+          if length(chanloc) ~= length(channel_nr)
+                
+                chanloc=chanloc(1:length(channel_nr));
+            end
+            
             biom = s.biom_name;
             unit = s.unit;
             nbt_plot_2conditions_topo(Group1,Group2,chanloc,s,unit,biom,regs);
@@ -1362,7 +1371,18 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
             s = stat_results(biomIndex);
             biom = s.biom_name;
             unit = s.unit;
-            nbt_plot_2conditions_topoAll(Group1, Group2, Group1.chansregs.chanloc,s,unit,biom,biomIndex, NR_Biomarkers);
+            
+            chanloc = Group1.chansregs.chanloc;
+             channel_nr = Group1.chansregs.channel_nr;
+            
+         %in case chanloc does not correspond to the channels you want to plot   
+          if length(chanloc) ~= length(channel_nr)
+                
+                chanloc=chanloc(1:length(channel_nr));
+            end
+            
+           
+           nbt_plot_2conditions_topoAll(Group1, Group2, chanloc,s,unit,biom,biomIndex, NR_Biomarkers);
         end
     end
 
