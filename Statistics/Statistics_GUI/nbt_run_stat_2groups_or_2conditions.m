@@ -104,7 +104,7 @@ elseif strcmp(char(statfunc),'ttest')
             warning('The subjects are not paired')
         end
     end
-    catch MExc
+    catch
         warning('Something did not work when matching subjects')
     end
         
@@ -122,7 +122,9 @@ elseif strcmp(char(statfunc),'signrank')
             C(i,:)=bootci(1000,statistic,B(i,:));
             statvalues(i) = stats.signedrank;
         end
-        s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
+        %s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
+        s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,[],unit);
+        
     catch
         warning('The two groups do not have the same number of subjects')
     end
