@@ -125,6 +125,8 @@ ListGroup = uicontrol(hp4,'Units', 'pixels','style','listbox','Max',length(group
 RunButton = uicontrol(StatSelection,'Style','pushbutton','String','Run Test','Position',[500 5 100 50],'fontsize',10,'callback',@get_settings, 'Tag', 'NBTstatRunButton');
 % join button
 joinButton = uicontrol(StatSelection,'Style','pushbutton','String','Join Groups','Position',[5 70 70 30],'fontsize',8,'callback',@join_groups);
+% create average groups button
+averagegroupsButton = uicontrol(StatSelection,'Style','pushbutton','String','Average Groups','Position',[5 40 70 30],'fontsize',8,'callback',@average_groups);
 % create difference group button
 groupdiffButton = uicontrol(StatSelection,'Style','pushbutton','String','Difference Group','Position',[280 70 100 30],'fontsize',8,'callback',@diff_group);
 % create difference group button
@@ -232,6 +234,9 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
                 %----------------------
                 [B_values_cell,Sub,Proj,unit] = nbt_checkif_groupdiff(Group,G,n_files,bioms_name,path);
             end
+            
+            %adicionei p experimentar
+            disp(B_values_cell)
             %----------------------
             % check biomarkers dimensionality
             %----------------------
@@ -725,7 +730,8 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
             end
             
             
-            NCHANNELS=length(Group.chansregs.chanloc);
+            %NCHANNELS=length(Group.chansregs.chanloc);
+            NCHANNELS=length(Group.chansregs.channel_nr);
             s = nbt_statisticslog(statTest);
             stat_results=nbt_run_stat_multiGroup(B_values,s,MaxGroupSize,NCHANNELS, bioms_name,unit);
             
@@ -1259,6 +1265,160 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
         save([PathName '/' FileName],'G');
         
     end
+
+%creating a new group that results of the average of groups
+    function average_groups(d1,d2)
+        
+        disp('TO DO!!')
+% maybe the easiest is to call join groups and have other function to
+% average after the joining
+%calling join groups 
+          join_groups(d1,d2)
+        
+        bioms_ind = get(ListBiom,'Value');
+        bioms_name = get(ListBiom,'String');
+        bioms_name = bioms_name(bioms_ind);
+        chansMax=length(G(end).chansregs.channel_nr);
+        chansNonEEG=length(G(end).chansregs.chanloc);
+        
+        
+            for j = 1:length(G(end).fileslist) % total no of files
+                disp(j)
+                for l = 1:length(bioms_name) % biomarkers chosen
+                    namefile = G(end).fileslist(j).name;
+                    Bpath = G(end).fileslist(j).path;
+                    [B_values_cell{j,l},Sub,Proj,unit{j,l}]=nbt_load_analysis(Bpath,namefile,bioms_name{l},@nbt_get_biomarker,[],[],[]);
+                end
+    
+            end
+            
+            %B_values_cell -- no_files x no biomarkers
+            
+        
+            no_conditions = length(G) - 1;
+            no_subjects=length(G(end).fileslist)/no_conditions;
+            
+            %get rid of nonEEG channels (PIB channels e.g.) Avoiding using
+            %nanmean
+            B_values_cellEEG = cellfun(@(x) x(1:chansMax,1), B_values_cell,'UniformOutput',0);
+   
+            %na verdade eu so preciso de um reshape
+            B_values_cell_perSubj=reshape(B_values_cellEEG,[no_subjects no_conditions length(bioms_name)]);
+            
+            %disp( B_values_cell_perSubj)
+           
+            
+            tmp_double=cell2mat(B_values_cell_perSubj); %28 x no conditions x no biomarkers
+            mean_conditions=mean(tmp_double,2);
+            
+            %disp(mean_conditions)
+            
+            Atmp=chansMax;
+            
+            %need to convert back to cells
+            for ff=1:length(bioms_name)
+            Averages_B_values_cell(:,:,ff)=mat2cell(mean_conditions(:,:,ff),[repmat(Atmp,[no_subjects,1])]);
+            end
+            
+            
+            %need to pad the NaNs back
+            Averages_B_values_cell_padded= cellfun(@(x) [x(1:chansMax);NaN(chansNonEEG-chansMax,1)],Averages_B_values_cell ,'UniformOutput',0);
+          
+            
+            
+            %Averages_B_values_cell no_subjects x Average x no_biomarkers
+          
+%now I need to save each of the biomarkers in a new analysis file for 28
+%subjects / do I need to copy 1 analysis file per subject and update the
+%biomarkers? -- maybe not the most efficient because maybe not all of the
+%biomarkers are selected for the average? probably there is a function to
+%save biomarkers on NBT? 
+
+         %Averages_B_values_cell
+         
+            %how to name the new condition = average of all conditions, then it
+        %does not contain information from which files where averaged -
+        %let's name it same label as the name of group
+        %nao sei s eh melhor criar novos analysis files and info files? 
+        
+      
+        
+        %here it is just defining the new names for the fileslist 
+        %this is after extracting biomarkers
+        
+      
+       
+        for Subjno=1:no_subjects
+        idxFilename{Subjno} = strfind(G(end).fileslist(Subjno).name,'.');
+        G(end).fileslist(Subjno).name = G(end).fileslist(Subjno).name;
+        G(end).fileslist(Subjno).name =  G(end).fileslist(Subjno).name(1:idxFilename{Subjno}(3)-1);
+        G(end).fileslist = G(end).fileslist(1:no_subjects);%deleting all the left ones
+        SignalInfofilename= strcat(G(end).fileslist(Subjno).name,'.',G(1).fileslist(Subjno).group_name,'_info.mat');
+        G(end).fileslist(Subjno).name = strcat(G(end).fileslist(Subjno).name,'.',G(end).fileslist(Subjno).group_name,'_analysis.mat');
+      
+        newIdx{Subjno} = strfind(G(end).fileslist(Subjno).name,'.');
+        %loading infofile too
+        
+        infofilestruct=load(SignalInfofilename);
+        %SignalInfo = infofilestruct.CleanTransientSignalInfo; %this needs to be adapted to work with the right SignalInfo, maybe use always the last
+        infofilestruct.CleanTransientSignalInfo.condition=G(end).fileslist(Subjno).group_name;
+        
+        %signalinfo name for saving need to change condition
+        SignalInfofilename_final = strcat( G(end).fileslist(Subjno).name(1:newIdx{Subjno}(4)-10),'_info.mat');
+        
+        file_analysis_template=G(1).fileslist(Subjno).name;
+        
+        vv = load(file_analysis_template);
+        
+        for b_ind=1:length(bioms_name);
+        idx{b_ind} = strfind(bioms_name{b_ind},'.');
+        
+        %this is the name to save
+        bioms_name_save{b_ind} =  bioms_name{b_ind}(1:idx{b_ind}(1)-1);
+        
+        
+
+     
+        aa=vv.(bioms_name_save{b_ind});
+          
+        name_biom=vv.(bioms_name_save{b_ind}).Biomarkers;
+          
+        badum=fieldnames(aa);
+          
+          %how to find the position of the biomarker
+        pos_biom_log=strcmpi(vv.(bioms_name_save{b_ind}).Biomarkers,badum);
+          
+        pos_biom =find(pos_biom_log);
+          
+        vv.(bioms_name_save{b_ind}).(badum{pos_biom})=cell2mat(Averages_B_values_cell_padded(Subjno,:,b_ind));
+          
+        
+         vv.(bioms_name_save{b_ind}).Condition = G(end).fileslist(Subjno).group_name;
+        
+               
+         
+        save(G(end).fileslist(Subjno).name,'-struct','vv');
+        save(SignalInfofilename_final,'-struct','infofilestruct')
+        %nbt_SaveClearObject(Xstr,SignalInfo,Bpath)
+        end
+       
+        end
+        
+
+        
+        assignin('base','G',G)
+        
+        
+        %biomarkers need to be saved in the new analysis file (total is no of subjects)
+        %function that creates the analysis files and info files to
+        % function that calculates the new biomarkers just the average per
+        % subject of all conditions (12 music) collapsed (in a way this is "mathematically" distinct from averaging all files I guess)
+        % function that saves the new biomarkers in the new files (probably already done)
+        
+        
+        
+    end
+
 %----
 % export bioms
     function export_bioms(d1,d2)
@@ -1381,7 +1541,7 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
                 chanloc=chanloc(1:length(channel_nr));
             end
             
-           
+           %nbt_plot_2conditions_topoAll(Group1, Group2, Group1.chansregs.chanloc,s,unit,biom,biomIndex, NR_Biomarkers);
            nbt_plot_2conditions_topoAll(Group1, Group2, chanloc,s,unit,biom,biomIndex, NR_Biomarkers);
         end
     end

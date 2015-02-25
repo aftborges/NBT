@@ -54,6 +54,7 @@ classdef nbt_Info
         subject_medication
         Interface
         BadChannels
+        InterpolatedChannels
         NBTgrade
         NonEEGch
         EyeCh

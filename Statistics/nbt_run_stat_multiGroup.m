@@ -42,7 +42,8 @@ for BId = 1:length(bioms_name)
                 if(any(isnan(DataMatrix)))
                     DataMatrix=removeNANsubjects(DataMatrix);
                 end
-                [dummy, table, MultiStats{ChId, 1}] = anova2(DataMatrix,[],'off');
+                %[dummy, table, MultiStats{ChId, 1}] = anova2(DataMatrix,[],'off');
+                [dummy, table, MultiStats{ChId, 1}] = anova2(DataMatrix,1,'off');
                 F = table(2,5);
                 pvalues(ChId) = adjPF(DataMatrix,F{1,1});
             elseif(strcmp(s(1).statname, 'n-way ANOVA'))
@@ -63,7 +64,8 @@ for BId = 1:length(bioms_name)
                 if(any(isnan(DataMatrix)))
                     DataMatrix=removeNANsubjects(DataMatrix);
                 end
-                [dummy Table MultiStats{ChId, 1},F]=friedmanGG(DataMatrix,[],'off');
+                %[dummy Table MultiStats{ChId, 1},F]=friedmanGG(DataMatrix,[],'off');
+                [dummy Table MultiStats{ChId, 1},F]=friedmanGG(DataMatrix,1,'off'); %changing reps to 1
                 % yes correct to use F stat.. see Conover 1981
                 pvalues(ChId) = adjPF(DataMatrix,F{1,1});
             else
