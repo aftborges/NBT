@@ -1362,7 +1362,22 @@ downButton = uicontrol(StatSelection,'Style','pushbutton','String','\/','Positio
             s = stat_results(biomIndex);
             biom = s.biom_name;
             unit = s.unit;
+<<<<<<< HEAD
             nbt_plot_2conditions_topoAll(Group1, Group2, Group1.chansregs.chanloc,s,unit,biom,biomIndex, NR_Biomarkers);
+=======
+            
+            chanloc = Group1.chansregs.chanloc;
+             channel_nr = Group1.chansregs.channel_nr;
+            
+         %in case chanloc does not correspond to the channels you want to plot   
+          if length(chanloc) ~= length(channel_nr)
+                
+                chanloc=chanloc(1:length(channel_nr));
+            end
+            
+           
+           nbt_plot_2conditions_topoAll(Group1, Group2, chanloc,s,unit,biom,biomIndex, NR_Biomarkers);
+>>>>>>> parent of e83f58b... friedman reps
         end
     end
 
