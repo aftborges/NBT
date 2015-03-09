@@ -92,7 +92,8 @@ else biomarker = P{2};
 end
 
 if (nargs<3 | isempty(P{3}))
-    stat={'mean','median'};
+%     stat={'mean','median', 'plot'};
+ stat={'mean','median'};
     [selection,ok]=listdlg('liststring',stat, 'SelectionMode','single', 'ListSize',[250 300],'PromptString','Select statistic');
     statistic=stat{selection};
 else statistic= P{3}; end;
@@ -122,11 +123,14 @@ if strcmp(statistic,'mean')
     statfunc = @ttest;
     statfuncname='ttest';
     statname='mean';
-else
+elseif strcmp(statistic,'median')
     statistic=@nanmedian;
     statfunc = @signrank;
     statfuncname='signrank';
     statname='median';
+% else %i.e. plot so we will plot directly
+%     plot(nbt_get_biomarker([path(1:end-4) '_analysis.mat'],biomarker,[],1));
+%     return
 end
 
 %% get biomarkers from analysis files
@@ -192,9 +196,7 @@ end
     set(gcf,'name','NBT: group statistics EEG','numbertitle','off');
     clf   
     set(gcf,'position',[215         546        1280         431])
-    coolWarm = load('nbt_CoolWarm.mat','coolWarm');
-        coolWarm = coolWarm.coolWarm;
-        colormap(coolWarm);
+    
     %% create grand averages:
     
     meanc1=statistic(c1,2); %mean / median per biomarker

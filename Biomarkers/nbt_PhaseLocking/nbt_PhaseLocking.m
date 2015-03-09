@@ -61,34 +61,27 @@ classdef nbt_PhaseLocking < nbt_Biomarker
     IndexE %index based on the Shannon entropy
     IndexF %based on the intensity of the first Fourier mode of the distribution
     IndexCP %based on the conditional probability
-%     PLV_in_time
-%     time_int
-        
+
+    PLV_in_time
+    time_int
+    IndexE_in_time
+    IndexCP_in_time
+    IndexF_in_time
     end
     methods
        
-        function BiomarkerObject = nbt_PhaseLocking(LengthSign,NumChannels)%,overlap,nw)
+        function BiomarkerObject = nbt_PhaseLocking(LengthSign,NumChannels)
             if nargin == 0
                 LengthSign = 1;
                 NumChannels = 1;
+                
+            
             end
-%                 overlap = 1;
-%                 nw = 1;
-%             elseif nargin == 1
-%                 NumChannels = 1;
-%                 overlap = 1;
-%                 nw = 1;
-%             elseif nargin == 2
-%                 overlap = 1;
-%                 nw = 1;
-%             elseif nargin == 2
-%                 overlap = 1;
-%                 nw = 1;
-%             end
             % assign values for this biomarker object:
             %% Define Phase Locking values
             BiomarkerObject.Ratio = nan(NumChannels,NumChannels);
             BiomarkerObject.PLV = nan(NumChannels,NumChannels);
+            BiomarkerObject.Instphase = nan(LengthSign,NumChannels);
             BiomarkerObject.filterorder =  nan(1);
             BiomarkerObject.interval =  nan(1,2); 
 %             BiomarkerObject.synchlag =  nan(2,NumChannels,NumChannels); 
@@ -97,22 +90,28 @@ classdef nbt_PhaseLocking < nbt_Biomarker
             BiomarkerObject.IndexF = nan(NumChannels,NumChannels);%based on the intensity of the first Fourier mode of the distribution     
             %% Define fields for additional information
             BiomarkerObject.DateLastUpdate = datestr(now);
-% %             PhaseLogkingObject.PLV_in_time = nan(NumChannels,NumChannels,floor((LengthSign-nw)/(nw/overlap)));
-% %             PhaseLogkingObject.time_int = nan(floor((LengthSign-nw)/(nw/overlap)),1);
-            PhaseLogkingObject.Instphase = nan(LengthSign,NumChannels);
+
+             BiomarkerObject.PLV_in_time = [];
+             BiomarkerObject.time_int = [];
+            BiomarkerObject.IndexE_in_time = [];
+            BiomarkerObject.IndexCP_in_time = [];
+            BiomarkerObject.IndexF_in_time = [];
+            
             BiomarkerObject.PrimaryBiomarker = 'PLV';
             BiomarkerObject.Biomarkers = {'PLV','Instphase'};
            
             
         end
-        function plotPLV(obj)
+        function plot(obj)
             figure
-            pcolor(obj.PLV)
-            view(90,-90)
+            imagesc(obj.PLV')
             colorbar
-            xlabel('Channels')
-            ylabel('Channels')
-            axis tight
+            colormap(flipud(gray))
+        end
+        
+        function plotPLV(obj)
+            %for backward compatibility
+            plot(obj)
         end
     end
 

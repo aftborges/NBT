@@ -17,9 +17,7 @@
 %   nbt_NBTsignal2EEGlab
 
 %--------------------------------------------------------------------------
-% Copyright (C) 2008  Neuronal Oscillations and Cognition group,
-% Department of Integrative Neurophysiology, Center for Neurogenomics and
-% Cognitive Research, Neuroscience Campus Amsterdam, VU University Amsterdam.
+% Copyright (C) 2008  Simon-Shlomo Poil
 %
 % Part of the Neurophysiological Biomarker Toolbox (NBT)
 %
@@ -105,7 +103,7 @@ if (strcmpi(input('Do you want to save this signal? ([Y]es/[N]o)','s'),'y'))
                 end
                 
             else
-                OptionSave = input(['A file named' fn '.mat does not exist in this directory. Do you want create a new file? [[Y]es [N]o]'],'s'); % e.g. RawSignal, CleanSigna
+                OptionSave = input(['A file named ' fn '.mat does not exist in this directory. Do you want create a new file? [[Y]es [N]o]'],'s'); % e.g. RawSignal, CleanSigna
                 if strcmp(OptionSave(1),'Y') || strcmp(OptionSave(1),'y')
                     save([directoryname '/' fn '_info.mat'],[name 'Info'])
                     save([directoryname '/' fn '.mat'],name)

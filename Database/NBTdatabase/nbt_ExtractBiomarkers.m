@@ -47,11 +47,11 @@ else
       
 % temporary adjustement
 for ii=1:length(s)
-    if(strcmp(superclasses(s(ii).class),'nbt_Biomarker')) & ~strcmp(s(ii).class,'nbt_rsq')
+    if(strcmp(superclasses(s(ii).class),'nbt_Biomarker')) & ~strcmp(s(ii).class,'nbt_questionnaire')
         BiomarkerObjects = [BiomarkerObjects, s(ii).name];
         Biomarkers{counter}=eval([s( ii ).name,'.Biomarkers']);
         counter=counter+1;
-    elseif (strcmp(superclasses(s(ii).class),'nbt_Biomarker')) & strcmp(s(ii).class,'nbt_rsq')
+    elseif (strcmp(superclasses(s(ii).class),'nbt_Biomarker')) & strcmp(s(ii).class,'nbt_questionnaire')
         BiomarkerObjects = [BiomarkerObjects, s(ii).name];
         Biomarkers{counter}={'Answers'};
         counter=counter+1;

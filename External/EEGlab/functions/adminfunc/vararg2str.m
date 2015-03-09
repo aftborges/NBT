@@ -42,6 +42,10 @@ if nargin < 1
 	help vararg2str;
 	return;
 end;
+if isempty(allargs)
+    strout = '';
+    return;
+end;
 
 % default arguments
 % -----------------
@@ -141,7 +145,7 @@ return;
 % ------------------------
 function str = struct2str( structure )
 	if isempty( structure )
-		str = '[]'; return;
+		str = 'struct([])'; return;
 	end;
 	str = '';
 	allfields = fieldnames( structure );
@@ -156,7 +160,7 @@ return;
 % double the quotes in strings
 % ----------------------------
 function str = doublequotes( str )
-	quoteloc = union(findstr( str, ''''), union(findstr(str, '%'), findstr(str, '\')));
+	quoteloc = union_bc(findstr( str, ''''), union(findstr(str, '%'), findstr(str, '\')));
 	if ~isempty(quoteloc)
 		for index = length(quoteloc):-1:1
 			str = [ str(1:quoteloc(index)) str(quoteloc(index):end) ];

@@ -52,8 +52,8 @@
 % --------------
 
 
-function G = nbt_selectbiomarkers(G)
-
+function nbt_selectbiomarkers
+G=evalin('base', 'G');
 if(nbt_determineNBTelementState)
    s=evalin('base','whos');
    FreqBands = evalin('base', 'FrequencyBand.Data');
@@ -61,18 +61,21 @@ if(nbt_determineNBTelementState)
     for ii=1:length(s)
         if(strcmp(s(ii).class,'nbt_NBTelement'))
             NBTe = evalin('base',s(ii).name);
-            if(~isempty(NBTe.Biomarkers))
-                
+            if(~isempty(NBTe.Biomarkers))    
+                if(NBTe.Uplink == 4)
                 for fb = 1:length(FreqBands)
                 counter = counter+1;
                 biomarker_objects{counter} = [s(ii).name '.' FreqBands{1,fb}];
                 biomarkers{counter} = NBTe.Biomarkers;  
+                end       
+                else
+                    counter = counter+1;
+                    biomarker_objects{counter} = s(ii).name;
+                    biomarkers{counter} = NBTe.Biomarkers;
                 end
-                       
             end
         end
     end
-    
 else
     path = G(1).fileslist.path;
     name = G(1).fileslist(1).name;
@@ -89,10 +92,11 @@ for i = 1:length(biomarker_objects)
     end
 end
 % --- display biomarkers list interface
-[selection,ok]=listdlg('liststring',biom,'SelectionMode','multiple','ListSize',[250 300],'PromptString','Select biomarker object');
-biomarkerslist = biom(selection);
+%[selection,ok]=listdlg('liststring',biom,'SelectionMode','multiple','ListSize',[250 300],'PromptString','Select biomarker object');
+biomarkerslist = biom(:);
 for i = 1:length(G)
     G(i).biomarkerslist = biomarkerslist;
 end
-disp('Biomarkers Selection Completed.')
+%disp('Biomarkers Selection Completed.')
+assignin('base', 'G',G);
 end

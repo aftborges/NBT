@@ -42,7 +42,7 @@
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-function [last,med1,med2,var1,var2,prior1,prior2]=EM(vec)
+function [last,med1,med2,var1,var2,prior1,prior2]=nbt_EM(vec)
 
 if size(vec,2)>1
 	len=size(vec,2); %number of elements
@@ -56,7 +56,7 @@ c_MA=1; % Missed Alarm cost
 
 med=mean(vec);
 standard=std(vec);
-mediana=(max(vec)+min(vec))/2;
+mediana=median(vec);
 
 alpha1=0.01*(max(vec)-mediana); % initialization parameter/ righthand side
 alpha2=0.01*(mediana-min(vec)); % initialization parameter/ lefthand side

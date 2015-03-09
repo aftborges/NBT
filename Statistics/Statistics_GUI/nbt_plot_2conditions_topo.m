@@ -13,24 +13,25 @@
 %   regions
 %
 % Outputs:
-% 
+%
 %
 % Example:
-%  
+%
 %
 % References:
-% 
-% See also: 
+%
+% See also:
 %  nbt_plot_EEG_channels, nbt_plot_stat
-  
+
 %------------------------------------------------------------------------------------
-% Originally created by Rick Jansen and later modified by Giuseppina Schiavone (2012), see NBT website (http://www.nbtwiki.net) for current email address
+% Originally created by Rick Jansen, see NBT website (http://www.nbtwiki.net) for current email address
 %------------------------------------------------------------------------------------
 %
 % ChangeLog - see version control log at NBT website for details.
+% modified by Giuseppina Schiavone (2012)
 %
-% Copyright (C) <year>  <Main Author>  (Neuronal Oscillations and Cognition group, 
-% Department of Integrative Neurophysiology, Center for Neurogenomics and Cognitive Research, 
+% Copyright (C) 2011 Rick Jansen  (Neuronal Oscillations and Cognition group,
+% Department of Integrative Neurophysiology, Center for Neurogenomics and Cognitive Research,
 % Neuroscience Campus Amsterdam, VU University Amsterdam)
 %
 % Part of the Neurophysiological Biomarker Toolbox (NBT)
@@ -55,12 +56,9 @@
 
 
 function nbt_plot_2conditions_topo(Group1,Group2,chanloc,s,unit,biomarker,regions)
-tmp1 = findstr(Group1.fileslist(1).name,'.');
-tmp2 = findstr(Group1.fileslist(1).name,'_');
-condition1 = Group1.fileslist.group_name;
-tmp1 = findstr(Group2.fileslist(1).name,'.');
-tmp2 = findstr(Group2.fileslist(1).name,'_');
-condition2 = Group2.fileslist.group_name;
+
+condition1 = Group1.selection.group_name;
+condition2 = Group2.selection.group_name;
 
 meanc1=s.meanc1; %mean / median per channel condition 1
 meanc2=s.meanc2; %mean / median per channel condition 2
@@ -78,12 +76,11 @@ statistic=s.statistic;
 statfunc = s.statfunc;
 statfuncname={s.statfuncname};
 fontsize = 10;
-if isempty(regions) 
+if isempty(regions)
     
     fontsize = 10;
     fig1 = figure('name',['NBT: Statistics (Channels) for ',regexprep(biomarker,'_',' ')],...
         'NumberTitle','off','position',[10          80       1500      500]); %128
-<<<<<<< HEAD
     fig1=nbt_movegui(fig1);
     
     %plot control buttons
@@ -93,128 +90,98 @@ if isempty(regions)
     uicontrol(fig1, 'Style', 'pushbutton', 'string', 'Pop out', 'position',[600 20 60 20],'callback', @plot_pTopo);
     
     % ---for color scale in following plots
-=======
-     set(fig1,'CreateFcn','movegui')
-        hgsave(fig1,'onscreenfig')
-        close(fig1)
-        fig1= hgload('onscreenfig');
-        currentFolder = pwd;
-        delete([currentFolder '/onscreenfig.fig']);
-
-   
-
-% ---for color scale in following plots
->>>>>>> FETCH_HEAD
     vmax=max([meanc1,meanc2]);
     vmin=min([meanc1,meanc2]);
-    cmax = max(vmax); 
+    cmax = max(vmax);
     cmin = min(vmin);
-<<<<<<< HEAD
     cmin = 0; %change here for lower limit
     
-=======
-   
->>>>>>> FETCH_HEAD
     xa=-2.5;
     ya = 0.25;
     maxline = 20;
-    coolWarm = load('nbt_CoolWarm.mat','coolWarm');
-    coolWarm = coolWarm.coolWarm;
-    colormap(coolWarm);
-%---plot grand average condition 1 per channel(Interpolated Plot)
-    subplot(4,3,4)
-    topoplot(meanc1',chanloc,'headrad','rim');
-    cb = colorbar('westoutside');
-    set(get(cb,'title'),'String',unit);
-    caxis([cmin,cmax])
-    drawnow
-    if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'signrank')
-        textThis = sprintf('Grand average for  %s',condition1);
-    else
-        textThis = sprintf('Grand average for group: %s',condition1);
-    end
-    nbt_split_text(xa,ya,textThis,maxline,fontsize);
-    set(gca,'fontsize',fontsize)
-%---plot grand average condition 1 per channel(Actual Channels)
-    subplot(4,3,5)
-    nbt_plot_EEG_channels(meanc1,cmin,cmax,chanloc)
-    axis square
-    cb = colorbar('westoutside');
-    set(get(cb,'title'),'String',unit);
-    caxis([cmin,cmax])
-    set(gca,'fontsize',fontsize)
-    drawnow
-%---plot grand average condition 1 per channel(Interpolated Plot)
-    subplot(4,3,7)
-    topoplot(meanc2',chanloc,'headrad','rim');
-    cb = colorbar('westoutside');
-    set(get(cb,'title'),'String',unit);
-    caxis([cmin,cmax])
-    if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'signrank')
-        textThis = sprintf('Grand average for condition: %s',condition2);
-    else
-        textThis = sprintf('Grand average for group: %s',condition2);
-    end
-    nbt_split_text(xa,ya,textThis,maxline,fontsize);
-    set(gca,'fontsize',fontsize)
-    drawnow
-%---plot grand average condition 1 per channel(Actual Channels)
-    subplot(4,3,8)
-    nbt_plot_EEG_channels(meanc2,cmin,cmax,chanloc)
-    axis square
-    cb = colorbar('westoutside');
-    set(get(cb,'title'),'String',unit);
-    caxis([cmin,cmax])
-    set(gca,'fontsize',fontsize)
-    drawnow
-%---plot P-values for the test
-    minPValue = -2;% Plot log10(P-Values) to trick colour bar
-    maxPValue = -0.5;
-    subplot(4,3,11)
-    nbt_plot_EEG_channels(log10(p),minPValue,maxPValue,chanloc);
-    cbh = colorbar('westoutside');
-    caxis([minPValue maxPValue])
-    axis square
-    set(cbh,'YTick',[-2 -1.3010 -1 0])
-    set(cbh,'YTicklabel',[0.01 0.05 0.1 1]) %(log scale)
-    set(get(cbh,'title'),'String','P-values');
-    set(gca,'fontsize',fontsize)
-    drawnow
-%     a=get(gca,'xlim');
-%     b=get(gca,'ylim');
-%     text(a(1),b(1)-(b(2)-b(1))/10,'P-values','horizontalalignment','right')
     
-%---plot grand average difference between conditions or difference between group means (Interpolated Plot)
-    subplot(4,3,10)
-    if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'signrank')
-        topoplot(statistic(diffC2C1,2),chanloc,'headrad','rim');
-        textThis = sprintf('Grand average for condition %s minus condition %s',condition2,condition1);
-    else
-        topoplot(statistic(diffC2C1_2,2),chanloc,'headrad','rim');
-        textThis = sprintf('Grand average for group %s minus group %s',condition2,condition1);
-    end
-    cb = colorbar('westoutside');
-    set(get(cb,'title'),'String',unit);
-    nbt_split_text(xa,ya,textThis,maxline,fontsize);
-    axis off
-    set(gca,'fontsize',fontsize)
+    %---plot grand average condition 1 per channel(Interpolated Plot)
+    subplot(4,3,4)
+    plot_interpolatedTopo(1);
+    cbfreeze
+    freezeColors
     drawnow
-%--- plot condition 1 errorbars per channels
+    
+    %---plot grand average condition 2 per channel(Interpolated Plot)
+    subplot(4,3,7)
+    plot_interpolatedTopo(2);
+    cbfreeze
+    freezeColors
+    drawnow
+    
+    %---plot grand average condition 1 per channel(Actual Channels)
+    subplot(4,3,5)
+    calctext = text(1,1,'Calculating...');
+    nbt_plot_EEG_channels(meanc1,cmin,cmax,chanloc,nbt_redwhite,unit);
+    
+    %---plot grand average condition 2 per channel(Actual Channels)
+    subplot(4,3,8)
+    calctext = text(1,1,'Calculating...');
+    nbt_plot_EEG_channels(meanc2,cmin,cmax,chanloc,nbt_redwhite,unit);
+
+    
+    %---plot grand average difference between conditions or difference between group means (Interpolated Plot)
+    subplot(4,3,10)
+    plot_interpolatedTopo(3)
+    freezeColors
+    cbfreeze
+    drawnow
+ 
+    %---plot P-values for the test (log scaled colorbar)
+    %minPValue = -2;% Plot log10(P-Values) to trick colour bar -
+    %maxPValue = -0.5;
+    % red white blue color scale
+    minPValue = log10(0.0005);
+    maxPValue = -log10(0.0005);
+    pLog = log10(p); % to make it log scaled
+    
+    if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'signrank')
+        pLog = sign(statistic(diffC2C1,2))'.*pLog;
+    else
+        pLog = sign(statistic(diffC2C1_2,2))'.*pLog;
+    end
+    pLog = -1*pLog;
+    pLog( pLog<minPValue) = minPValue;
+    pLog(pLog> maxPValue) = maxPValue;
+     
+    subplot(4,3,11)
+    plot_pTopo()
+    drawnow
+    cbfreeze
+    
+    
+    %   nbt_plot_EEG_channels(p,minPValue,maxPValue,chanloc,CoolWarm,'P-values');
+    
+    %     a=get(gca,'xlim');
+    %     b=get(gca,'ylim');
+    %     text(a(1),b(1)-(b(2)-b(1))/10,'P-values','horizontalalignment','right')
+    %--- plot condition 1 errorbars per channels
     n_cnl = size(c1,1);
+    subplot(4,3,6)
+    calctext = text(1,1,'Calculating...');
+    drawnow
     if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'ttest2')
         [h,p,C]=ttest(c1');
     else
         for i=1:size(c1,1)
-            C(:,i)=bootci(1000,@nanmedian,c1(i,:));
+            try
+                C(:,i)=bootci(1000,@nanmedian,c1(i,:));
+            catch
+            end
+            
         end
     end
-    diff=statistic(C);
-    subplot(4,3,6)
-    errorbar(1:n_cnl,diff,(C(2,:)-C(1,:))/2,'linestyle','none', ...
+    meanc1 = statistic(c1,2);
+    errorbar(1:n_cnl,meanc1,(C(2,:)-C(1,:))/2,'linestyle','none', ...
         'markeredgecolor','red','marker','none','markersize',10)
     hold on
-    plot(1:n_cnl,diff,'r.','Markersize',10)
-%     plot(1.2:n_cnl+0.2,c1','.k')
+    plot(1:n_cnl,meanc1,'r.','Markersize',10)
+    %     plot(1.2:n_cnl+0.2,c1','.k')
     ylim1=get(gca,'ylim');
     ylabel(unit)
     hold off
@@ -222,28 +189,34 @@ if isempty(regions)
     set(gca,'xlim',[0.5 n_cnl+0.5])
     set(gca,'fontsize',fontsize)
     drawnow
-%--- plot condition 1 errorbars per channels
+    %--- plot condition 2 errorbars per channels
+    subplot(4,3,9)
+    text(1,1, 'Calculating...')
+    drawnow
     if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'ttest2')
         [h,p,C]=ttest(c2');
     else
         for i=1:size(c2,1)
-            C(:,i)=bootci(1000,@nanmedian,c2(i,:));
+            try
+                C(:,i)=bootci(1000,@nanmedian,c2(i,:));
+            catch
+            end
         end
     end
-    diff=statistic(C);
-    subplot(4,3,9)
-    errorbar(1:n_cnl,diff,(C(2,:)-C(1,:))/2,'linestyle','none', ...
+    
+    meanc2 = statistic(c2,2);
+    errorbar(1:n_cnl,meanc2,(C(2,:)-C(1,:))/2,'linestyle','none', ...
         'markeredgecolor','red','marker','none','markersize',10)
     hold on
-    plot(1:n_cnl,diff,'r.','Markersize',10)
-%     plot(1.2:n_cnl+0.2,c2','.k')
+    plot(1:n_cnl,meanc2,'r.','Markersize',10)
+    %     plot(1.2:n_cnl+0.2,c2','.k')
     ylim2=get(gca,'ylim');
     hold off
     set(gca,'xtick',[])
     set(gca,'xlim',[0.5 n_cnl+0.5])
     set(gca,'fontsize',fontsize)
     ylabel(unit)
-%--- set axis equal for two conditions
+    %--- set axis equal for two conditions
     maxylim=max(ylim1(2),ylim2(2));
     minylim=max(ylim1(1),ylim2(1));
     set(gca,'ylim',[minylim,maxylim])
@@ -252,15 +225,18 @@ if isempty(regions)
     set(gca,'ylim',[minylim,maxylim])
     xlabel('Channels')
     drawnow
-%--- test for difference: condition 2 - condition 1, plot errorbars per
-%channels
+    %--- test for difference: condition 2 - condition 1, plot errorbars per
+    %channels
     C = Cdiff';
-    diff=statistic(C);
+    meanDiff = meanc2 - meanc1;
     subplot(4,3,12)
-    errorbar(1:n_cnl,diff,(C(2,:)-C(1,:))/2,'linestyle','none', ...
-        'markeredgecolor','red','marker','none','markersize',10)
+    try
+        errorbar(1:n_cnl,meanDiff,(C(2,:)-C(1,:))/2,'linestyle','none', ...
+            'markeredgecolor','red','marker','none','markersize',10)
+    catch
+    end
     hold on
-    plot(1:n_cnl,diff,'r.','Markersize',10)
+    plot(1:n_cnl,meanDiff,'r.','Markersize',10)
     ylim1=get(gca,'ylim');
     hold off
     set(gca,'xtick',[])
@@ -270,25 +246,24 @@ if isempty(regions)
     xlabel('Channels')
     ylabel(unit)
     drawnow
-%--- tiles and info
-%   Interpolated topoplot
+    %--- tiles and info
+    %   Interpolated topoplot
     y=0.1;
     subplot(4,3,1)
     text(0.5,y,'Interpolated topoplot','horizontalalignment','center')
     axis off
-%   Title
+    %   Title
     subplot(4,3,2)
-     textThis = sprintf('Statistics for difference in "%s" between %s (n = %i) and %s (n = %i) ',regexprep(biomarker,'_',' '),...
-       regexprep(condition2,'_',' '),size(c2,2),regexprep(condition1,'_',' '),size(c1,2));
+    textThis = sprintf('Statistics for difference in "%s" between %s (n = %i) and %s (n = %i) ',regexprep(biomarker,'_',' '),...
+        regexprep(condition2,'_',' '),size(c2,2),regexprep(condition1,'_',' '),size(c1,2));
     nbt_split_title([0.2 1],textThis,200,11);
-%     title(textThis,'fontweight','bold');
-%   Actual Channels    
+    %     title(textThis,'fontweight','bold');
+    %   Actual Channels
     text(0.5,y,'Actual channels','horizontalalignment','center')
     axis off
-%   Error Bar   
+    %   Error Bar
     subplot(4,3,3);text(0.5,y,['Errorbars and ',statfuncname,' per channels'],'horizontalalignment','center')
     axis off
-<<<<<<< HEAD
     %--- Zoom on statistics
     s.test = statfuncname;
     
@@ -305,31 +280,9 @@ else % when Regions are specified
     fig2=nbt_movegui(fig2);
     
     % ---for color scale in following plots
-=======
-%--- Zoom on statistics
-    s.test = statfuncname;    
-    if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'signrank')
-        nbt_plot_stat(diffC2C1,s,biomarker,condition2,condition1);
-    else
-        nbt_plot_stat(diffC2C1_2,s,biomarker,condition2,condition1);
-    end
-    
-else % when Regions are specified
-     fontsize = 10;
-     fig2 = figure('name',['NBT: Statistics (Regions) for ',regexprep(biomarker,'_',' ')],'NumberTitle','off',...
-         'position',[10          80       1500      500]); %128
-      set(fig2,'CreateFcn','movegui')
-        hgsave(fig2,'onscreenfig')
-        close(fig2)
-        fig2= hgload('onscreenfig');
-        currentFolder = pwd;
-        delete([currentFolder '/onscreenfig.fig']);
-
-% ---for color scale in following plots
->>>>>>> FETCH_HEAD
     vmax=max([meanc1,meanc2]);
     vmin=min([meanc1,meanc2]);
-    cmax = max(vmax); 
+    cmax = max(vmax);
     cmin = min(vmin);
     
     xa=-5;
@@ -338,24 +291,19 @@ else % when Regions are specified
     coolWarm = load('nbt_CoolWarm.mat','coolWarm');
     coolWarm = coolWarm.coolWarm;
     colormap(coolWarm);
-
     
-<<<<<<< HEAD
 
     
     %---plot grand average condition 1 per regions
-=======
-%---plot grand average condition 1 per regions
->>>>>>> FETCH_HEAD
     subplot(4,2,3)
-    chns_for_topo = nan(size(chanloc));    
+    chns_for_topo = nan(size(chanloc));
     for l = 1:length(regions)
-       region{l} = regexprep(regions(l).reg.name,'_',' ');
-       chans_reg{l} = regions(l).reg.channel_nr; 
-       chns_for_topo(regions(l).reg.channel_nr) = meanc1(l);
+        region{l} = regexprep(regions(l).reg.name,'_',' ');
+        chans_reg{l} = regions(l).reg.channel_nr;
+        chns_for_topo(regions(l).reg.channel_nr) = meanc1(l);
     end
     
-%     nbt_plot_EEG_channels(chns_for_topo,cmin,cmax,chanloc)
+    %     nbt_plot_EEG_channels(chns_for_topo,cmin,cmax,chanloc)
     standard = checkregions(chans_reg);
     if standard == 1
         nbt_plot_subregions(meanc1,1,cmin,cmax,chans_reg) % improve his function for more regions
@@ -369,26 +317,26 @@ else % when Regions are specified
     set(gca,'fontsize',fontsize)
     drawnow
     if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'signrank')
-        textThis = sprintf('Grand average for condition: %s',condition1);
+        textThis = sprintf('Grand average for condition: %s (n = %i)',condition1,size(c1,2));
     else
-        textThis = sprintf('Grand average for group %s',condition1);
+        textThis = sprintf('Grand average for group %s (n = %i)',condition1,size(c1,2));
     end
     nbt_split_text(xa,ya,textThis,maxline,fontsize);
     set(gca,'fontsize',fontsize)
-
     
-%---plot grand average condition 2 per regions
+    
+    %---plot grand average condition 2 per regions
     subplot(4,2,5)
     chns_for_topo = nan(size(chanloc));
     for l = 1:length(regions)
-       region{l} = regexprep(regions(l).reg.name,'_',' ');
-       chans_reg{l} = regions(l).reg.channel_nr; 
-       chns_for_topo(regions(l).reg.channel_nr) = meanc2(l);
+        region{l} = regexprep(regions(l).reg.name,'_',' ');
+        chans_reg{l} = regions(l).reg.channel_nr;
+        chns_for_topo(regions(l).reg.channel_nr) = meanc2(l);
     end
-%     nbt_plot_EEG_channels(chns_for_topo,cmin,cmax,chanloc)
+    %     nbt_plot_EEG_channels(chns_for_topo,cmin,cmax,chanloc)
     standard = checkregions(chans_reg);
     if standard == 1
-       nbt_plot_subregions(meanc2,1,cmin,cmax,chans_reg) % improve his function for more regions
+        nbt_plot_subregions(meanc2,1,cmin,cmax,chans_reg) % improve his function for more regions
     else
         nbt_plot_EEG_channels(chns_for_topo,cmin,cmax,chanloc)
     end
@@ -399,23 +347,23 @@ else % when Regions are specified
     set(gca,'fontsize',fontsize)
     drawnow
     if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'signrank')
-        textThis = sprintf('Grand average for condition: %s',condition2);
+        textThis = sprintf('Grand average for condition: %s (n = %i)',condition2,size(c2,2));
     else
-        textThis = sprintf('Grand average for group: %s',condition2);
+        textThis = sprintf('Grand average for group: %s (n = %i)',condition2,size(c2,2));
     end
     nbt_split_text(xa,ya,textThis,maxline,fontsize);
     set(gca,'fontsize',fontsize)
-%---- Plot P-values
+    %---- Plot P-values
     minPValue = -2;% Plot log10(P-Values) to trick colour bar
     maxPValue = -0.5;
     subplot(4,2,7)
     chns_for_topo = nan(size(chanloc));
     for l = 1:length(regions)
-       region{l} = regexprep(regions(l).reg.name,'_',' ');
-       chans_reg{l} = regions(l).reg.channel_nr; 
-       chns_for_topo(regions(l).reg.channel_nr) = p(l);
+        region{l} = regexprep(regions(l).reg.name,'_',' ');
+        chans_reg{l} = regions(l).reg.channel_nr;
+        chns_for_topo(regions(l).reg.channel_nr) = p(l);
     end
-%     nbt_plot_EEG_channels(log10(chns_for_topo),minPValue,maxPValue,chanloc);
+    %     nbt_plot_EEG_channels(log10(chns_for_topo),minPValue,maxPValue,chanloc);
     standard = checkregions(chans_reg);
     if standard == 1
         nbt_plot_subregions(log10(p),1,minPValue,maxPValue,chans_reg);
@@ -428,23 +376,23 @@ else % when Regions are specified
     set(cbh,'YTick',[-2 -1.3010 -1 0])
     set(cbh,'YTicklabel',[0.01 0.05 0.1 1]) %(log scale)
     set(get(cbh,'title'),'String','P-value');
-%     a=get(gca,'xlim');
-%     b=get(gca,'ylim');
-%     text(a(1),b(1)-(b(2)-b(1))/10,'P-values','horizontalalignment','right')
+    %     a=get(gca,'xlim');
+    %     b=get(gca,'ylim');
+    %     text(a(1),b(1)-(b(2)-b(1))/10,'P-values','horizontalalignment','right')
     set(gca,'fontsize',fontsize)
     drawnow
-%---text 
+    %---text
     subplot(4,2,7)
     if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'signrank')
         textThis = sprintf('Grand average for condition %s minus condition %s',condition2,condition1);
-    else   
+    else
         textThis = sprintf('Grand average for group %s minus group %s',condition2,condition1);
     end
     nbt_split_text(xa,ya,textThis,maxline,fontsize);
     axis off
     set(gca,'fontsize',fontsize)
     
-%--- plot condition 1 errorbars per regions
+    %--- plot condition 1 errorbars per regions
     n_cnl = size(c1,1);
     if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'ttest2')
         [h,p,C]=ttest(c1');
@@ -453,13 +401,13 @@ else % when Regions are specified
             C(:,i)=bootci(1000,@nanmedian,c1(i,:));
         end
     end
-    diff=statistic(C);
+    meanc1 = statistic(c1,2);
     subplot(4,2,4)
-    errorbar(1:n_cnl,diff,(C(2,:)-C(1,:))/2,'linestyle','none', ...
+    errorbar(1:n_cnl,meanc1,(C(2,:)-C(1,:))/2,'linestyle','none', ...
         'markeredgecolor','red','marker','none','markersize',10)
     hold on
-    plot(1:n_cnl,diff,'r.','Markersize',10)
-%     plot(1.2:n_cnl+0.2,c1','.k')
+    plot(1:n_cnl,meanc1,'r.','Markersize',10)
+    %     plot(1.2:n_cnl+0.2,c1','.k')
     ylim1=get(gca,'ylim');
     ylabel(unit)
     hold off
@@ -467,7 +415,7 @@ else % when Regions are specified
     set(gca,'xlim',[0.5 n_cnl+0.5])
     set(gca,'fontsize',fontsize)
     drawnow
-%--- plot condition 2 errorbars per regions
+    %--- plot condition 2 errorbars per regions
     if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'ttest2')
         [h,p,C]=ttest(c2');
     else
@@ -475,20 +423,21 @@ else % when Regions are specified
             C(:,i)=bootci(1000,@nanmedian,c2(i,:));
         end
     end
-    diff=statistic(C);
+    
+    meanc2 = statistic(c2,2);
     subplot(4,2,6)
-    errorbar(1:n_cnl,diff,(C(2,:)-C(1,:))/2,'linestyle','none', ...
+    errorbar(1:n_cnl,meanc2,(C(2,:)-C(1,:))/2,'linestyle','none', ...
         'markeredgecolor','red','marker','none','markersize',10)
     hold on
-    plot(1:n_cnl,diff,'r.','Markersize',10)
-%     plot(1.2:n_cnl+0.2,c2','.k')
+    plot(1:n_cnl,meanc2,'r.','Markersize',10)
+    %     plot(1.2:n_cnl+0.2,c2','.k')
     ylim2=get(gca,'ylim');
     hold off
     set(gca,'xtick',[])
     set(gca,'xlim',[0.5 n_cnl+0.5])
     set(gca,'fontsize',fontsize)
     ylabel(unit)
-%--- set axis equal for two conditions
+    %--- set axis equal for two conditions
     maxylim=max(ylim1(2),ylim2(2));
     minylim=max(ylim1(1),ylim2(1));
     set(gca,'ylim',[minylim,maxylim])
@@ -510,15 +459,15 @@ else % when Regions are specified
     
     drawnow
     
-%--- test for difference: condition 2 - condition 1, plot errorbars per
-%regions
+    %--- test for difference: condition 2 - condition 1, plot errorbars per
+    %regions
     C = Cdiff';
-    diff=statistic(C);
+    meanDiff = meanc2 - meanc1;
     subplot(4,2,8)
-    errorbar(1:n_cnl,diff,(C(2,:)-C(1,:))/2,'linestyle','none', ...
+    errorbar(1:n_cnl,meanDiff,(C(2,:)-C(1,:))/2,'linestyle','none', ...
         'markeredgecolor','red','marker','none','markersize',10)
     hold on
-    plot(1:n_cnl,diff,'r.','Markersize',10)
+    plot(1:n_cnl,meanDiff,'r.','Markersize',10)
     ylim1=get(gca,'ylim');
     hold off
     set(gca,'xtick',[])
@@ -534,22 +483,22 @@ else % when Regions are specified
     end
     
     drawnow
-%--- tiles and info
+    %--- tiles and info
     y=0.1;
     
-% Title
+    % Title
     subplot(4,2,1)
     textThis = sprintf('Statistics for difference in "%s" between %s (n = %i) and %s (n = %i) ',regexprep(biomarker,'_',' '),...
-       regexprep(condition2,'_',' '),size(c2,2),regexprep(condition1,'_',' '),size(c1,2));
-   nbt_split_title([1.2 1],textThis,200,11);
-%      title(textThis,'fontweight','bold');
-     subplot(4,2,1)
+        regexprep(condition2,'_',' '),size(c2,2),regexprep(condition1,'_',' '),size(c1,2));
+    nbt_split_title([1.2 1],textThis,200,11);
+    %      title(textThis,'fontweight','bold');
+    subplot(4,2,1)
     text(0.5,y,'Regions','horizontalalignment','center')
     axis off
-%error Bar
+    %error Bar
     subplot(4,2,2);text(0.5,y,['Errorbars and ',statfuncname,' per regions'],'horizontalalignment','center')
     axis off
-%--- Zoom on statistics
+    %--- Zoom on statistics
     s.test = statfuncname;
     if strcmp(char(statfunc),'ttest') || strcmp(char(statfunc),'signrank')
         nbt_plot_stat(diffC2C1,s,biomarker,condition2,condition1);
@@ -565,7 +514,6 @@ else % when Regions are specified
     xlabel('')
     
 end
-<<<<<<< HEAD
 %% Nested functions part
     function plot_interpolatedTopo(ConditionNr)
         if(ConditionNr ==3)
@@ -651,19 +599,23 @@ end
         close gcf
     end
 
-=======
->>>>>>> FETCH_HEAD
 %---- check if the selected regions are equal to the default regions for
 %129 EEG channels
-function standard = checkregions(chans_reg)
-
-    if chans_reg{1} == [1 2 3 4 8 9 10 14 15 16 17 18 19 21 22 23 24 25 26 27 32 33 122 123 124 125 126 127 128]
-        if chans_reg{2} == [28 34 35 38 39 40 41 43 44 45 46 47 48 49 50 51 56 57]
-            if chans_reg{3} == [5 6 7 11 12 13 20 29 30 31 36 37 42 54 55 79 80 87 93 104 105 106 111 112 118] 
-                if chans_reg{4} == [97 98 100 101 102 103 107 108 109 110 113 114 115 116 117 119 120 121] 
-                    if chans_reg{5} == [52 53 58 59 60 61 62 63 64 65 66 67 68 72 77 78 84 85 86 90 91 92 94 95 96 99] 
-                        if chans_reg{6} == [69 70 71 73 74 75 76 81 82 83 88 89]
-                            standard = 1;
+    function standard = checkregions(chans_reg)
+        if length(chans_reg) == 6
+            if chans_reg{1} == [1 2 3 4 8 9 10 14 15 16 17 18 19 21 22 23 24 25 26 27 32 33 122 123 124 125 126 127 128]
+                if chans_reg{2} == [28 34 35 38 39 40 41 43 44 45 46 47 48 49 50 51 56 57]
+                    if chans_reg{3} == [5 6 7 11 12 13 20 29 30 31 36 37 42 54 55 79 80 87 93 104 105 106 111 112 118]
+                        if chans_reg{4} == [97 98 100 101 102 103 107 108 109 110 113 114 115 116 117 119 120 121]
+                            if chans_reg{5} == [52 53 58 59 60 61 62 63 64 65 66 67 68 72 77 78 84 85 86 90 91 92 94 95 96 99]
+                                if chans_reg{6} == [69 70 71 73 74 75 76 81 82 83 88 89]
+                                    standard = 1;
+                                else
+                                    standard = 0;
+                                end
+                            else
+                                standard = 0;
+                            end
                         else
                             standard = 0;
                         end
@@ -679,9 +631,5 @@ function standard = checkregions(chans_reg)
         else
             standard = 0;
         end
-    else
-        standard = 0;
     end
-
-end
 end

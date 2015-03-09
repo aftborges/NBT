@@ -28,9 +28,10 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function alllocs = eeg_mergelocs(varargin)
+function [alllocs warn] = eeg_mergelocs(varargin)
 
 persistent warning_shown;
+warn = 0;
 
 % sort by length
 % --------------
@@ -48,6 +49,7 @@ for index = 2:length(varargin)
     
     if length(newlocs) > length(union({ alllocs.labels }, { tmplocs.labels }))
         
+        warn = 1;
         if isempty(warning_shown)
             disp('Warning: different channel montage order for the different datasets');
             warning_shown = 1;
@@ -61,9 +63,9 @@ for index = 2:length(varargin)
             tmplocs = tmp;
         end;
         allchans = { alllocs.labels tmplocs.labels };
-        [uniquechan ord1 ord2 ]  = unique( allchans );
+        [uniquechan ord1 ord2 ]  = unique_bc( allchans );
         
-        [tmp rminds] = intersect( uniquechan, { alllocs.labels });
+        [tmp rminds] = intersect_bc( uniquechan, { alllocs.labels });
         ord1(rminds) = [];
         tmplocsind = ord1-length(alllocs);
         
@@ -123,7 +125,14 @@ function loc3 = concatlocs(loc1, loc2);
     fields1 = fieldnames(loc1);
     fields2 = fieldnames(loc2);
     if isequal(fields1, fields2)
-        loc3 = [ loc1 loc2 ];
+        % the try, catch clause is necessary 
+        % below seems to be a Matlab bug
+        try, loc3 = [ loc1; loc2 ];
+        catch
+            try loc3 = [ loc1 loc2 ];
+            catch, loc3 = [ loc1(:)' loc2(:)' ];
+            end;
+        end;
     else
         loc3 = loc1;
         for index = 1:length(loc2)

@@ -52,7 +52,8 @@
 
 
 
-function [Data_filtered] = nbt_filter_fir(Data,hp,lp,fs,fir_order);
+function [Data_filtered] = nbt_filter_fir(Data,hp,lp,fs,fir_order,removeOffset);
+error(nargchk(5, 6, nargin))
 %
 % Modified klaus.linkenkaer@cncr.vu.nl, 070521.
 % Modified S. Poil, 12-Feb-2008, added warning for wrong filter order.
@@ -98,7 +99,15 @@ end
 %******************************************************************************************************************
 % Define filter characteristics:
 
+if hp == 0
+    % lowpass filter
+    fir_order = 2/lp;
+    b = fir1(floor(fir_order*fs),[lp]/(fs/2));
+else
+    
 b = fir1(floor(fir_order*fs),[hp lp]/(fs/2));
+end
+
 % [b,a] = butter(fir_order*fs/10,[hp lp]/(fs/2));
 
 %******************************************************************************************************************
@@ -107,5 +116,8 @@ b = fir1(floor(fir_order*fs),[hp lp]/(fs/2));
 Data_filtered = zeros(size(Data));
 for ii = 1:size(Data,2)
     Data_filtered(:,ii) = filter(b,1,Data(:,ii));
+end
+if(exist('removeOffset','var'))
+    Data_filtered = Data_filtered((fs*fir_order*hp*2):end,:);
 end
 end

@@ -5,7 +5,8 @@
 %                                              callingfunc, mode, verbose );
 % Input:
 %   varargin  - Cell array 'varargin' argument from a function call using 'key', 
-%               'value' argument pairs. See Matlab function 'varargin'
+%               'value' argument pairs. See Matlab function 'varargin'.
+%               May also be a structure such as struct(varargin{:})
 %   fieldlist - A 4-column cell array, one row per 'key'. The first
 %               column contains the key string, the second its type(s), 
 %               the third the accepted value range, and the fourth the 
@@ -89,21 +90,25 @@ function [g, varargnew] = finputcheck( vararg, fieldlist, callfunc, mode, verbos
 	% create structure
 	% ----------------
 	if ~isempty(vararg)
-		for index=1:length(vararg)
-			if iscell(vararg{index})
-				vararg{index} = {vararg{index}};
-			end;
-		end;
-		try
-			g = struct(vararg{:});
-		catch
-            vararg = removedup(vararg, verbose);
+        if isstruct(vararg)
+            g = vararg;
+        else
+            for index=1:length(vararg)
+                if iscell(vararg{index})
+                    vararg{index} = {vararg{index}};
+                end;
+            end;
             try
                 g = struct(vararg{:});
             catch
-                g = [ callfunc 'error: bad ''key'', ''val'' sequence' ]; return;
+                vararg = removedup(vararg, verbose);
+                try
+                    g = struct(vararg{:});
+                catch
+                    g = [ callfunc 'error: bad ''key'', ''val'' sequence' ]; return;
+                end;
             end;
-		end;
+        end;
 	else 
 		g = [];
 	end;
@@ -215,6 +220,10 @@ function g = fieldtest( fieldname, fieldtype, fieldval, tmpval, callfunc );
           g = [ callfunc 'error: argument ''' fieldname ''' must be a structure' ]; return;
       end;
       
+     case 'function_handle'
+      if ~isa(tmpval, 'function_handle')
+          g = [ callfunc 'error: argument ''' fieldname ''' must be a function handle' ]; return;
+      end;
       
      case '';
      otherwise, error([ 'finputcheck error: unrecognized type ''' fieldname '''' ]);
@@ -225,7 +234,7 @@ function g = fieldtest( fieldname, fieldtype, fieldval, tmpval, callfunc );
 function cella = removedup(cella, verbose)
 % make sure if all the values passed to unique() are strings, if not, exist
 %try
-    [tmp indices] = unique(cella(1:2:end));
+    [tmp indices] = unique_bc(cella(1:2:end));
     if length(tmp) ~= length(cella)/2
         myfprintf(verbose,'Note: duplicate ''key'', ''val'' parameter(s), keeping the last one(s)\n');
     end;

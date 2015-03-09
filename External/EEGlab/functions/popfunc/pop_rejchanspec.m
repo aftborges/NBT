@@ -1,17 +1,22 @@
-% pop_rejchanspec() - reject artifacts channels in an EEG dataset using joint 
-%                  probability of the recorded electrode.
+% pop_rejchanspec() - reject artifacts channels in an EEG dataset using 
+%                  channel spectrum. The average spectrum for all selected
+%                  is computed and a threshold is applied.
 %
 % Usage:
 %   >> pop_rejchanspec( INEEG ) % pop-up interative window mode
 %   >> [OUTEEG, indelec] = pop_rejchanspec( INEEG, 'key', 'val');
 %
 % Inputs:
-%   INEEG      - input dataset
+%   INEEG       - input EEGLAB dataset
 %
 % Optional inputs:
 %   'freqlims'  - [min max] frequency limits. May also be an array where
-%                 each row defines a different set of limits.
-%   'stdthresh' - [max] positive threshold in terms of standard deviation
+%                 each row defines a different set of limits. Default is 
+%                 35 to the Niquist frequency of the data.
+%   'stdthresh' - [max] positive threshold in terms of standard deviation.
+%                 Default is 5.
+%   'absthresh' - [max] positive threshold in terms of spectrum units
+%                 (overides the option above).
 %   'averef'    - ['on'|'off'] 'on' computes average reference before
 %                 applying threshold. Default is 'off'.
 %   'plothist'  - ['on'|'off'] 'on' plot the histogram of values along 
@@ -19,15 +24,22 @@
 %   'plotchans'  - ['on'|'off'] 'on' plot the channels scrollplot with
 %                 selected channels for rejection in red. Allow selected
 %                 channels rejection with the 'REJECT' button.
-%   'elec'      - [integer array] only include specific channels.
+%   'elec'      - [integer array] only include specific channels. Default
+%                 is to use all channels.
+%   'specdata'  - [fload array] use this array containing the precomputed 
+%                 spectrum instead of computing the spectrum. Default is
+%                 empty.
+%   'specfreqs' - [fload array] frequency array for precomputed spectrum
+%                 above.
+%   'verbose'   - ['on'|'off'] display information. Default is 'off'.
 %
 % Outputs:
 %   OUTEEG    - output dataset with updated joint probability array
 %   indelec   - indices of rejected electrodes
+%   specdata  - data spectrum for the selected channels
+%   specfreqs - frequency array for spectrum above
 %
 % Author: Arnaud Delorme, CERCO, UPS/CNRS, 2008-
-%
-% See also: jointprob(), rejkurt()
 
 % Copyright (C) 2008 Arnaud Delorme, CERCO, UPS/CNRS
 %
@@ -45,13 +57,16 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [EEG allrmchan com] = pop_rejchanspec(EEG, varargin)
+function [EEG allrmchan specdata specfreqs com] = pop_rejchanspec(EEG, varargin)
 
 if nargin < 1
     help pop_rejchanspec;
     return;
 end;
-    
+allrmchan = [];
+specdata  = [];
+specfreqs = [];
+com       = '';
 if nargin < 2
     uilist = { { 'style' 'text' 'string' 'Electrode (number(s); Ex: 2 4 5)' } ...
                { 'style' 'edit' 'string' ['1:' int2str(EEG.nbchan)] } ...
@@ -97,11 +112,14 @@ end;
 
 % decode options
 % --------------
-opt = finputcheck( options, { 'averef'    'string'    { 'on' 'off' }       'off';
-                              'plothist'  'string'    { 'on' 'off' }       'off';
-                              'plotchans'  'string'    { 'on' 'off' }       'off';
+opt = finputcheck( options, { 'averef'    'string'    { 'on';'off' }       'off';
+                              'plothist'  'string'    { 'on';'off' }       'off';
+                              'plotchans' 'string'    { 'on';'off' }       'off';
+                              'verbose'   'string'    { 'on';'off' }       'off';
                               'elec'      'integer'   []                   [1:EEG.nbchan];
                               'freqlims'  'real'   []                      [35 EEG.srate/2];
+                              'specdata'  'real'   []                      [];
+                              'specfreqs' 'real'   []                      [];
                               'absthresh' 'real'   []                      [];
                               'stdthresh' 'real'   []                      5 }, 'pop_rejchanspec');
 if isstr(opt), error(opt); end;
@@ -111,9 +129,23 @@ if strcmpi(opt.averef, 'on')
      NEWEEG = pop_reref(EEG, [], 'exclude', setdiff([1:EEG.nbchan], opt.elec));
 else NEWEEG = EEG;
 end;
-[tmpspec freqs] = pop_spectopo(NEWEEG, 1, [], 'EEG' , 'percent', 100, 'freqrange',[0 EEG.srate/2], 'plot', 'off');
+if isempty(opt.specdata)
+    [tmpspecdata specfreqs] = pop_spectopo(NEWEEG, 1, [], 'EEG' , 'percent', 100, 'freqrange',[0 EEG.srate/2], 'plot', 'off');
+    % add back 0 channels
+    devStd = std(EEG.data(:,:), [], 2);
+    if any(devStd == 0)
+        goodchan  = find(devStd ~= 0);
+        specdata  = zeros(length(opt.elec), size(tmpspecdata,2));
+        specdata(goodchan,:) = tmpspecdata;
+    else
+        specdata = tmpspecdata;
+    end;
+else
+    specdata  = opt.specdata;
+    specfreqs = opt.specfreqs;
+end;
 
-if length(opt.stdthresh) >= 1 && size(opt.freqlims,1) > 1
+if size(opt.stdthresh,1) == 1 && size(opt.freqlims,1) > 1
     opt.stdthresh = ones(length(opt.stdthresh), size(opt.freqlims,1))*opt.stdthresh;  
 end;
 
@@ -121,9 +153,9 @@ allrmchan = [];
 for index = 1:size(opt.freqlims,1)
     % select frequencies, compute median and std then reject channels
     % ---------------------------------------------------------------
-    [tmp fbeg] = min(abs(freqs - opt.freqlims(index,1)));
-    [tmp fend] = min(abs(freqs - opt.freqlims(index,2)));
-    selectedspec = mean(tmpspec(opt.elec, fbeg:fend), 2);
+    [tmp fbeg] = min(abs(specfreqs - opt.freqlims(index,1)));
+    [tmp fend] = min(abs(specfreqs - opt.freqlims(index,2)));
+    selectedspec = mean(specdata(opt.elec, fbeg:fend), 2);
     if ~isempty(opt.absthresh)
         rmchan = find(selectedspec <= opt.absthresh(1) | selectedspec >= opt.absthresh(2));
     else
@@ -144,10 +176,12 @@ for index = 1:size(opt.freqlims,1)
     else textout = sprintf('Range %2.1f-%2.1f Hz: channels %s removed\n', opt.freqlims(index,1), opt.freqlims(index,2), int2str(opt.elec(rmchan')));
     end;
     fprintf(textout);
-    for inde = 1:length(opt.elec)
-        if ismember(inde, rmchan)
-             fprintf('Elec %s power: %1.2f *\n', EEG.chanlocs(opt.elec(inde)).labels, selectedspec(inde));
-        else fprintf('Elec %s power: %1.2f\n', EEG.chanlocs(opt.elec(inde)).labels  , selectedspec(inde));
+    if strcmpi(opt.verbose, 'on')
+        for inde = 1:length(opt.elec)
+            if ismember(inde, rmchan)
+                 fprintf('Elec %s power: %1.2f *\n', EEG.chanlocs(opt.elec(inde)).labels, selectedspec(inde));
+            else fprintf('Elec %s power: %1.2f\n', EEG.chanlocs(opt.elec(inde)).labels  , selectedspec(inde));
+            end;
         end;
     end;
     allrmchan = [ allrmchan rmchan' ];    
@@ -176,7 +210,7 @@ for index = 1:size(opt.freqlims,1)
     end;
     
 end;
-allrmchan = unique(allrmchan);
+allrmchan = unique_bc(allrmchan);
 
 com = sprintf('EEG = pop_rejchan(EEG, %s);', vararg2str(options));
 if strcmpi(opt.plotchans, 'on')   

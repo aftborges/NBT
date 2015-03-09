@@ -54,11 +54,11 @@ function nbt_set_name(Signal,SignalInfo)
 hh = findobj('Tag','NBT');
 
 if isempty(Signal)
-    mm = uicontrol('parent', hh, 'style','text','string','No Signal loaded','position',[0   10   700   70]);
+    mm = uicontrol('parent', hh, 'style','text','string','No Signal loaded','position',[0   10   800   70]);
 else
     mm = uicontrol('parent', hh, 'style','text','string',[{['Current Signal: ' SignalInfo.SignalName '@'  SignalInfo.file_name]},{['# channels: ' ...
         num2str(size(Signal,2))]},{['# samples: ', num2str(size(Signal,1))]},{['Sample frequency: ', num2str(SignalInfo.converted_sample_frequency),' Hz']}, ...
-        {['Total length in minutes: ', num2str(size(Signal,1)/(SignalInfo.converted_sample_frequency*60))]}], 'position',[0   10   650   70]);
+        {['Total length in minutes: ', num2str(size(Signal,1)/(SignalInfo.converted_sample_frequency*60))]}], 'position',[0   10   800   70]);
 
     %% no callback????:
     %     uicontrol(hh,'Style','popupmenu',...

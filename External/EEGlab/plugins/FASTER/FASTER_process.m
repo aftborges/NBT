@@ -145,7 +145,7 @@ try
     EEG = eeg_checkset(EEG);
 
     % Check if channel locations exist, and if not load them from disk.
-    if (~isfield(EEG.chanlocs,'X') || ~isfield(EEG.chanlocs,'Y') || ~isfield(EEG.chanlocs,'Z') || isempty(EEG.chanlocs))
+    if (~isfield(EEG.chanlocs,'X') || ~isfield(EEG.chanlocs,'Y') || ~isfield(EEG.chanlocs,'Z') || isempty(EEG.chanlocs)) || isempty([EEG.chanlocs(:).X]) || isempty([EEG.chanlocs(:).Y]) || isempty([EEG.chanlocs(:).Z])
         EEG = pop_chanedit(EEG, 'load', {channel_locations_file});
         EEG.saved='no';
         fprintf(log_file,'%.2f - Loaded channel locations file from %s.\n',toc,channel_locations_file);

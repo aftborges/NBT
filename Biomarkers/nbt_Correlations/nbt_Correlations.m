@@ -17,9 +17,10 @@ classdef nbt_Correlations < nbt_Biomarker  % define here the name of the new obj
             BiomarkerObject.Between_Channels = Between_Channels;
             BiomarkerObject.Between_Channels_P_values=Between_Channels_P_values;
             
-            for i =1:size(Between_Channels,1)
-            BiomarkerObject.Biomarkers{i} =strcat('Between_Channels(',num2str(i),',:)');
-            end
+%             for i =1:size(Between_Channels,1)
+%             BiomarkerObject.Biomarkers{i} =strcat('Between_Channels(',num2str(i),',:)');
+%             end
+BiomarkerObject.Biomarkers = {'Between_Channels'};
         end
     end
     

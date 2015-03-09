@@ -63,17 +63,24 @@ filename = correctfile(fullfile( ALLEEG(abset).filepath,[ ALLEEG(abset).filename
 tmpfile  = which(filename);
 if ~isempty(tmpfile), filename = tmpfile; end;
 
-while getfield(dir(filename), 'bytes') < 1000
+% 061411, 2:51pm
+% Modified by Joaquin
+% while getfield(dir(filename), 'bytes') < 1000
+i = 1;
+while getfield(dir(filename), 'bytes') < 1500
     topo = load( '-mat', filename);
-    filename = correctfile(topo.file);
+    filename = correctfile(topo.file, ALLEEG(abset).filepath);
     tmpfile  = which(filename);
     if ~isempty(tmpfile), filename = tmpfile; end;
+    if(i>100) 
+        error('too many attempts to find valid icatopo');
+    end
+    i = i+1;
 end;
 
 for k = 1:length(comps)
 
     if length(comps) < 3
-        warning off;
         try
             topo = load( '-mat', filename, ...
                          [ 'comp' int2str(comps(k)) '_grid'], ...
@@ -82,17 +89,20 @@ for k = 1:length(comps)
         catch
             error( [ 'Cannot read file ''' filename '''' ]);
         end;
-        warning on;
     elseif k == 1
         try
             topo = load( '-mat', filename);
         catch
-            error( [ 'Cannot read file ''' filename '''' ]);
+            error([ 'Missing scalp topography file - also necessary for ERP polarity' 10 'Try recomputing scalp topographies for components' ]);
         end;
     end;
     
-    tmp =  getfield(topo, [ 'comp' int2str(comps(k)) '_grid' ]);
-    
+    try,
+        tmp =  getfield(topo, [ 'comp' int2str(comps(k)) '_grid' ]);
+    catch,
+        error([ 'Empty scalp topography file - also necessary for ERP polarity' 10 'Try recomputing scalp topographies for components' ]);
+    end;
+        
     if strcmpi(option, 'gradient')
         [tmpx, tmpy]  = gradient(tmp); % Gradient
         tmp        = tmpx;
@@ -117,7 +127,7 @@ X = squeeze(X);
 
 return;
 
-function filename = correctfile(filename)
+function filename = correctfile(filename, datasetpath)
     comp = computer;
     if filename(2) == ':' & ~strcmpi(comp(1:2), 'PC') 
         filename = [filesep filename(4:end) ];
@@ -133,7 +143,10 @@ function filename = correctfile(filename)
             if exist(fullfile(tmpp1, [ tmpf ext ]))
                 filename = fullfile(tmpp1, [ tmpf ext ]);
             else
-                error([ 'Cannot load file ''' [ tmpf ext ] '''' ]);
+                filename = fullfile(datasetpath, [ tmpf ext ]);
+                if ~exist(filename)
+                    error([ 'Cannot load file ''' [ tmpf ext ] '''' ]);
+                end;
             end;
         end;
     end;        

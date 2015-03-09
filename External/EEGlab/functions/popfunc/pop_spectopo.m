@@ -119,7 +119,10 @@ end;
 chanlocs_present = 0;
 if ~isempty(EEG.chanlocs)
     if isfield(EEG.chanlocs, 'theta')
-        chanlocs_present = 1;
+        tmpchanlocs = EEG.chanlocs;
+        if any(~cellfun(@isempty, { tmpchanlocs.theta }))
+            chanlocs_present = 1;
+        end;
     end;
 end;
 
@@ -226,7 +229,9 @@ else
 		topofreqs = [];
 	end;
 end;
-try, icadefs; set(gcf, 'color', BACKCOLOR); catch, end;
+
+% set the background color of the figure
+try, tmpopt = struct(varargin{:}); if ~isfield(tmpopt, 'plot') || strcmpi(tmpopt, 'on'), icadefs; set(gcf, 'color', BACKCOLOR); end; catch, end;
 
 switch processflag,
  case {'EEG' 'eeg' 'ERP' 'erp' 'BOTH' 'both'},;

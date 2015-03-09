@@ -70,14 +70,15 @@
 
 function [index1nm,index2nm, index3nm] = nbt_n_m_detection(phase1,phase2,n,m)
 
-RP = n*phase1-m*phase2;
+RP = n*unwrap(phase1)-m*unwrap(phase2);
 %--- 
 % distribution of the cyclic relative phase
-CRP = mod(RP,2*pi);
+CRP = (rem(RP,2*pi));
 Nbins = round(exp(0.626+0.4*log(length(RP)-1)));
 range = linspace(-pi,pi,Nbins);
 dCRP = hist(CRP,range);
 dCRP = dCRP/length(CRP);
+close all
 % figure
 % bar(range,dCRP)
 % axis tight
@@ -86,7 +87,7 @@ dCRP = dCRP/length(CRP);
     
 %% 1. Index1: n:m synchronization index based on the Shannon entropy
 
-S = -nansum(dCRP.*log2(dCRP)); % entropy of the distribution of the cyclic relative phase
+S = -nansum(dCRP.*log(dCRP)); % entropy of the distribution of the cyclic relative phase
 Smax = log(length(dCRP));
 index1nm = (Smax-S)/Smax;
 % 0<=Index1nm<=1
@@ -95,11 +96,12 @@ index1nm = (Smax-S)/Smax;
 %% 2. Index2: based on the conditional probability
 Nint = 10;
 int_m = linspace(0,2*pi*m,Nint);
+mod_phase1 = mod(phase1,2*pi*m);
 for j = 1:Nint-1
         int1 = int_m(j);
         int2 = int_m(j+1);
 
-        [theta index] = find(mod(phase1,2*pi*m)<=int2 & mod(phase1,2*pi*m)>=int1);
+        [theta index] = find(mod_phase1 <= int2 & mod_phase1 >= int1);
         M = length(theta);
         ni = mod(phase2(index),2*pi*n);
         sum(exp(i*ni/n))/M;

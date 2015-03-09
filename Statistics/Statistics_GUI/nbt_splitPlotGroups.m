@@ -1,7 +1,6 @@
 function nbt_splitPlotGroups(d1,d2,ListSplit,ListSplitValue,ListBiom1, ListBiom2, ListRegion, ListGroup,G)
-
-global rsq %set in nbt_compareBiomarkers
-
+global Factors
+global Questionnaire
 splt = get(ListSplit,'Value');
 spltVal = str2num(get(ListSplitValue,'String'));
 
@@ -80,13 +79,13 @@ elseif length(group_ind) == 2
         end
     end
     
-    B_values1 = B1_values1-B2_values1;% rsq
+    B_values1 = B1_values1-B2_values1;% questionnaire
     B_values2 = B1_values2-B2_values2;%i.e. amplitude
     
 end
 
 if strcmp(regs_or_chans_name,'Regions')
-    if strcmp(bioms_name1,'rsq.Answers') == 0
+    if isempty(strfind(bioms_name1,'.Answers'))
         regions = G(group_ind(1)).chansregs.listregdata;
         for j = 1:size(B_values1,2) % subject
             
@@ -96,7 +95,7 @@ if strcmp(regs_or_chans_name,'Regions')
         clear B_values1;
         B_values1 = B_gebruik1;
     end
-    if strcmp(bioms_name2,'rsq.Answers') == 0
+    if isempty(strfind(bioms_name2,'.Answers'))
         regions = G(group_ind(1)).chansregs.listregdata;
         for j = 1:size(B_values2,2) % subject
             B2 = B_values2(:,j);
@@ -124,10 +123,14 @@ for k = 1:noFigs
       
         plot(sort(vals(i,:)),1/noSubj:1/noSubj:1);
         
-        if strcmp(nm,'rsq.Answers') == 1
-            
-            if (length(rsq.Questions{i}) > 20)
-                bs = rsq.Questions{i};
+        if ~isempty(strfind(nm,'.Answers'))
+            if cellfun(@isempty,(strfind(nm,'Factors')))
+                varQuest = Questionnaire;
+            else
+                varQuest = Factors;
+            end
+            if (length(varQuest.Questions{i}) > 20)
+                bs = varQuest.Questions{i};
                 [ab, cd] = strtok(bs(15:end));
                 ad = length(ab);
                 
@@ -137,12 +140,12 @@ for k = 1:noFigs
                     title({[num2str(i) '. ' bs(1:14 + ad)], cd},'FontWeight','Bold');
                 end
             else
-                title([num2str(i) '. ' rsq.Questions{i}],'FontWeight','Bold');
+                title([num2str(i) '. ' varQuest.Questions{i}],'FontWeight','Bold');
             end
             if length(group_ind) ==1
-                xlabel('RSQ score');
+                xlabel([strtok(nm,'.') ' score']);
             else
-                xlabel('Change in RSQ score');
+                xlabel(['Change in ' strtok(nm,'.') ' score']);
             end
             ylabel('CDF');
             
