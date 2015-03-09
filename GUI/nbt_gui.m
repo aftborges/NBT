@@ -64,9 +64,9 @@ try
 catch
 end
 if(isempty(varargin))
-<<<<<<< HEAD
+
     NBT_version = nbt_GetVersion;
-=======
+
     %% get NBT version THIS TAKES LOTS OF TIME!!!!
     %     try
     %         [m,s] =system('bzr revno');
@@ -97,7 +97,7 @@ if(isempty(varargin))
     catch
         NBT_version= 'NBT';
     end
->>>>>>> FETCH_HEAD
+
     
     %% Make menu
     %'Position',[200 400 500 0.5]
@@ -106,12 +106,11 @@ if(isempty(varargin))
     NBTMenu = figure('Units','pixels', 'name',NBT_version,'numbertitle','off', 'Userdata', {[] []},'Tag','NBT','DockControls','off','Position',[390.0000  456.7500 700  88.5000], ...
         'MenuBar','none','NextPlot','new','Resize','off');
    
-<<<<<<< HEAD
+
    %make sure the GUI is onscreen
      NBTMenu=nbt_movegui(NBTMenu);
 
-=======
->>>>>>> FETCH_HEAD
+
         try
             nbt_set_name(evalin('base','Signal'),evalin('base','SignalInfo'));
         catch
@@ -152,7 +151,7 @@ if (standalone)
     %uimenu(PreProc,'label', 'Find & add bad channel to Info.BadChannels','callback',['[Signal,SignalInfo] = nbt_EEGLABwrp(@nbt_FindBadChannels, Signal, SignalInfo, SignalPath,0);']);
    ICAsub = uimenu(PreProc, 'label', '&ICA');
     uimenu(ICAsub,'label', 'Run ICA on good channels only','callback',['[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_filterbeforeICA, Signal, SignalInfo, SignalPath,0, ''EEG.data = nbt_filter_firHp(EEG.data,0.5,EEG.srate,4);'',4);[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_rejectICAcomp, Signal, SignalInfo, SignalPath, 0,''EEG.data = nbt_filter_firHp(EEG.data,0.5,EEG.srate,4);'',4,1);']);
-<<<<<<< HEAD
+
     uimenu(ICAsub,'label', 'Filter ICA components', 'callback',['[Signal, SignalInfo] = nbt_EEGLABwrp(@nbt_rejectICAcomp, Signal, SignalInfo, SignalPath, 0,''EEG.data = nbt_filter_firHp(EEG.data,0.5,EEG.srate,4);'',4,1);'],'Tag','NBTICAfilter');
     VisICAsub = uimenu(ICAsub, 'label', '&Visualize ICA');
     uimenu(VisICAsub, 'label', 'Plot component activations', 'callback', '[Signal, SignalInfo]=nbt_EEGLABwrp2(@pop_eegplot, Signal, SignalInfo, SignalPath,0, 0, 1, 1);')
@@ -166,7 +165,7 @@ if (standalone)
     AutoCleanMenuSetup = uimenu(AutoCleanMenuSub,'label','Setup');
     uimenu(AutoCleanMenuSetup,'label', 'Set Eye Channels','callback','nbt_setEyeCh');
     uimenu(AutoCleanMenuSetup,'label', 'Set Non-EEG Channel', 'callback', 'nbt_setNonEEGCh');
-=======
+
     uimenu(ICAsub,'label', 'Filter ICA components', 'callback',['[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_rejectICAcomp, Signal, SignalInfo, SignalPath, 0,''EEG.data = nbt_filter_firHp(EEG.data,0.5,EEG.srate,4);'',4,1);'],'Tag','NBTICAfilter');
     VisICAsub = uimenu(ICAsub, 'label', '&Visualize ICA');
     uimenu(VisICAsub, 'label', 'Plot component activations', 'callback', '[Signal, SignalInfo]=nbt_EEGLABwrp2(@pop_eegplot, Signal, SignalInfo, SignalPath,0, 0, 1, 1);')
@@ -177,7 +176,7 @@ if (standalone)
    uimenu(ICAsub,'label', 'Reject filtered ICA components','callback',['[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_rejectICAcomp,Signal,SignalInfo,SignalPath,0,[],[],2);'],'Enable','off','Tag','NBTICAreject');
    uimenu(PreProc,'label', 'Re-reference to average reference (exclude bad channels)','callback', ['[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_AverageReference, Signal, SignalInfo, SignalPath,0);']);
     
->>>>>>> FETCH_HEAD
+
     
     CompBio = uimenu(NBTMenu, 'label', ' &Compute biomarkers ');
     perSignal = uimenu(CompBio, 'label', ' &For current NBT Signal');
