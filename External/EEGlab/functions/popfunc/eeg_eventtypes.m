@@ -1,21 +1,13 @@
 % eeg_eventtypes()  - return a list of event or urevent types in a dataset and 
 %                     the respective number of events of each type. Ouput event 
-%                     types are sorted in reverse order of their number. If no 
-%                     outputs, print this list on the commandline instead.
+%                     or urevent types are sorted in reverse order of their number.
+%                     If no outputs, print this list on the commandline instead.
+%
+% WARNING: this function returns the wrong frequency of events (see bug 519)
+%          this is a deprecated function.
 %
 % Usage:
 %        >> [types,numbers] = eeg_eventtypes(EEG);
-% Inputs:
-%        EEG        - EEGLAB dataset structure
-% Outputs:
-%        types      - cell array of event type strings
-%        numbers    - vector giving the numbers of each event type in the data
-%
-% Example:
-%           >> eeg_eventtypes(EEG);       % print numner of each event types
-%
-% Author: Scott Makeig, SCCN/INC/UCSD, April 28, 2004-
-
 %        >> [types,numbers] = eeg_eventtypes(EEG,types);
 %        >> [types,numbers] = eeg_eventtypes(EEG,'urevents',types);
 % Inputs:
@@ -29,15 +21,15 @@
 % Note:  Numeric (ur)event types are converted to strings, so, for example, 
 %        types {13} and {'13'} are not distinguished.
 %
-% Example:
-%           >> eeg_eventtypes(EEG);       % print numner of each event types
-%
-% Curently disabled:
+% Examples:
+%           >> eeg_eventtypes(EEG);       % print histogram of event types
 %           >> eeg_eventtypes(EEG,'urevent');  % print hist. of urevent types
 %           >> eeg_eventtypes(EEG,{'rt'});% print number of 'rt' events 
 %           >> eeg_eventtypes(EEG,'urevent',{'rt','break'}); 
 %                                         % print numbers of 'rt' and 'break' 
 %                                         % type urevents 
+%
+% Author: Scott Makeig, SCCN/INC/UCSD, April 28, 2004-
 
 % Copyright (C) 2004 Scott Makeig, SCCN/INC/UCSD, smakeig@ucsd.edu
 %
@@ -72,9 +64,6 @@ end
 if ~isfield(EEG,'event')
    error('EEG.event field not found');
 end
-if nargin > 1
-    error('Multiple input arguments are currently disabled');
-end;
 
 UREVENTS = 0; % flag returning infor for urevents instead of events
 typelist = [];
@@ -124,13 +113,13 @@ else
    end
 end
 
-[types i j] = unique_bc(alltypes);
+[types i j] = unique(alltypes);
 
 istypes = 1:length(types);
 notistypes = [];
 if ~isempty(typelist)
-  notistypes = ismember_bc(typelist,types);
-  istypes = ismember_bc(types,typelist(find(notistypes==1))); % types in typelist?
+  notistypes = ismember(typelist,types);
+  istypes = ismember(types,typelist(find(notistypes==1))); % types in typelist?
   notistypes = typelist(find(notistypes==0));
 end
 

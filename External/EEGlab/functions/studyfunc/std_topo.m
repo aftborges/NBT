@@ -66,7 +66,7 @@ if nargin < 3
     option = 'none';
 end;
 
-g = finputcheck( varargin, { 'recompute'   'string'   { 'on','off' }   'off' }, 'std_topo');
+g = finputcheck( varargin, { 'recompute'   'string'   { 'on' 'off' }   'off' }, 'std_topo');
 if isstr(g), error(g); end;
 
 % figure; toporeplot(grid,'style', 'both','plotrad', 0.5, 'intrad', 0.5, 'xsurface' ,Xi, 'ysurface',Yi );
@@ -100,11 +100,7 @@ for k = 1:numc
 
     % compute topo map grid (topoimage)
     % ---------------------------------
-    chanlocs = EEG.chanlocs(EEG.icachansind);
-    if isempty( [ chanlocs.theta ] )
-        error('Channel locations are required for computing scalp topographies');
-    end;
-    [hfig grid plotrad Xi Yi] = topoplot( EEG.icawinv(:,k), chanlocs, ...
+    [hfig grid plotrad Xi Yi] = topoplot( EEG.icawinv(:,k), EEG.chanlocs(EEG.icachansind), ...
                                           'verbose', 'off',...
                                            'electrodes', 'on' ,'style','both',...
                                            'plotrad',0.55,'intrad',0.55,...

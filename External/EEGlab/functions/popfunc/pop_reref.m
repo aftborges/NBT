@@ -27,9 +27,9 @@
 %   ref         - reference: []            = convert to average reference
 %                            [int vector]  = new reference electrode number(s)
 % Optional inputs:
-%   'exclude'   - [integer array] List of channels to exclude. Default: none.
-%   'keepref'   - ['on'|'off'] keep the reference channel. Default: 'off'.
-%   'refloc'    - [structure] Previous reference channel structure. Default: none.
+%   'exclude'   - [integer array] List of channels to exclude.
+%   'keepref'   - ['on'|'off'] keep the reference channel.
+%   'refloc'    - [structure] Previous reference channel structure.
 %
 % Outputs:
 %   EEGOUT      - re-referenced output dataset
@@ -70,8 +70,6 @@ end;
 
 % gui inputs
 % ----------
-orichanlocs = EEG.chanlocs;
-orinbchan   = EEG.nbchan;
 if nargin < 2
     
     % find initial reference
@@ -102,7 +100,7 @@ if nargin < 2
                     'elseif isempty(EEG(1).chaninfo.nodatchans),' ...
                     '   warndlg2(''There are no Reference channel defined, add it using the channel location editor'');' ...
                     'else,' ...
-                    '   tmpchaninfo = EEG(1).chaninfo; [tmp tmpval] = pop_chansel({tmpchaninfo.nodatchans.labels}, ''withindex'', ''on''); set(findobj(gcbf, ''tag'', ''refloc''  ), ''string'',tmpval); clear tmpchanlocs tmp tmpval;' ...
+                    '   tmpchanlocs = EEG(1).chanlocs; [tmp tmpval] = pop_chansel({tmpchaninfo.nodatchans.labels}, ''withindex'', ''on''); set(findobj(gcbf, ''tag'', ''refloc''  ), ''string'',tmpval); clear tmpchanlocs tmp tmpval;' ...
                     'end;' ];
     if isempty(EEG.chanlocs), cb_chansel1 = ''; cb_chansel2 = ''; cb_chansel3 = ''; end;
     
@@ -110,9 +108,9 @@ if nargin < 2
     % ----------------------------------------------
     if isfield(EEG(1).chanlocs, 'ref')
         tmpchanlocs = EEG(1).chanlocs;
-        [curref tmp allinds] = unique_bc( { tmpchanlocs.ref });
+        [curref tmp allinds] = unique( { tmpchanlocs.ref });
         maxind = 1;
-        for ind = unique_bc(allinds)
+        for ind = unique(allinds)
             if length(find(allinds == ind)) > length(find(allinds == maxind))
                 maxind = ind;
             end;
@@ -246,36 +244,40 @@ if ~isempty(EEG.icaweights)
         EEG.icasphere  = [];
     else
         fprintf('Re-referencing ICA matrix\n');
-        if isempty(orichanlocs)
-            error('Cannot re-reference ICA decomposition without channel locations')
+        EEG.icawinv = reref(EEG.icawinv, ref, optionscall{:});
+        
+        % get output channel indices
+        % --------------------------
+        chansout = 1:nchans;
+        if ~isempty(ref) & strcmpi(g.keepref,'off')
+            ref = sort(ref);
+            for ind = length(ref):-1:1
+                chansout(ref(ind)+1:end) = chansout(ref(ind)+1:end)-1;
+                chansout(ref(ind)) = [];
+            end;
         end;
         
-        newICAchaninds = zeros(orinbchan, size(EEG.icawinv,2));
-        newICAchaninds(EEG.icachansind,:) = EEG.icawinv;
-        
-        [newICAchaninds newchanlocs] = reref(newICAchaninds, ref, optionscall{:});
-        
-        % convert channel indices in icachanlocs (uses channel labels)
-        % ------------------------------------------------------------
+        % convert channel indices in icachanlocs
+        % --------------------------------------
         icachansind = EEG.icachansind;
-        rminds      = [1:size(newICAchaninds,1)];
         for i=length(icachansind):-1:1
-            oldLabel    = orichanlocs(icachansind(i)).labels;
-            newLabelPos = strmatch(oldLabel, { newchanlocs.labels }, 'exact');
-            
-            if ~isempty( newLabelPos )
-                icachansind(i) = newLabelPos;
-                rminds(find(icachansind(i) == rminds)) = [];
+            indchan = find( icachansind(i) == chansout );
+            if ~isempty( indchan )
+                icachansind(i) = indchan;
             else
                 icachansind(i) = [];
             end;
         end;
-        newICAchaninds(rminds,:) = [];
-        EEG.icawinv = newICAchaninds;
+        
+        % add new channel if necessary
+        if ~isempty(g.refloc)
+            icachansind = [ icachansind [1:length(g.refloc)]+size(EEG.data,1)-1 ];
+        end;
         
         EEG.icachansind = icachansind;
         if length(EEG.icachansind) ~= size(EEG.icawinv,1)
             warning('Wrong channel indices, removing ICA decomposition');
+            dsafdsf
             EEG.icaweights = [];
             EEG.icasphere  = [];
         else

@@ -41,7 +41,7 @@ if(state==1)
     disp('Done')
 elseif(state ==2)
     EEG.data = EEG.NBTEEGtmp;
-    EEG = rmfield(EEG,'NBTEEGtmp');
+    EEG.NBTEEGtmp = [];
     EEG.pnts = size(EEG.data,2);
     EEG.icaact = [];
     EEG.icawinv = [];
@@ -52,5 +52,8 @@ elseif(state ==2)
     hh = findobj('Tag','NBTICAfilter');
     set(hh,'Enable','on');    
     disp('Done')
+    evalin('base', 'clear EEG');
+    evalin('base', 'clear ALLEEG');
+    evalin('base', 'clear CURRENTSET');
 end
 end

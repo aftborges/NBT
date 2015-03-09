@@ -61,4 +61,4 @@ function [eeg] = read_eep_cnt(fn, varargin);
 % ANT Software BV, The Netherlands, www.ant-software.nl / info@ant-software.nl
 %
 
-error('Compiled import function (mex format) not available for your operating system');
+error('could not locate mex file');

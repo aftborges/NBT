@@ -1,7 +1,8 @@
 % iseeglabdeployed - true for EEGLAB compile version and false otherwise
-function val = iseeglabdeployed
-try
+
+function val = iseeglabdeployed;
+%val = 1; return;
+if exist('isdeployed')
      val = isdeployed;
-catch
-    val = 0;
-end
+else val = 0;
+end;

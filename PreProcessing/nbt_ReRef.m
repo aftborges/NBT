@@ -50,5 +50,4 @@ function EEG=nbt_ReRef(EEG, RefCh)
     else
             EEG = pop_reref(EEG,RefCh,'exclude',find(EEG.NBTinfo.BadChannels),'keepref','on');
     end
-    EEG.ref = RefCh;
 end

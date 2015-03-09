@@ -66,13 +66,13 @@ fontsize = 10;
 ElementsSwitch = uicontrol(StatisticsSelection,'Style', 'checkbox', 'String', 'Use NBTelements', 'Position', [20 20 150 20],'Tag', 'NBTelementSwitch');
 
 GroupsButton = uicontrol(StatisticsSelection,'Style','pushbutton','String','Select Group(s)','Position',[p1 p2 p3 p4],'fontsize',fontsize);%,'callback',@GroupsButton_Callback);
-set(GroupsButton,'callback','nbt_definegroups;');
+set(GroupsButton,'callback','G = nbt_definegroups;');
 BiomarkersButton = uicontrol(StatisticsSelection,'Style','pushbutton','String','Select Biomarker(s)','Position',[p1 p2-d p3 p4],'fontsize',fontsize);%,'callback',@BiomarkersButton_Callback);
-set(BiomarkersButton,'callback','nbt_selectbiomarkers;');
+set(BiomarkersButton,'callback','G = nbt_selectbiomarkers(G);');
 ChannelsButton = uicontrol(StatisticsSelection,'Style','pushbutton','String','Select Channels and Regions','Position',[p1 p2-2*d p3 p4],'fontsize',fontsize);%,'callback',@ChannelsButton_Callback);
-set(ChannelsButton,'callback','nbt_selectchansregs(G);');
+set(ChannelsButton,'callback','G = nbt_selectchansregs(G);');
 StatisticsButton = uicontrol(StatisticsSelection,'Style','pushbutton','String','Select Statistics','Position',[p1 p2-3*d p3 p4],'fontsize',fontsize);
-set(StatisticsButton,'callback','nbt_selectrunstatistics;');
+set(StatisticsButton,'callback','G = nbt_selectrunstatistics(G);');
 ComparButton = uicontrol(StatisticsSelection,'Style','pushbutton','String','Compare Biomarkers','Position',[p1 p2-4*d p3 p4],'fontsize',fontsize);
 set(ComparButton,'callback','G = nbt_comparebiomarkers(G);');
 %     

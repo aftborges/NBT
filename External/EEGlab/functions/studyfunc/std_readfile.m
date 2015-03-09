@@ -11,7 +11,7 @@
 %                selected input measure (measure input).
 %
 % Optional inputs:
-%   'channels'   - [cell or integer] channel labels - for instance 
+%   'channels'   - [cell or integet] channel labels - for instance 
 %                  { 'cz' 'pz' } - or indices - for instance [1 2 3]
 %                  of channels to load from the data file.
 %   'components' - [integer] component index in the selected EEG dataset for which 
@@ -19,7 +19,7 @@
 %   'timelimits' - [min max] ERSP time (latency in ms) range of interest
 %   'freqlimits' - [min max] ERSP frequency range (in Hz) of interest
 %   'measure'    - ['erp'|'spec'|'ersp'|'itc'|'timef'|'erspbase'|'erspboot'
-%                  'itcboot'|'erpim'] data measure to read. If a full file name
+%                  'itcboot'] data measure to read. If a full file name
 %                  is provided, the data measure is selected automatically.
 %   'getparamsonly' - ['on'|'off'] only read file parameters not data.
 %
@@ -58,32 +58,24 @@
 % dimensions
 % time x freqs x channel_comps x subjects_trials
 
-function [measureData, parameters, measureRange1, measureRange2, events, setinfoTrialIndices] = std_readfile(fileBaseName, varargin);
+function [measureData, parameters, measureRange1, measureRange2] = std_readfile(fileBaseName, varargin);
 
 if nargin < 1
     help std_readfile;
     return;
 end;
 
-opt = finputcheck(varargin, { 'components'       'integer'  []    [];
-                              'getparamonly'     'string'   { 'on','off' }  'off';
-                              'singletrials'     'string'   { 'on','off' }  'off';
-                              'concatenate'      'string'   { 'on','off' }  'off'; % ERPimage only
+opt = finputcheck(varargin, { 'dataindices'      'integer'  []    [];
+                              'components'       'integer'  []    [];
+                              'getparamonly'     'string'   { 'on' 'off' }  'off';
+                              'singletrials'     'string'   { 'on' 'off' }  'off';
                               'channels'         'cell'     []    {};
-                              'setinfoinds'      'integer'  []    [];
-                              'measure'          'string'   { 'erpim','ersp','erspboot','erspbase','itc','itcboot','spec','erp','timef' }  'erp';
-                              'timelimits'       'real'     []    []; % ERPimage, ERP, ERSP, ITC
-                              'triallimits'      'real'     []    []; % ERPimage only
-                              'freqlimits'       'real'     []    []; % SPEC, ERSP, ITC
-                              'dataindices'      'integer'  []    [] }, 'std_readdatafile');
+                              'measure'          'string'   { 'ersp' 'erspboot' 'erspbase' 'itc' 'itcboot' 'spec' 'erp' 'timef' }  'erp';
+                              'timelimits'       'real'     []    [];
+                              'freqlimits'       'real'     []    [] }, 'std_readdatafile');
 if isstr(opt), error(opt); end;
-if ~isempty(opt.triallimits), opt.freqlimits = opt.triallimits; end;
-if strcmpi(opt.concatenate, 'on'), opt.singletrials = 'on'; end;
 if isstruct(fileBaseName), fileBaseName = { fileBaseName.filebase }; 
 else                       fileBaseName = { fileBaseName };
-end;
-if ~isempty(opt.channels) && length(opt.channels) < length(fileBaseName)
-    opt.channels(2:length(fileBaseName)) = opt.channels(1);
 end;
 
 % get file extension
@@ -92,7 +84,7 @@ if ~isempty(opt.channels) || (~isempty(opt.dataindices) && opt.dataindices(1) < 
 else                                                                                 dataType = 'comp';
 end;
 [tmp1 tmp2 currentFileExt] = fileparts(fileBaseName{1});
-if length(currentFileExt) > 3 && (strcmpi(currentFileExt(2:4), 'dat') || strcmpi(currentFileExt(2:4), 'ica'))
+if ~isempty(currentFileExt)
     opt.measure = currentFileExt(5:end);
     if strcmpi(currentFileExt(2:4), 'dat'), dataType = 'chan';
     else                                    dataType = 'comp';
@@ -103,16 +95,11 @@ else
     else                          fileExt = [ '.ica' opt.measure ];
     end;
 end;
-if nargin > 5 && strcmpi(opt.singletrials, 'on')
-     indFlag = true;
-else indFlag = false;
-end;
 
 % get fields to read
 % ------------------
 erspFreqOnly = 0;
 switch opt.measure
-    case 'erpim'   , fieldExt = '';
     case 'erp'     , fieldExt = '';
     case 'spec'    , fieldExt = '';
     case 'ersp'    , fieldExt = '_ersp';
@@ -128,20 +115,22 @@ end;
 if ~isempty(opt.channels) && isnumeric(opt.channels)
     opt.dataindices = opt.channels;
 elseif ~isempty(opt.channels)
-    %if length(fileBaseName) > 1, error('Cannot read channel labels when reading more than 1 input file'); end;
-    for iFile = 1:length(fileBaseName)
-        filename = [ fileBaseName{iFile} fileExt ];
-        try, 
-            warning('off', 'MATLAB:load:variableNotFound');
-            fileData = load( '-mat', filename, 'labels', 'chanlabels' );
-            warning('on', 'MATLAB:load:variableNotFound');
-        catch, fileData = [];
+    if length(fileBaseName) > 1, error('Cannot read channel labels when reading more than 1 input file'); end;
+    filename = [ fileBaseName{1} fileExt ];
+    try, 
+        warning('off', 'MATLAB:load:variableNotFound');
+        fileData = load( '-mat', filename, 'labels', 'chanlabels' );
+        warning('on', 'MATLAB:load:variableNotFound');
+    catch, fileData = [];
+    end;
+    if ~isempty(fileData)
+        if isfield(fileData, 'labels'), chan.chanlocs = struct('labels',     fileData.labels);
+        else                            chan.chanlocs = struct('labels', fileData.chanlabels);
         end;
-        if isfield(fileData, 'labels'),        chan.chanlocs = struct('labels', fileData.labels);
-        elseif isfield(fileData, 'chanlabels') chan.chanlocs = struct('labels', fileData.chanlabels);
-        else error('Cannot use file to lookup channel names, the file needs to be recomputed');
-        end;
-        opt.dataindices(iFile) = std_chaninds(chan, opt.channels{iFile});
+        opt.dataindices = std_chaninds(chan, opt.channels);
+    else
+        warning('Cannot use file to lookup channel names, the file needs to be recomputed')
+        return;
     end;
 elseif ~isempty(opt.components)
      opt.dataindices = opt.components;
@@ -153,17 +142,15 @@ end;
 if strcmpi(opt.getparamonly, 'on'), opt.dataindices = 1; end;
 if length(fileBaseName   ) == 1, fileBaseName(   1:length(opt.dataindices)) = fileBaseName;    end;
 if length(opt.dataindices) == 1, opt.dataindices(1:length(fileBaseName   )) = opt.dataindices; end;
-if length(opt.dataindices) ~= length(fileBaseName) && ~isempty(opt.dataindices), error('Number of files and number of indices must be the same'); end;
+if length(opt.dataindices) ~= length(fileBaseName), error('Number of files and number of indices must be the same'); end;
 
 % scan datasets
 % -------------
-measureRange1  = [];
-measureRange2  = [];
-measureData    = [];
-parameters     = [];
-events         = {};
-setinfoTrialIndices = [];
-
+measureRange1 = [];
+measureRange2 = [];
+measureData   = [];
+parameters    = [];
+    
 % read only specific fields
 % -------------------------
 counttrial = 0;
@@ -172,7 +159,7 @@ for fInd = 1:length(opt.dataindices) % usually only one value
     fieldsToRead = [ dataType int2str(opt.dataindices(fInd)) fieldExt ]; 
     try,
         warning('off', 'MATLAB:load:variableNotFound');
-        fileData = load( '-mat', [ fileBaseName{fInd} fileExt ], 'parameters', 'freqs', 'times', 'events', 'chanlocsforinterp', fieldsToRead );
+        fileData = load( '-mat', [ fileBaseName{fInd} fileExt ], 'parameters', 'freqs', 'times', fieldsToRead );
         warning('on', 'MATLAB:load:variableNotFound');
     catch
         error( [ 'Cannot read file ''' fileBaseName{fInd} fileExt '''' ]);
@@ -180,7 +167,6 @@ for fInd = 1:length(opt.dataindices) % usually only one value
 
     % get output for parameters and measure ranges
     % --------------------------------------------
-    if isfield(fileData, 'chanlocsforinterp'), chanlocsforinterp = fileData.chanlocsforinterp; end;
     if isfield(fileData, 'parameters')
         parameters = removedup(fileData.parameters);
         for index = 1:length(parameters), if iscell(parameters{index}), parameters{index} = { parameters{index} }; end; end;
@@ -188,7 +174,6 @@ for fInd = 1:length(opt.dataindices) % usually only one value
     end;
     if isfield(fileData, 'times'),  measureRange1 = fileData.times; end;
     if isfield(fileData, 'freqs'),  measureRange2 = fileData.freqs; end;
-    if isfield(fileData, 'events'), events{fInd}  = fileData.events; end;
 
     % if the function is only called to get parameters
     % ------------------------------------------------
@@ -218,12 +203,6 @@ for fInd = 1:length(opt.dataindices) % usually only one value
     % -------------------------------
     if isfield(fileData, fieldsToRead)
         fieldData = getfield(fileData, fieldsToRead);
-        if isempty(fieldData)
-            tmpSize = size(fieldData); 
-            tmpSize(tmpSize == 0) = 1;
-            fieldData = ones(tmpSize)*NaN;
-        end;
-        if isstr(fieldData), eval( [ 'fieldData = ' fieldData ] ); end;
         
         % average single trials if necessary
         % ----------------------------------
@@ -238,13 +217,8 @@ for fInd = 1:length(opt.dataindices) % usually only one value
         if fInd == 1
             sizeFD = size(fieldData);
             if length(sizeFD) == 2 && (sizeFD(1) == 1 || sizeFD(2) == 1), sizeFD = sizeFD(1)*sizeFD(2); end;
-            if length(sizeFD) == 2 && (sizeFD(1) == 0 || sizeFD(2) == 0), sizeFD = max(sizeFD(1)); end;
             if strcmpi(opt.singletrials, 'off'), measureData = zeros([ sizeFD length(opt.dataindices) ], 'single');
             else                                 measureData = zeros([ sizeFD ], 'single');
-            end;
-            if indFlag,
-                setinfoTrialIndices = zeros(1, size(measureData,ndims(measureData)), 'int16'); 
-                if length(opt.setinfoinds) ~= length(opt.dataindices) error('For single trial output, the "setinfoinds" parameter must be set'); end;
             end;
             nDimData = length(sizeFD);
         end;
@@ -258,21 +232,16 @@ for fInd = 1:length(opt.dataindices) % usually only one value
                 else            measureData(:,:,:,fInd) = fieldData;
                 end;
             else
-                if nDimData == 2, measureData(:,counttrial+1:counttrial+size(fieldData,2))   = fieldData; 
+                if nDimData == 2, measureData(:,counttrial+1:counttrial+size(fieldData,2)) = fieldData;
                 else              measureData(:,:,counttrial+1:counttrial+size(fieldData,2)) = fieldData;
                 end;
-                setinfoTrialIndices(counttrial+1:counttrial+size(fieldData,2)) = opt.setinfoinds(fInd);
                 counttrial = counttrial+size(fieldData,2);
             end;
         end;
     elseif ~isempty(findstr('comp', fieldsToRead))
         error( sprintf([ 'Field "%s" not found in file %s' 10 'Try recomputing measure.' ], fieldsToRead, [ fileBaseName{fInd} fileExt ]));
     else
-        error(['Problem loading data, most likely your design has' 10 ...
-                      'conditions with no trials or missing channels' 10 ...
-                      'If you think this is a bug, report it on Bugzilla for EEGLAB' ]);
         % the case below is for the rare case where all the channels are read and the end of the array needs to be trimmed
-        % error('There is a problem with your data, please enter a bug report and upload your data at http://sccn.ucsd.edu/eeglab/bugzilla');
         if nDimData == 1,     measureData(:,1:(fInd-1))     = [];
         elseif nDimData == 2, measureData(:,:,1:(fInd-1))   = [];
         else                  measureData(:,:,:,1:(fInd-1)) = [];
@@ -281,40 +250,25 @@ for fInd = 1:length(opt.dataindices) % usually only one value
     end;
 end;
 
-% special ERP image
-% -----------------
-if ~isempty(events)
-    len    = length(events{1});
-    events = [ events{:} ];
-    if strcmpi(opt.singletrials, 'off') && ~isempty(events), events = reshape(events, len, length(events)/len); end;
-end;
-    
 % select plotting or clustering time/freq range
 % ---------------------------------------------
 if ~isempty(measureRange1) && ~erspFreqOnly
     [measureRange1 indBegin indEnd] = indicesselect(measureRange1, opt.timelimits);
-    if ~isempty(measureData)
-        if strcmpi(opt.measure, 'erp') || ( strcmpi(opt.measure, 'erpim') && strcmpi(opt.singletrials, 'on') )
-             measureData = measureData(indBegin:indEnd,:,:);
-        else measureData = measureData(:,indBegin:indEnd,:);
-        end;
+    if strcmpi(opt.measure, 'erp')
+         measureData = measureData(indBegin:indEnd,:,:);
+    else measureData = measureData(:,indBegin:indEnd,:);
     end;
-end;
-if isempty(measureRange2) && size(measureData,1) > 1 && size(measureData,2) > 1 % for ERPimage
-    measureRange2 = [1:size(measureData,1)];
 end;
 if ~isempty(measureRange2)
     [measureRange2 indBegin indEnd] = indicesselect(measureRange2, opt.freqlimits);
-    if ~isempty(measureData)
-        measureData = measureData(indBegin:indEnd,:,:);
-    end;
+    measureData = measureData(indBegin:indEnd,:,:);
     if strcmpi(opt.measure, 'spec'), measureRange1 = measureRange2; end;
 end;
 
 % remove duplicates in the list of parameters
 % -------------------------------------------
 function cella = removedup(cella)
-    [tmp indices] = unique_bc(cella(1:2:end));
+    [tmp indices] = unique(cella(1:2:end));
     if length(tmp) ~= length(cella)/2
         %fprintf('Warning: duplicate ''key'', ''val'' parameter(s), keeping the last one(s)\n');
     end;

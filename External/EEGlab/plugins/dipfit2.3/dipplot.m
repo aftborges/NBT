@@ -84,9 +84,6 @@
 %               pair of dipole).
 %  'holdon'   - ['on'|'off'] create a new dipplot figure or plot dipoles within an
 %               an existing figure. Default is 'off'.
-%  'camera'   - ['auto'|'set'] camera position. 'auto' is the default and 
-%               an option using camera zoom. 'set' is a fixed view that
-%               does not depend on the content being plotted.
 %
 % Outputs:
 %   sources   - EEG.source structure with two extra fiels 'mnicoord' and 'talcoord'
@@ -180,7 +177,6 @@ function [outsources, XX, YY, ZZ, XO, YO, ZO] = dipplot( sourcesori, varargin )
     %                             key        type       range             default
     g = finputcheck( varargin, { 'color'     ''         []                  [];
                                  'axistight' 'string'   { 'on' 'off' }     'off';
-                                 'camera'    'string'   { 'auto' 'set' }   'auto';
                                  'coordformat' 'string' { 'MNI' 'spherical' 'CTF' 'auto' } 'auto';
                                  'drawedges' 'string'   { 'on' 'off' }     'off';
                                  'mesh'      'string'   { 'on' 'off' }     'off';
@@ -274,10 +270,10 @@ function [outsources, XX, YY, ZZ, XO, YO, ZO] = dipplot( sourcesori, varargin )
             g.mri = load('-mat', g.mri);
             g.mri = g.mri.mri;
         catch,
-            disp('Failed to read Matlab file. Attempt to read MRI file using function ft_read_mri');
+            disp('Failed to read Matlab file. Attempt to read MRI file using function read_fcdc_mri');
             try,
                 warning off;
-                g.mri = ft_read_mri(g.mri);
+                g.mri = read_fcdc_mri(g.mri);
                 %g.mri.anatomy(find(g.mri.anatomy > 255)) = 255;
                 %g.mri.anatomy = uint8(g.mri.anatomy);
                 g.mri.anatomy = round(gammacorrection( g.mri.anatomy, 0.8));
@@ -288,7 +284,7 @@ function [outsources, XX, YY, ZZ, XO, YO, ZO] = dipplot( sourcesori, varargin )
                 % misplaced
                 warning on;
             catch,
-                error('Cannot load file using ft_read_mri');
+                error('Cannot load file using read_fcdc_mri');
             end;
         end;
     end;
@@ -566,31 +562,22 @@ function [outsources, XX, YY, ZZ, XO, YO, ZO] = dipplot( sourcesori, varargin )
             end;
         end;
         
-        % dipole length
-        % -------------
-        multfactor = 1;
-        if strcmpi(g.normlen, 'on')
-            if nbdip == 1
-                len    = sqrt(sum(sources(index).momxyz(1,:).^2));
-            else
-                len1   = sqrt(sum(sources(index).momxyz(1,:).^2));
-                len2   = sqrt(sum(sources(index).momxyz(2,:).^2));
-                len    = mean([len1 len2]);
-            end;
-            if strcmpi(g.coordformat, 'CTF'), len = len*10; end;
-            if len ~= 0, multfactor = 15/len; end;
-        else
-            if strcmpi(g.coordformat, 'spherical')
-                 multfactor = 100;
-            else multfactor = 1.5;
-            end;            
-        end;
-        
         for dip = 1:nbdip
         
+            multfactor = 1;
             x = sources(index).posxyz(dip,1);
             y = sources(index).posxyz(dip,2);
             z = sources(index).posxyz(dip,3);
+            if strcmpi(g.normlen, 'on')
+                len    = sqrt(sum(sources(index).momxyz(dip,:).^2));
+                if strcmpi(g.coordformat, 'CTF'), len = len*10; end;
+                if len ~= 0, multfactor = 15/len; end;
+            else
+                if strcmpi(g.coordformat, 'spherical')
+                     multfactor = 100;
+                else multfactor = 1.5;
+                end;            
+            end;
             
             xo = sources(index).momxyz(dip,1)*g.dipolelength*multfactor;
             yo = sources(index).momxyz(dip,2)*g.dipolelength*multfactor;
@@ -963,18 +950,6 @@ function [outsources, XX, YY, ZZ, XO, YO, ZO] = dipplot( sourcesori, varargin )
         box off;
         axis equal;
         axis off;
-    end;
-
-    % set camera positon
-    if strcmpi(g.camera, 'set')
-        set(gca, 'CameraPosition', [2546.94 -894.981 689.613], ...
-                 'CameraPositionMode', 'manual', ...
-                 'CameraTarget', [0 -18 18], ...
-                 'CameraTargetMode', 'manual', ...
-                 'CameraUpVector', [0 0 1], ...
-                 'CameraUpVectorMode', 'manual', ...
-                 'CameraViewAngle', [3.8815], ...
-                 'CameraViewAngleMode', 'manual');
     end;
     
 return;

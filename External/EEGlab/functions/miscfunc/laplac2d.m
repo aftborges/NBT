@@ -16,12 +16,6 @@
 %   cut	    - percentage (0->1) of the maximum value for removing 
 %             values in the matrix (default: 0) 
 %
-% Note: this function implements a simple laplacian for exploratory
-%       research. For a more rigorous validated approach use the freely 
-%       available Current Source Density Matlab toolbox.
-%
-% See also: eeg_laplac()
-%
 % Author: Arnaud Delorme, CNL, Salk Institute, 2001
 
 % Copyright (C) 2001 Arnaud Delorme, Salk Institute, arno@salk.edu

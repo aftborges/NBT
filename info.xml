@@ -1,0 +1,44 @@
+<productinfo
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="http://www.mathworks.com/namespace/info/v1/info.xsd">
+<?xml-stylesheet type="text/xsl" href="http://www.mathworks.com/namespace/info/v1/info.xsl"?>
+
+<matlabrelease>13</matlabrelease>
+<name>NBT</name>
+<type>toolbox</type>
+<icon>$toolbox/matlab/icons/matlabicon.gif</icon>
+<help_location>/Help</help_location>
+
+<list>
+
+
+<listitem>
+<label>NBTwiki</label>
+<callback>web http://www.falw.vu/~nbt/ -browser;</callback>
+<icon>$toolbox/matlab/icons/webicon.gif</icon>
+</listitem>
+
+<listitem>
+<label>Tutorials</label>
+<callback>web http://www.falw.vu/~nbt/doku.php?id=tutorial:start -browser;</callback>
+<icon>$toolbox/matlab/icons/webicon.gif</icon>
+</listitem>
+<listitem>
+<label>Documentation</label>
+<callback>web http://www.falw.vu/~nbt/doku.php?id=nbtdocumentation:start -browser;</callback>
+<icon>$toolbox/matlab/icons/webicon.gif</icon>
+</listitem>
+<listitem>
+<label>How to contribute</label>
+<callback>web http://www.falw.vu/~nbt/doku.php?id=nbtdev:start -browser;</callback>
+<icon>$toolbox/matlab/icons/webicon.gif</icon>
+</listitem>
+<listitem>
+<label>Copyrights</label>
+<callback>web http://www.falw.vu/~nbt/doku.php?id=copyrights -browser;</callback>
+<icon>$toolbox/matlab/icons/webicon.gif</icon>
+</listitem>
+
+</list>
+
+</productinfo>

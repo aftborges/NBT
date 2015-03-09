@@ -39,41 +39,12 @@ if any(epochfield)
     return;
 end;
 
-%% check if conversion of event is necessary
-ff = {};
-flagConvert = true;
-for index = 1:length(ALLEEG), ff = union(ff, fieldnames(ALLEEG(index).event)); end;
-for iField = 1:length(ff)
-    
-    fieldChar = zeros(1,length(ALLEEG))*NaN;
-    for index = 1:length(ALLEEG)
-        if isfield(ALLEEG(index).event, ff{iField}) 
-            if ischar(ALLEEG(index).event(1).(ff{iField}))
-                 fieldChar(index) = 1;
-            else fieldChar(index) = 0;
-            end;
-        end;
-    end;
-    if ~all(fieldChar(~isnan(fieldChar)) == 1) && ~all(fieldChar(~isnan(fieldChar)) == 0)
-        % need conversion to char
-        for index = 1:length(ALLEEG)
-            if fieldChar(index) == 0
-                if flagConvert, disp('Warning: converting some event fields to strings - this may be slow'); flagConvert = false; end;
-                for iEvent = 1:length(ALLEEG(index).event)
-                    ALLEEG(index).event(iEvent).(ff{iField}) = num2str(ALLEEG(index).event(iEvent).(ff{iField}));
-                end;
-            end;
-        end;
-    end
-end;
-                
 %% Make trial info
 for index = 1:length(ALLEEG)
-    tmpevent = ALLEEG(index).event;
-    eventlat = abs(eeg_point2lat( [ tmpevent.latency ], [ tmpevent.epoch ], ALLEEG(index).srate, [ALLEEG(index).xmin ALLEEG(index).xmax]));
+    eventlat = abs(eeg_point2lat( [ ALLEEG(index).event.latency ], [ ALLEEG(index).event.epoch ], ALLEEG(index).srate, [ALLEEG(index).xmin ALLEEG(index).xmax]));
     events   = ALLEEG(index).event;
     ff = fieldnames(events);
-    ff = setdiff_bc(ff, { 'latency' 'urevent' 'epoch' });
+    ff = setdiff(ff, { 'latency' 'urevent' 'epoch' });
     trialinfo = [];
     
     % process time locking event fields
@@ -90,7 +61,7 @@ for index = 1:length(ALLEEG)
             disp('std_maketrialinfo: not the same number of time-locking events as trials, trial info ignored');
         else
             % pick one event per epoch
-            [tmp tmpind] = unique_bc(epochs(end:-1:1)); % reversing the array ensures the first event gets picked
+            [tmp tmpind] = unique(epochs(end:-1:1)); % reversing the array ensures the first event gets picked
             tmpind = length(epochs)+1-tmpind;
             indtle = indtle(tmpind);
             if length(indtle) ~= ALLEEG(index).trials

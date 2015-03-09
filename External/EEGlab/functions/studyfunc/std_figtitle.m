@@ -59,23 +59,23 @@ if nargin < 1
 end;
 
 alllegends = {};
-opt = finputcheck( varargin, { 'chanlabels'  {'cell','string'}   []     {};
-                               'condnames'   {'cell','string'}   []     '';
-                               'cond2names'  {'cell','string'}   []     '';
-                               'condstat'    'string'            {'on','off'}     'off';
-                               'cond2stat'   'string'            {'on','off'}     'off';
-                               'condgroup'   'string'            {'on','off','together','apart'}     'off';
-                               'cond2group'  'string'            {'on','off','together','apart'}     'off';
-                               'plotmode'    'string'            {'normal','condensed'}              'normal';
-                               'plotsubjects' 'string'           {'on','off'}                        'off';
+opt = finputcheck( varargin, { 'chanlabels'  {'cell' 'string'}   []     {};
+                               'condnames'   {'cell' 'string'}   []     '';
+                               'cond2names'  {'cell' 'string'}   []     '';
+                               'condstat'    'string'            {'on' 'off'}     'off';
+                               'cond2stat'   'string'            {'on' 'off'}     'off';
+                               'condgroup'   'string'            {'on' 'off' 'together' 'apart'}     'off';
+                               'cond2group'  'string'            {'on' 'off' 'together' 'apart'}     'off';
+                               'plotmode'    'string'            {'normal' 'condensed'}              'normal';
+                               'plotsubjects' 'string'           {'on' 'off'}                        'off';
                                'threshold'   'real'              []     NaN;
                                'statistics'  'string'            []     '';
                                'mcorrect'    'string'            []     '';
                                'datatype'    'string'            []     '';
                                'clustname'   'string'            []     '';
-                               'compnames'   {'cell','string'}   []     {};
-                               'vals'        {'cell','real'}     []     {}; % just for titles
-                               'valsunit'    {'cell','string'}   []     {}; % just for titles
+                               'compnames'   {'cell' 'string'}   []     {};
+                               'vals'        {'cell' 'real'}     []     {}; % just for titles
+                               'valsunit'    {'cell' 'string'}   []     {}; % just for titles
                                'subject'     'string'            []              '' }, 'std_figtitle'); %, 'ignore');
 if isstr(opt), error(opt); end;
 if ~iscell(opt.vals),       opt.vals       = { opt.vals }; end;
@@ -103,7 +103,7 @@ if ~iscell(opt.condnames),  opt.condnames  = { opt.condnames }; end;
 if ~iscell(opt.cond2names), opt.cond2names = { opt.cond2names }; end;
 if isempty(opt.condnames),  opt.condnames{1}  = ''; end;
 if isempty(opt.cond2names), opt.cond2names{1} = ''; end;
-
+    
 for c1 = 1:length(opt.condnames)
     for c2 = 1:length(opt.cond2names)
 
@@ -181,14 +181,14 @@ for c1 = 1:length(opt.condnames)
         
         if strcmpi(opt.cond2group, 'together') && strcmpi(opt.condgroup, 'together')
             fig_title = fig_title2;
-            if ~isempty(fig_title1) && length(fig_title1) > 1 && strcmpi(fig_title1(end-1:end), ', '), fig_title1(end-1:end) = []; end;
-            if ~isempty(fig_title1) && length(fig_title1) > 1 && strcmpi(fig_title1(end-1:end), '- '), fig_title1(end-1:end) = []; end;
+            if ~isempty(fig_title1) && strcmpi(fig_title1(end-1:end), ', '), fig_title1(end-1:end) = []; end;
+            if ~isempty(fig_title1) && strcmpi(fig_title1(end-1:end), '- '), fig_title1(end-1:end) = []; end;
             alllegends{c1, c2} = fig_title1;
         else
             fig_title = [ fig_title2 fig_title1 ];
         end;
-        if ~isempty(fig_title) && length(fig_title) > 1 && strcmpi(fig_title(end-1:end), ', '), fig_title(end-1:end) = []; end;
-        if ~isempty(fig_title) && length(fig_title) > 1 && strcmpi(fig_title(end-1:end), '- '), fig_title(end-1:end) = []; end;
+        if ~isempty(fig_title) && strcmpi(fig_title(end-1:end), ', '), fig_title(end-1:end) = []; end;
+        if ~isempty(fig_title) && strcmpi(fig_title(end-1:end), '- '), fig_title(end-1:end) = []; end;
         all_titles{c1,c2}  = fig_title;
         
     end;
@@ -199,9 +199,7 @@ if ~isempty(alllegends)
 
     % convert legends to string if necessary
     % --------------------------------------
-    for ileg = 1:length(alllegends), 
-        alllegends{ileg} = value2str(alllegends{ileg}); 
-    end;
+    for ileg = 1:length(alllegends), alllegends{ileg} = num2str(alllegends{ileg}); end;
 end;
 
 % statistic titles
@@ -224,13 +222,13 @@ if ~isempty(opt.mcorrect) && ~strcmpi(opt.mcorrect, 'none'),   basicstat = [ bas
 if strcmpi(opt.condstat, 'on')
     rown = size(all_titles,1)+1;
     for c2 = 1:length(opt.cond2names)
-        all_titles{rown, c2} = [ value2str(opt.cond2names{c2}) ' ' basicstat ];   
+        all_titles{rown, c2} = [ num2str(opt.cond2names{c2}) ' ' basicstat ];   
     end;
 end;
 if strcmpi(opt.cond2stat, 'on')
     coln = size(all_titles,2)+1;
     for c1 = 1:length(opt.condnames)
-        all_titles{c1, coln} = [ value2str(opt.condnames{c1}) ' ' basicstat ];   
+        all_titles{c1, coln} = [ num2str(opt.condnames{c1}) ' ' basicstat ];   
     end;
 end;
 if strcmpi(opt.condstat, 'on') && strcmpi(opt.cond2stat, 'on')

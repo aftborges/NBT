@@ -66,7 +66,7 @@ end
 sets = sets(:,sind);
 comps = comps(sind);
 % sort component indexes within a set
-diffsets = unique_bc(sets(1,:));
+diffsets = unique(sets(1,:));
 for k = 1:length(diffsets)
     ci = find(sets(1,:) == diffsets(k)); % find the compnents belonging to each set
     [tmp,cind] = sort(comps(ci));
@@ -82,6 +82,5 @@ STUDY.cluster(end).comps = comps; % Update merge cluster with the merged compone
 for k = 1:length(mrg_cls) % update the merge cluster as a child for the parent clusters
     STUDY.cluster(mrg_cls(k)).child{end + 1} = STUDY.cluster(end).name;
 end
-STUDY = std_selectdesign(STUDY, ALLEEG, STUDY.currentdesign);
 
 

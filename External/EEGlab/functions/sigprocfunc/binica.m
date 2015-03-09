@@ -159,8 +159,7 @@ else
         if exist('wtsin') == 2 % file
            fprintf('   setting %s, %s\n','weightsin',Arg);
         elseif exist('wtsin') == 1 % variable
-           nchans = size(data,1); % by nima
-            if size(wtsin,2) ~= nchans
+           if size(wtsin,2) ~= nchans
                 fprintf('weightsin variable must be of width %d\n',nchans);
                 return
            end
@@ -428,4 +427,3 @@ while isempty(s) | s ~= -1
    end
   end
 end 
-fclose(fid);

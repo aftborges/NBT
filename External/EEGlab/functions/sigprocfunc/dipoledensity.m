@@ -58,9 +58,6 @@
 %                 five to 20 minutes). By default this function save the volume file 
 %                 mesh into a file named volmesh_local.mat in the current
 %                 folder.
-% 'norm2JointProb' - ['on'|'off'] Use joint probability (i.e. sum of all
-%                    voxel values == 1) instead of number of dipoles/cm^3.
-%                    Should be used for group comparison. (default 'off')
 %
 % Outputs:
 %  dens3d       - [3-D num array] density in dipoles per cubic centimeter. If output
@@ -85,7 +82,6 @@
 %           EEGLAB: dipplot(), mri3dplot(), Fieldtrip: find_inside_vol() 
 %
 % Author: Arnaud Delorme & Scott Makeig, SCCN, INC, UCSD
-% 02/19/2013 'norm2JointProb' added by Makoto.
 
 % Copyright (C) Arnaud Delorme & Scott Makeig, SCCN/INC/UCSD, 2003-
 %
@@ -115,20 +111,19 @@ if nargin < 1
 end
 
 g = finputcheck(varargin, { 'subjind'     'integer'  []               [];
-                            'method' 'string' { 'relentropy','entropy','distance','alldistance' } 'alldistance';
+                            'method' 'string' { 'relentropy' 'entropy' 'distance' 'alldistance' } 'alldistance';
                             'methodparam' 'real'     []               20; 
-                            'weight'      { 'real','cell' }  []               [];
+                            'weight'      { 'real' 'cell' }  []               [];
                             'smooth'      'real'     []               0;
                             'nsessions'   'integer'  []               1;
                             'subsample'   'integer'  []               2;
                             'plotargs'    'cell'     []               {};
-                            'plot'        'string'  { 'on','off' }    fastif(nargout == 0, 'on', 'off');
-                            'dipplot'     'string'  { 'on','off' }   'off';
-                            'coordformat' 'string'  { 'mni','spherical' }   'mni';
-                            'normalization' 'string'  { 'on','off' } 'on';
+                            'plot'        'string'  { 'on' 'off' }    fastif(nargout == 0, 'on', 'off');
+                            'dipplot'     'string'  { 'on' 'off' }   'off';
+                            'coordformat' 'string'  { 'mni' 'spherical' }   'mni';
+                            'normalization' 'string'  { 'on' 'off' } 'on';
                             'volmesh_fname' 'string'  []  'volmesh_local.mat';
-                            'mri'         { 'struct','string' } [] '';
-                            'norm2JointProb' 'string'  { 'on','off' } 'off'});
+                            'mri'         { 'struct' 'string' } [] ''});
 if isstr(g), error(g); end;
 if ~strcmpi(g.method, 'alldistance') & isempty(g.subjind)
     error('Subject indices are required for this method');
@@ -277,7 +272,7 @@ voxvol = sum((point1(1:3)-point2(1:3)).^2)*g.subsample^3; % in mm
 
 % compute global subject entropy if necessary
 % -------------------------------------------
-vals   = unique_bc(g.subjind); % the unique subject indices
+vals   = unique(g.subjind); % the unique subject indices
 if strcmpi(g.method, 'relentropy') | strcmpi(g.method, 'entropy') %%%%% entropy %%%%%%%
     newind = zeros(size(g.subjind));
     for index = 1:length(vals) % foreach subject in the cluster
@@ -433,15 +428,10 @@ if strcmpi(g.method, 'alldistance') && strcmpi(g.normalization,'on')
             fprintf('It is highly recommended to turn normaliziation off by using ''normalization'' key to ''off''.\n');
         end;
         totval = sum(prob3d{i}(:));  % total values in the head
-        switch g.norm2JointProb
-            case 'off'
-                totdip = size(allx,2);   % number of dipoles
-                voxvol;                  % volume of a voxel in mm^3
-                prob3d{i} = prob3d{i}/totval*totdip/voxvol*1000; % time 1000 to get cubic centimeters
-                prob3d{i} = prob3d{i}/g.nsessions;
-            case 'on'
-                prob3d{i} = prob3d{i}/totval;
-        end
+        totdip = size(allx,2);   % number of dipoles
+        voxvol;                  % volume o af a voxel in mm^3
+        prob3d{i} = prob3d{i}/totval*totdip/voxvol*1000; % time 1000 to get cubic centimeters
+        prob3d{i} = prob3d{i}/g.nsessions;
     end;
 end;
 
@@ -478,40 +468,3 @@ else
     mri3dplot( prob3d, g.mri, g.plotargs{:}); % plot the density using mri3dplot()
 end;
 return;
-
-%%
-function [inside, outside] = find_inside_vol(pos, vol);
-
-% FIND_INSIDE_VOL locates dipole locations inside/outside the source
-% compartment of a volume conductor model.
-% 
-% [inside, outside] = find_inside_vol(pos, vol)
-%
-% This function is obsolete and its use in other functions should be replaced 
-% by inside_vol
-
-% Copyright (C) 2003-2007, Robert Oostenveld
-%
-% This file is part of FieldTrip, see http://www.ru.nl/neuroimaging/fieldtrip
-% for the documentation and details.
-%
-%    FieldTrip is free software: you can redistribute it and/or modify
-%    it under the terms of the GNU General Public License as published by
-%    the Free Software Foundation, either version 3 of the License, or
-%    (at your option) any later version.
-%
-%    FieldTrip is distributed in the hope that it will be useful,
-%    but WITHOUT ANY WARRANTY; without even the implied warranty of
-%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%    GNU General Public License for more details.
-%
-%    You should have received a copy of the GNU General Public License
-%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
-%
-% $Id$
-
-warning('find_inside_vol is obsolete and will be removed, please use ft_inside_vol');
-inside  = ft_inside_vol(pos, vol);
-% replace boolean vector with indexing vectors
-outside = find(~inside);
-inside  = find(inside);

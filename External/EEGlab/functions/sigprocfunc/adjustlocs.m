@@ -80,11 +80,11 @@ function chanlocs = adjustlocs( chanlocs, varargin)
                                  'scale'      'cell'  []   {};
                                  'center'     'cell'  []   {};
                                  'rotate'     'cell'  []   {};
-                                 'autoscale'  'string'  { 'on','off' }    'off';
-                                 'autocenter' 'string'  { 'on','off' }    'on';
-                                 'autorotate' 'string'  { 'on','off' }    'on';
-                                 'uniform'    'string'  { 'on','off' }    'on';
-                                 'coordinates' 'string' { 'pol','sph','cart' } 'sph' });
+                                 'autoscale'  'string'  { 'on' 'off' }    'off';
+                                 'autocenter' 'string'  { 'on' 'off' }    'on';
+                                 'autorotate' 'string'  { 'on' 'off' }    'on';
+                                 'uniform'    'string'  { 'on' 'off' }    'on';
+                                 'coordinates' 'string'  { 'pol' 'sph' 'cart' } 'sph' });
     if ischar(g), error(g); end;
     
     names = { chanlocs.labels };
@@ -99,7 +99,7 @@ function chanlocs = adjustlocs( chanlocs, varargin)
         % -----------------------------
         tmpnames      = lower(names);
         tmpnames1020  = lower({ locs1020.labels });
-        [tmp indelec] = intersect_bc(tmpnames1020, tmpnames);
+        [tmp indelec] = intersect(tmpnames1020, tmpnames);
 
         % remove non-symetrical electrodes
         % --------------------------------
@@ -142,7 +142,7 @@ function chanlocs = adjustlocs( chanlocs, varargin)
         tmpnames      = lower(names);
         tmpnames1020  = lower({ locs1020.labels });
         tmptheta1020 = { locs1020.theta };
-        [tmp indelec] = intersect_bc(tmpnames1020(1:end-1), tmpnames); % do not use cz
+        [tmp indelec] = intersect(tmpnames1020(1:end-1), tmpnames); % do not use cz
 
         g.rotate(1:2:2*length(indelec))   = tmpnames1020 (indelec);
         g.rotate(2:2:2*length(indelec)+1) = tmptheta1020(indelec);
@@ -167,7 +167,7 @@ function chanlocs = adjustlocs( chanlocs, varargin)
             % -----------------------------------------------------
             theta  = [ locs1020.theta ];
             indxh  = find(abs(theta) == 90);
-            indxv  = union_bc(find(theta == 0) , find(theta == 180));
+            indxv  = union(find(theta == 0) , find(theta == 180));
             locs1020horiz = locs1020(indxh);
             locs1020vert  = locs1020(indxv);
             
@@ -176,7 +176,7 @@ function chanlocs = adjustlocs( chanlocs, varargin)
             tmpnames      = lower(names);
             tmpnames1020  = lower({ locs1020horiz.labels });
             tmpradius1020 = { locs1020horiz.radius };
-            [tmp indelec] = intersect_bc(tmpnames1020, tmpnames);
+            [tmp indelec] = intersect(tmpnames1020, tmpnames);
             
             if isempty(indelec)
                 disp('No electrodes found for horiz. position spherical re-scaling')
@@ -193,7 +193,7 @@ function chanlocs = adjustlocs( chanlocs, varargin)
             % -----------------------------
             tmpnames1020  = lower({ locs1020vert.labels });
             tmpradius1020 = { locs1020vert.radius };
-            [tmp indelec] = intersect_bc(tmpnames1020, tmpnames);
+            [tmp indelec] = intersect(tmpnames1020, tmpnames);
             
             if isempty(indelec)
                 disp('No electrodes found for vertical position spherical re-scaling')
@@ -212,7 +212,7 @@ function chanlocs = adjustlocs( chanlocs, varargin)
             tmpnames      = lower(names);
             tmpnames1020  = lower({ locs1020.labels });
             tmpradius1020 = { locs1020.radius };
-            [tmp indelec] = intersect_bc(tmpnames1020, tmpnames);
+            [tmp indelec] = intersect(tmpnames1020, tmpnames);
             
             if isempty(indelec)
                 disp('No electrodes found for uniform spherical re-scaling')

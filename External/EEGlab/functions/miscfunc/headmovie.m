@@ -1,5 +1,3 @@
-% ########## This function is deprecated. Use eegmovie instead. ########## 
-%
 % headmovie() - Record a Matlab movie of scalp data.
 %               Use seemovie() to display the movie.
 %
@@ -46,7 +44,7 @@
 
 % 01-25-02 reformated help & license, added links -ad 
 
-function [Movie, Colormap, minc, maxc] = headmovie(data,eloc_file,spline_file,srate,titl,camerapath,movieframes,minmax,startsec,varargin)
+function [Movie, Colormap, minc, maxc] = headmovie(data,eloc_file,spline_file,srate,titl,camerapath,movieframes,minmax,startsec)
 
 if nargin<1
 	help headmovie
@@ -140,7 +138,7 @@ az_step   = camerapath(1,2);
 elevation = camerapath(1,3);
 el_step   = camerapath(1,4);
 
-if ~isstruct(eloc_file) && eloc_file(1) == 0
+if eloc_file(1) == 0
    eloc_file    = 'chan.angles';
 end
 if spline_file(1) == 0
@@ -153,13 +151,7 @@ clf            % clear figure
 %%%%%%%%%%%%%%%%%%%%% eegplot() of data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 axeegplot = axes('Units','Normalized','Position',[.75 .05 .2 .9]);
-if isstruct(eloc_file)
-    eegplotold('noui',-data,srate,0,[],startsec,'r');
-    %eegplotsold(-data,srate,[],' ',0,frames/srate,'r',startsec); %CJH
-else
-    eegplotold('noui',-data,srate,0,eloc_file,startsec,'r');
-    %eegplotsold(-data,srate,eloc_file,' ',0,frames/srate,'r',startsec); %CJH
-end;    
+eegplotsold(-data,srate,eloc_file,' ',0,frames/srate,'r',startsec); %CJH
 set(axeegplot,'XTick',[])                %%CJH
                                          % plot negative up
 limits = get(axeegplot,'Ylim');          % list channel numbers only
@@ -218,7 +210,7 @@ for i = movieframes                      % make the movie, frame by frame
    set(axheadplot,'Color',axcolor);
 
    headplot(data(:,i),spline_file,'maplimits',minmax,...
-                  'view',[azimuth elevation],'verbose','off', varargin{:}); 
+                  'view',[azimuth elevation],'verbose','off'); 
 
    if i== newpan    % adapt camerapath step sizes 
      az_step = camerapath(posrow,2);

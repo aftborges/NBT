@@ -143,7 +143,7 @@ else
 end;
 g = finputcheck(options, { 'chanlocs'  ''    []          '';
                     'frames'    'integer'               [1 Inf]     size(data,2);
-                    'chans'     { 'integer','string' }  { [1 Inf] [] }    0;
+                    'chans'     { 'integer' 'string' }  { [1 Inf] [] }    0;
                     'geom'      'integer'               [1 Inf]     [];
                     'channames' 'string'                []          '';
                     'limits'    'float'                 []          0;
@@ -152,9 +152,9 @@ g = finputcheck(options, { 'chanlocs'  ''    []          '';
                     'plotfunc'  'cell'                  []          {};
                     'axsize'    'float'                 [0 1]       [nan nan];
                     'regions'   'cell'                  []          {};
-                    'colors'    { 'cell','string' }     []          {};
+                    'colors'    { 'cell' 'string' }     []          {};
                     'legend'    'cell'                  []          {};
-                    'showleg'   'string'                {'on','off'} 'on';
+                    'showleg'   'string'                {'on' 'off'} 'on';
                     'ydir'      'integer'               [-1 1]      DEFAULT_SIGN;
                     'vert'      'float'                 []          [];
                     'hori'      'float'                 []          []});
@@ -493,7 +493,7 @@ end;
         % find position for other channels
         % --------------------------------
         totalchans = length(g.chanlocs);
-        emptychans = setdiff_bc(1:totalchans, nonemptychans);
+        emptychans = setdiff(1:totalchans, nonemptychans);
         totalchans = floor(sqrt(totalchans))+1;
         for index = 1:length(emptychans)
             xvals(emptychans(index)) = 0.7+0.2*floor((index-1)/totalchans);

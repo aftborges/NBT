@@ -1,6 +1,5 @@
 function display(this);
 
-    disp(inputname(1));
     if length(this) == 1
         struct(this.EEG)
     else

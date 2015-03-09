@@ -49,24 +49,22 @@ try
     IDdots = strfind(filename,'.');
     if(~isempty(FileExt))
         Info = nbt_Info(filename(1:(strfind(filename,FileExt)-2)),file_name_format,filename((IDdots(3)+1):(IDdots(4)-1)), ...
-            filename((IDdots(2)+1):(IDdots(3)-1)),[],[],[],str2double(filename((IDdots(1)+2):(IDdots(2)-1))),filename(1:(IDdots(1)-1)),[],[],[],[],[],[]);
+            filename((IDdots(2)+1):(IDdots(3)-1)),[],Fs,[],str2double(filename((IDdots(1)+2):(IDdots(2)-1))),filename(1:(IDdots(1)-1)),[],[],[],[],[],[]);
     else
         Info = nbt_Info(filename,file_name_format,filename((IDdots(3)+1):end), ...
-            filename((IDdots(2)+1):(IDdots(3)-1)),[],[],[],str2double(filename((IDdots(1)+2):(IDdots(2)-1))),filename(1:(IDdots(1)-1)),[],[],[],[],[],[]);
+            filename((IDdots(2)+1):(IDdots(3)-1)),[],Fs,[],str2double(filename((IDdots(1)+2):(IDdots(2)-1))),filename(1:(IDdots(1)-1)),[],[],[],[],[],[]);
     end
 catch
     filename = input('Please write filename in correct format, <ProjectID>.S<SubjectID>.<Date in YYMMDD>.Condition ','s');
     IDdots = strfind(filename,'.');
     if(~isempty(FileExt))
         Info = nbt_Info(filename(1:(strfind(filename,FileExt)-2)),file_name_format,filename((IDdots(3)+1):(IDdots(4)-1)), ...
-            filename((IDdots(2)+1):(IDdots(3)-1)),[],[],[],str2double(filename((IDdots(1)+2):(IDdots(2)-1))),filename(1:(IDdots(1)-1)),[],[],[],[],[],[]);
+            filename((IDdots(2)+1):(IDdots(3)-1)),[],Fs,[],str2double(filename((IDdots(1)+2):(IDdots(2)-1))),filename(1:(IDdots(1)-1)),[],[],[],[],[],[]);
     else
         Info = nbt_Info(filename,file_name_format,filename((IDdots(3)+1):end), ...
-            filename((IDdots(2)+1):(IDdots(3)-1)),[],[],[],str2double(filename((IDdots(1)+2):(IDdots(2)-1))),filename(1:(IDdots(1)-1)),[],[],[],[],[],[]);
+            filename((IDdots(2)+1):(IDdots(3)-1)),[],Fs,[],str2double(filename((IDdots(1)+2):(IDdots(2)-1))),filename(1:(IDdots(1)-1)),[],[],[],[],[],[]);
     end
 end
-Info.converted_sample_frequency = Fs;
-
 if(exist('NBTSignalObject'))
     Info.Info = NBTSignalObject.Info;
     try
@@ -75,5 +73,4 @@ if(exist('NBTSignalObject'))
     catch
     end
 end
-Info.LastUpdate = datestr(now);
 end

@@ -1,71 +1,49 @@
 % std_ersp() - Compute ERSP and/or ITC transforms for ICA components 
 %              or data channels of a dataset. Save results into Matlab 
-%              float files. 
+%              float files. When these output files already exist, loads 
+%              the ERSP/ITC information from them unless the requested 
+%              flag specifies differently. If so, a query window 
+%              pops up.
 %
 % Function description:
-%              The function computes the mean ERSP or ITC for the selected 
-%              dataset ICA components or data channels in the requested 
-%              frequency range and time window (the two are dependent). 
-%              Frequencies are equally log spaced. Options specify component 
-%              numbers, desired frequency range,  time window length, 
-%              frequency resolution, significance level, and wavelet
-%              cycles. See >> help newtimef and >> timef details 
+%              The function returns the masked (as per the requested alpha) 
+%              mean ERSP or ITC for the selected dataset ICA components or 
+%              data channels in the requested frequency range and time window 
+%              (the two are dependent). Frequencies are equally log spaced.
+%              Options specify component numbers, desired frequency range, 
+%              time window length, frequency resolution, significance level, 
+%              and wavelet cycles. See >> help newtimef and >> timef details 
 %
 %              Two Matlab files are saved (for ERSP and ITC). These contain 
 %              the ERSP|ITC image, plus the transform parameters 
 %              used to compute them. Saves the computed dataset mean images 
 %              in dataset-name files with extensions '.icaersp' and '.icaitc'
 %              for ICA components or '.datersp', '.datitc' for data channels.
+%              If the ERSPs/ITCs were previously saved into these files, 
+%              and the same set of ERSP/ITC parameters are used, the values 
+%              are not recomputed, but the information is read from these
+%              files. Vectors of frequencies and latencies for the ERSP/ITC 
+%              images are returned separately. Returned 'EEG.etc' fields
+%              are modified with pointers to the output float files and some 
+%              information about them. 
 % Usage:  
 %              >> [X times logfreqs ] = std_ersp(EEG, 'key', 'val', ...);
 % Inputs:
-%   EEG          - a loaded epoched EEG dataset structure. May be an array
-%                  of such structure containing several datasets.
+%   EEG          - an EEG dataset structure. 
 %
-% Other inputs:
-%   'trialindices' - [cell array] indices of trials for each dataset.
-%                  Default is EMPTY (no trials). NEEDS TO BE SET.
-%   'components' - [numeric vector] components of the EEG structure for which 
-%                  activation spectrum will be computed. Note that because 
-%                  computation of ERP is so fast, all components spectrum are
-%                  computed and saved. Only selected component 
-%                  are returned by the function to Matlab
-%                  {default|[] -> all}
-%   'channels'   - [cell array] channels of the EEG structure for which 
-%                  activation spectrum will be computed. Note that because 
-%                  computation of ERP is so fast, all channels spectrum are
-%                  computed and saved. Only selected channels 
-%                  are returned by the function to Matlab
-%                  {default|[] -> none}
-%   'recompute'  - ['on'|'off'] force recomputing ERP file even if it is 
-%                  already on disk.
-%   'recompute'  - ['on'|'off'] force recomputing data file even if it is 
-%                  already on disk.
-%   'rmcomps'    - [integer array] remove artifactual components (this entry
-%                  is ignored when plotting components). This entry contains 
-%                  the indices of the components to be removed. Default is none.
-%   'interp'     - [struct] channel location structure containing electrode
-%                  to interpolate ((this entry is ignored when plotting 
-%                  components). Default is no interpolation.
-%   'fileout'    - [string] name of the file to save on disk. The default
-%                  is the same name (with a different extension) as the 
-%                  dataset given as input.
-%  'savetrials'  - ['on'|'off'] save single-trials ERSP. Requires a lot of disk
-%                  space (dataset space on disk times 10) but allow for refined
-%                  single-trial statistics.
-%  'savefile'    - ['on'|'off'] save file or simply return measures.
-%                  Default is to save files ('on').
-%  'getparams'   - ['on'|'off'] return optional parameters for the newtimef 
-%                  function (and do not compute anything). This argument is
-%                  obsolete (default is 'off').
-%
-% ERSP optional inputs:
-%   'type'       - ['ersp'|'itc'|'ersp&itc'] save ERSP, ITC, or both data 
-%                  types to disk {default: 'ersp'}
+% Optional inputs:
+%   'components' - [numeric vector] components in the EEG structure for which 
+%                  ERSP and ITC data will be computed {default|[]: all 
+%                  components if no 'channels' are specified (see below)}
+%   'channels'   - [numeric vector or cell array of channel labels] channels 
+%                  in the EEG structure for which ERSP and ITC will be computed 
+%                  {default|[]: no channels}
 %   'freqs'      - [minHz maxHz] the ERSP/ITC frequency range to compute 
 %                  and return. {default: 3 to EEG sampling rate divided by 3}
 %   'timelimits' - [minms maxms] time window (in ms) to compute.
 %                  {default: whole input epoch}.
+%   'timewindow' - [minms maxms] time window (in ms) to plot.
+%                  {default: all output latencies}
 %   'cycles'     - [wavecycles (factor)]. If 0 -> DFT (constant window length 
 %                  across frequencies).
 %                  If >0 -> the number of cycles in each analysis wavelet. 
@@ -80,10 +58,18 @@
 %   'alpha'      - If in (0, 1), compute two-tailed permutation-based 
 %                  probability thresholds and use these to mask the output 
 %                  ERSP/ITC images {default: NaN}
+%   'type'       - ['ersp'|'itc'] though both ERSP and ITC images are computed 
+%                  and saved to disk, only this transform is returned to the 
+%                  command line (see first output, X, below) {default: 'ersp'}
+%   'savetrials' - ['on'|'off'] Save single-trial time-freq. decompositions in
+%                  a file with extension '.dattimef' (channels) or '.icatimef' 
+%                  (components). {default: 'off'}
 %   'powbase'    - [ncomps,nfreqs] optional input matrix giving baseline power 
 %                  spectra (not dB power, see >> help timef). 
 %                  For use in repeated calls to timef() using the same baseine
 %                  {default|[] -> none; data windows centered before 0 latency}
+%   'recompute'  - ['on'|'off'] 'on' forces recomputation of both ERSP and ITC. 
+%                  {default: 'off'}
 %
 % Other optional inputs:
 %   This function will take any of the newtimef() optional inputs (for instance
@@ -91,37 +77,32 @@
 %
 % Outputs:
 %   X         - the masked log ERSP/ITC of the requested ICA components/channels 
-%               in the selected frequency and time range. Note that for
-%               optimization reasons, this parameter is now empty or 0. X
-%               thus must be read from the datafile saved on disk.
+%               in the selected frequency and time range. 
 %   times     - vector of time points for which the ERSPs/ITCs were computed. 
 %   logfreqs  - vector of (equally log spaced) frequencies (in Hz) at which the 
 %               log ERSP/ITC was evaluated. 
-%   parameters - parameters given as input to the newtimef function.
 %
 % Files written or modified:     
 %              [dataset_filename].icaersp   <-- saved component ERSPs
 %              [dataset_filename].icaitc    <-- saved component ITCs
-%              [dataset_filename].icatimef  <-- saved component single
-%                                               trial decompositions.
 %  OR for channels
 %              [dataset_filename].datersp   <-- saved channel ERSPs
 %              [dataset_filename].datitc    <-- saved channel ITCs
-%              [dataset_filename].dattimef  <-- saved channel single
-%                                               trial decompositions.
 % Example: 
 %            % Create mean ERSP and ITC images on disk for all comps from 
 %            % dataset EEG use three-cycle wavelets (at 3 Hz) to more than 
-%            % three-cycle wavelets at 50 Hz. See >> help newtimef 
+%            % three-cycle wavelets at 50 Hz. Use probability masking at 
+%            % p < 0.01 with padratio 4. See >> timef details. 
 %            % Return the (equally log-freq spaced, probability-masked) ERSP.
 %            >> [Xersp, times, logfreqs] = std_ersp(EEG, ...
-%                       'type', 'ersp', 'freqs', [3 50], 'cycles', [3 0.5]);
+%                       'type', 'ersp', 'freqs', [3 50], ...
+%                                 'cycles', [3 0.5], 'alpha', 0.01);
 %
 % See also: timef(), std_itc(), std_erp(), std_spec(), std_topo(), std_preclust()
 %
 % Authors: Arnaud Delorme, Hilit Serby, SCCN, INC, UCSD, January, 2005-
 
-% Copyright (C) Arnaud Delorme, SCCN, INC, UCSD, October 11, 2004, arno@sccn.ucsd.edu
+% Copyright (C) Hilit Serby, SCCN, INC, UCSD, October 11, 2004, hilit@sccn.ucsd.edu
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -137,14 +118,13 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function [X, times, logfreqs, parameters] = std_ersp(EEG, varargin)
+function [X, times, freqs, parameters] = std_ersp(EEG, varargin)
 
 if nargin < 1
     help std_ersp;
     return;
 end;
 
-X = [];
 options = {};
 if length(varargin) > 1 
     if ~isstr(varargin{1})
@@ -162,30 +142,30 @@ if length(varargin) > 1
 end;
 
 [g timefargs] = finputcheck(options, { ...
-                        'components'    'integer'               []          [];
-                        'channels'      { 'cell','integer' }    { [] [] }   {};
-                        'powbase'       'real'                  []          [];
-                        'trialindices' { 'integer','cell' }     []          [];
-                        'savetrials'    'string'      { 'on','off' }        'off';
-                        'plot'          'string'      { 'on','off' }        'off'; % not documented for debugging purpose
-                        'recompute'     'string'      { 'on','off' }        'off';
-                        'getparams'     'string'      { 'on','off' }        'off';
-                        'savefile'      'string'      { 'on','off' }        'on';
-                        'timewindow'    'real'                  []          [];    % ignored, deprecated
-                        'fileout'       'string'                []          '';
-                        'timelimits'    'real'                  []          [EEG(1).xmin EEG(1).xmax]*1000;
-                        'cycles'        'real'                  []          [3 .5];
-                        'padratio'      'real'                  []          1;
-                        'freqs'         'real'                  []          [0 EEG(1).srate/2];
-                        'rmcomps'       'cell'                  []          cell(1,length(EEG));
-                        'interp'        'struct'                { }         struct([]);
-                        'freqscale'     'string'                []         'log';
-                        'alpha'         'real'                  []          NaN;
-                        'type'          'string'      { 'ersp','itc','both','ersp&itc' }  'both'}, 'std_ersp', 'ignore');
+                        'components'    'integer'     []      [];
+                        'channels'      { 'cell' 'integer' }  { [] [] }     {};
+                        'outputfile'    'string'      []      '';
+                        'powbase'       'real'        []      [];
+                        'trialindices' { 'integer' 'cell' } []         [];
+                        'savetrials'    'string'      { 'on' 'off' }      'off';
+                        'plot'          'string'      { 'on' 'off' }      'off';
+                        'recompute'     'string'      { 'on' 'off' }      'off';
+                        'getparams'     'string'      { 'on' 'off' }      'off';
+                        'timewindow'    'real'        []      [];
+                        'fileout'       'string'  []         '';
+                        'timelimits'    'real'        []      [EEG(1).xmin EEG(1).xmax]*1000;
+                        'cycles'        'real'        []      [3 .5];
+                        'padratio'      'real'        []      1;
+                        'freqs'         'real'        []      [0 EEG(1).srate/2];
+                        'rmcomps'       'cell'        []      cell(1,length(EEG));
+                        'interp'        'struct'      { }     struct([]);
+                        'freqscale'     'string'      []      'log';
+                        'alpha'         'real'        []      NaN;
+                        'type'          'string'      { 'ersp' 'itc' 'both' 'ersp&itc' }  'both'}, 'std_ersp', 'ignore');
 if isstr(g), error(g); end;
 if isempty(g.trialindices), g.trialindices = cell(length(EEG)); end;
 if ~iscell(g.trialindices), g.trialindices = { g.trialindices }; end;
-
+    
 % checking input parameters
 % -------------------------
 if isempty(g.components) & isempty(g.channels)
@@ -280,7 +260,7 @@ end
 % return parameters
 % -----------------
 if strcmpi(g.getparams, 'on')
-    X = []; times = []; logfreqs = [];
+    X = []; times = []; freqs = [];
     if strcmpi(g.savetrials, 'on')
         parameters = { parameters{:} 'savetrials', g.savetrials };
     end;
@@ -315,9 +295,28 @@ end;
 options = {};
 if ~isempty(g.rmcomps), options = { options{:} 'rmcomps' g.rmcomps }; end;
 if ~isempty(g.interp),  options = { options{:} 'interp' g.interp }; end;
-if isempty(g.channels)
-     X = eeg_getdatact(EEG, 'component', g.indices, 'trialindices', g.trialindices );
-else X = eeg_getdatact(EEG, 'channel'  , g.indices, 'trialindices', g.trialindices, 'rmcomps', g.rmcomps, 'interp', g.interp);
+X       = [];
+for dat = 1:length(EEG)
+    if strcmpi(prefix, 'comp')
+        tmpdata = eeg_getdatact(EEG(dat), 'component', [1:size(EEG(dat).icaweights,1)], 'trialindices', g.trialindices{dat} );
+    else
+        EEG(dat).data = eeg_getdatact(EEG(dat), 'channel', [1:EEG(dat).nbchan], 'rmcomps', g.rmcomps{dat}, 'trialindices', g.trialindices{dat});
+        EEG(dat).trials = size(EEG(dat).data,3);
+        EEG(dat).event  = [];
+        EEG(dat).epoch  = [];
+        if ~isempty(g.interp), 
+            TMPEEG = eeg_interp(EEG(dat), g.interp, 'spherical'); 
+            tmpdata = TMPEEG.data;
+        else
+            tmpdata = EEG(dat).data;
+        end;
+    end;
+    if isempty(X), X = tmpdata;
+    else
+        if size(X,1) ~= size(tmpdata,1), error('Datasets to be concatenated do not have the same number of channels'); end;
+        if size(X,2) ~= size(tmpdata,2), error('Datasets to be concatenated do not have the same number of time points'); end;
+        X(:,:,end+1:end+size(tmpdata,3)) = tmpdata; % concatenating trials
+    end;
 end;
 
 % frame range
@@ -345,23 +344,10 @@ for k = 1:length(g.indices)  % for each (specified) component
     % ------------------------
     timefdata  = reshape(X(k,pointrange,:), 1, length(pointrange)*size(X,3));
     if strcmpi(g.plot, 'on'), figure; end;
-    flagEmpty = 0;
-    if isempty(timefdata)
-        flagEmpty = 1;
-        timefdata = rand(1,length(pointrange));
-    end;
     [logersp,logitc,logbase,times,logfreqs,logeboot,logiboot,alltfX] ...
           = newtimef( timefdata, length(pointrange), g.timelimits, EEG(1).srate, tmpparams{2:end});
     %figure; newtimef( TMP.data(32,:), EEG.pnts, [EEG.xmin EEG.xmax]*1000, EEG.srate, cycles, 'freqs', freqs);
     %figure; newtimef( timefdata, length(pointrange), g.timelimits, EEG.srate, cycles, 'freqs', freqs);
-    if flagEmpty
-        logersp = [];
-        logitc  = [];
-        logbase = [];
-        logeboot = [];
-        logiboot = [];
-        alltfX   = [];
-    end;
     if strcmpi(g.plot, 'on'), return; end;
 
     all_ersp = setfield( all_ersp, [ prefix int2str(g.indices(k)) '_ersp'     ], single(logersp ));
@@ -374,29 +360,20 @@ for k = 1:length(g.indices)  % for each (specified) component
         all_trials = setfield( all_trials, [ prefix int2str(g.indices(k)) '_timef'     ], single( alltfX ));
     end;
 end
-X = logersp;
 
 % Save ERSP into file
 % -------------------
 all_ersp.freqs      = logfreqs;
 all_ersp.times      = times;
 all_ersp.datatype   = 'ERSP';
-all_ersp.datafiles  = computeFullFileName( { EEG.filepath }, { EEG.filename });
-all_ersp.datatrials = g.trialindices;
-
 all_itc.freqs       = logfreqs;
 all_itc.times       = times;
 all_itc.parameters  = parameters;
 all_itc.datatype    = 'ITC';
-all_itc.datafiles    = computeFullFileName( { EEG.filepath }, { EEG.filename });
-all_itc.datatrials   = g.trialindices;
-
-all_trials.freqs     = logfreqs;
-all_trials.times     = times;
+all_trials.freqs    = logfreqs;
+all_trials.times    = times;
 all_trials.parameters = { options{:} parameters{:} };
 all_trials.datatype   = 'TIMEF';
-all_trials.datafiles  = computeFullFileName( { EEG.filepath }, { EEG.filename });
-all_trials.datatrials = g.trialindices;
 
 if powbaseexist
     all_ersp.parameters = { parameters{:}, 'baseline', g.powbase };
@@ -416,22 +393,13 @@ if ~isempty(g.channels)
     end;
 end;
 
-if strcmpi(g.savefile, 'on')
-    if strcmpi(g.type, 'both') | strcmpi(g.type, 'ersp') | strcmpi(g.type, 'ersp&itc')
-        std_savedat( filenameersp, all_ersp);
-    end;
-    if strcmpi(g.type, 'both') | strcmpi(g.type, 'itc') | strcmpi(g.type, 'ersp&itc')
-        std_savedat( filenameitc , all_itc );
-    end;
-    if strcmpi(g.savetrials, 'on')
-        std_savedat( filenametrials , all_trials );
-    end;
+if strcmpi(g.type, 'both') | strcmpi(g.type, 'ersp') | strcmpi(g.type, 'ersp&itc')
+    std_savedat( filenameersp, all_ersp);
 end;
-
-% compute full file names
-% -----------------------
-function res = computeFullFileName(filePaths, fileNames);
-for index = 1:length(fileNames)
-    res{index} = fullfile(filePaths{index}, fileNames{index});
+if strcmpi(g.type, 'both') | strcmpi(g.type, 'itc') | strcmpi(g.type, 'ersp&itc')
+    std_savedat( filenameitc , all_itc );
+end;
+if strcmpi(g.savetrials, 'on')
+    std_savedat( filenametrials , all_trials );
 end;
 

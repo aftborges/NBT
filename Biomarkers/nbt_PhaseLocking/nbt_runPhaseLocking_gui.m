@@ -80,7 +80,7 @@ indexPhase = SettingsPLV.indexPhase;
 end
 name = genvarname (['PhaseLocking' num2str(Frange(1)) '_' num2str(Frange(2)) 'Hz' num2str(Trange(1)) '_' num2str(Trange(2)) 'sec']); 
 % compute biomarker
-eval([name '= nbt_doPhaseLocking(Signal,SignalInfo,Frange,Trange,filterorder,windowleng,overlap,indexPhase)']);
+eval([name '= nbt_doPhaseLocking(Signal,SignalInfo,Frange,Trange,filterorder,windowleng,overlap,indexPhase)'])
 % save biomarker
 nbt_SaveClearObject(name,SignalInfo,SaveDir);
 eval(['evalin(''caller'',''clear ' name ''');']);

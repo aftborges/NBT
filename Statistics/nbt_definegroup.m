@@ -6,7 +6,8 @@
 %   nbt_definegroup(d)
 %
 % Inputs:
-%   d is the path indicating the location of NBT files
+%   d is a directory struct obtained as follow d = dir(path); with path
+%   indicating the location of NBT files
 %
 % Outputs:
 %
@@ -20,10 +21,10 @@
 %------------------------------------------------------------------------------------
 % Originally created by Giuseppina Schiavone (2012), see NBT website (http://www.nbtwiki.net) for current email address
 %------------------------------------------------------------------------------------
-%% ChangeLog - see version control log at NBT website for details.
-%$ Version 1.1 - 25. Oct 2012: Modified by Piotr Sokol, piotr.a.sokol@gmail.com$
-%%
-% Copyright (C) 2012  (Neuronal Oscillations and Cognition group,
+%
+% ChangeLog - see version control log at NBT website for details.
+%
+% Copyright (C) <year>  <Main Author>  (Neuronal Oscillations and Cognition group,
 % Department of Integrative Neurophysiology, Center for Neurogenomics and Cognitive Research,
 % Neuroscience Campus Amsterdam, VU University Amsterdam)
 %
@@ -48,7 +49,6 @@
 
 
 function nbt_definegroup(varargin)
-global G
 P = varargin;
 nargs = length(P);
 
@@ -70,11 +70,6 @@ if(nbt_determineNBTelementState) %use NBTelement
     %load NBTelementBase from base
     readconditions = evalin('base', 'Condition.Data');
     SubjList = evalin('base', 'Subject.Data');
-    readproject = evalin('base', 'Project.Data');
-    readgender=evalin('base','Gender.Data');
-    readage=evalin('base','Age.Data');
-    readdate = evalin('base','Date.Data');
-    
     for mm=1:length(SubjList);
         readsubject{mm} = num2str(SubjList(mm));
     end
@@ -83,8 +78,7 @@ else %then we read the information from the analysis files
         [path]=uigetdir([],'Select folder with NBT Signals');
         d = dir(path);
     else
-        path=P{1};
-        d = dir(path);
+        d = P{1};
     end
     
     %--- scan files in the folder
@@ -96,97 +90,109 @@ else %then we read the information from the analysis files
         end
     end
     %---
-    pro=1;
-    disp('Please wait: NBT is checking the files in your folder...')
+    
     for i = startindex:length(d)
         if isempty(findstr(d(i).name,'analysis')) && ~isempty(findstr(d(i).name,'info')) && ~isempty(findstr(d(i).name(end-3:end),'.mat')) && isempty(findstr(d(i).name,'statistics'))
             index = findstr(d(i).name,'.');
             index2 = findstr(d(i).name,'_');
             % read gender and age
             % load info file
-            Loaded = load([path '/' d(i).name]);%Loads info file
+            Loaded = load([path '/' d(i).name]);
             
             Infofields = fieldnames(Loaded);
             Firstfield = Infofields{1};
             clear Loaded Infofields;
             
             SignalInfo = load([path '/' d(i).name],Firstfield);
+            
             SignalInfo = eval(strcat('SignalInfo.',Firstfield));
-            
-            %% dingus collects data for further selection
-            dingus(pro,1)= {strcat(d(i).name(1:index2-1),'_analysis.mat')};%contains filename
-            
-
-            dingus(pro,2) =  {d(i).name(index(3)+1:index2-1)};
-            dingus(pro,3) =  {d(i).name(1:index(1)-1)};
-            dingus(pro,4) = {d(i).name(index(1)+1:index(2)-1)};
-            dingus(pro,5) = {d(i).name(index(2)+1:index(3)-1)};
-            
-            if ~isempty(SignalInfo.subject_gender)
-                dingus(pro,6) = {SignalInfo.subject_gender};
-            else
-                dingus(pro,6) = {[]};
-            end
-            if ~isempty(SignalInfo.subject_age)
-                if isa(SignalInfo.subject_age,'char')
-                    dingus(pro,7) = {str2num(SignalInfo.subject_age)};
+            disp('Please wait: NBT is checking the files into your folder...')
+            if i == startindex
+                readconditions{con} =  d(i).name(index(3)+1:index2-1);
+                readproject{pro} =  d(i).name(1:index(1)-1);
+                readsubject{sub} = d(i).name(index(1)+1:index(2)-1);
+                readdate{date} = d(i).name(index(2)+1:index(3)-1);
+                if ~isempty(SignalInfo.subject_gender)
+                    readgender{gender} = SignalInfo.subject_gender;
                 else
-                    dingus(pro,7) = {SignalInfo.subject_age};
+                    readgender{gender} = [];
                 end
+                if ~isempty(SignalInfo.subject_gender)
+                    readage{age} = SignalInfo.subject_age;
+                else
+                    readage{age} = [];
+                end
+                
+                
+                con = con+1;
+                pro = pro+1;
+                sub = sub+1;
+                date = date+1;
+                gender = gender +1;
+                age = age+1;
             else
-                dingus(pro,7) = {[]};
+                if ~strcmp(readconditions,d(i).name(index(3)+1:index2-1))
+                    readconditions{con} = d(i).name(index(3)+1:index2-1);
+                    con = con+1;
+                end
+                if ~strcmp(readproject,d(i).name(1:index(1)-1))
+                    readproject{pro} = d(i).name(1:index(1)-1);
+                    pro = pro+1;
+                end
+                if ~strcmp(readsubject,d(i).name(index(1)+1:index(2)-1))
+                    readsubject{sub} = d(i).name(index(1)+1:index(2)-1);
+                    sub = sub+1;
+                end
+                if ~strcmp(readdate,d(i).name(index(2)+1:index(3)-1))
+                    readdate{date} = d(i).name(index(2)+1:index(3)-1);
+                    date = date+1;
+                end
+                if ~(length(readgender) == 2)
+                    if ~strcmp(num2str(readgender{end}),num2str(SignalInfo.subject_gender))
+                        
+                        if ~isempty(SignalInfo.subject_gender)
+                            readgender{gender} = SignalInfo.subject_gender;
+                        else
+                            readgender{gender} = [];
+                        end
+                        gender = gender+1;
+                    end
+                end
+                if ~strcmp(num2str(readage{end}),num2str(SignalInfo.subject_age))
+                    if ~isempty(SignalInfo.subject_age)
+                        readage{age} = SignalInfo.subject_age;
+                    else
+                        readage{age} =[];
+                    end
+                    age = age+1;
+                end
             end
-            pro=pro+1;
         end
     end
-    readconditions = unique(dingus(:,2));
-    readproject = unique(dingus(:,3));
-    readsubject = unique(dingus(:,4));
-    readdate = unique(dingus(:,5));
-    
-    temp=dingus(:,6);
-    emptyCells = cellfun(@isempty,temp);
-    temp(emptyCells) = [];
-    readgender=unique(temp);
-    
-    temp=dingus(:,7);
-    emptyCells = cellfun(@isempty,temp);
-    temp(emptyCells) = [];
-    readage=unique(cell2mat((temp)));
-    
-
+    clear con sub date pro age gender
 end
-
-%% Questions about this part
-if nargs==2;
+if nargs==1;
     selection.con = P{2};
     selection.sub = readsubject;
     selection.date = readdate;
     selection.pro = readproject;
     selection.age = readage;
     selection.gender = readgender;
-elseif nargs ==3;
+elseif nargs ==2;
     selection.con = P{2};
     selection.sub = P{3};
     selection.date =  readdate;
     selection.pro = readproject;
     selection.age = readage;
     selection.gender = readgender;
-elseif nargs == 4;
+elseif nargs == 3;
     selection.con = P{2};
     selection.sub = P{3};
     selection.date = P{4};
     selection.pro = readproject;
     selection.age = readage;
     selection.gender = readgender;
-elseif nargs == 5;
-    selection.con = P{2};
-    selection.sub = P{3};
-    selection.date = P{5};
-    selection.pro = readproject;
-    selection.age = readage;
-    selection.gender = readgender;
-elseif nargs == 6;
+elseif nargs == 4;
     selection.con = P{2};
     selection.sub = P{3};
     selection.date = P{5};
@@ -195,60 +201,86 @@ elseif nargs == 6;
     selection.gender = readgender;
 end
 %--- interface
-if nargs <= 1
+if nargs == 0
     scrsz = get(0,'ScreenSize');
-    GroupSelection = figure('Units','pixels', 'name','NBT: Define Group' ,'numbertitle','off','Position',[390.0000  456.7500  1000  320], ...
+    GroupSelection = figure('Units','pixels', 'name','Define Group' ,'numbertitle','off','Position',[390.0000  456.7500  1000  300], ...
         'MenuBar','none','NextPlot','new','Resize','off');
     GroupSelection=nbt_movegui(GroupSelection);
 
     g = gcf;
     Col = get(g,'Color');
-    Gp1 = uipanel(GroupSelection,'Title','Conditions','FontSize',10,'Units','pixels','Position',[10 100 150 200],'BackgroundColor','w','fontweight','bold');
-    listBox1 = uicontrol(Gp1,'Style','listbox','Units','pixels',...
-        'Position',[1 1 140 180],...
+    
+    listBox1 = uicontrol(GroupSelection,'Style','listbox','Units','characters',...
+        'Position',[4 1 15 17],...
         'BackgroundColor','white',...
         'Max',10,'Min',1, 'String', readconditions,'Value',[]);
-    Gp2 = uipanel(GroupSelection,'Title','Subjects','FontSize',10,'Units','pixels','Position',[170 100 150 200],'BackgroundColor','w','fontweight','bold');
-    listBox2 = uicontrol(Gp2,'Style','listbox','Units','pixels',...
-        'Position',[1 1 140 180],...
+    get(listBox1,'Position');
+    text_ui1= uicontrol(GroupSelection,'Style','text','Position',[20 270 700 20],...
+        'string','Condition            Subject             Date                 Project               Gender             Age   ','fontsize',12, 'HorizontalAlignment','Left');
+    listBox2 = uicontrol(GroupSelection,'Style','listbox','Units','characters',...
+        'Position',[24 1 15 17],...
         'BackgroundColor','white',...
         'Max',10,'Min',1, 'String', readsubject,'Value',[]);
-    Gp3 = uipanel(GroupSelection,'Title','Date','FontSize',10,'Units','pixels','Position',[330 100 150 200],'BackgroundColor','w','fontweight','bold');
-    listBox3 = uicontrol(Gp3,'Style','listbox','Units','pixels',...
-        'Position',[1 1 140 180],...
+%     text_ui2= uicontrol(GroupSelection,'Style','text','Position',[160 270 100 20],'string',' Subject ','fontsize',12);
+    listBox3 = uicontrol(GroupSelection,'Style','listbox','Units','characters',...
+        'Position',[44 1 15 17],...
         'BackgroundColor','white',...
         'Max',10,'Min',1, 'String', readdate,'Value',[]);
-    Gp4 = uipanel(GroupSelection,'Title','Project','FontSize',10,'Units','pixels','Position',[490 100 150 200],'BackgroundColor','w','fontweight','bold');
-    listBox4 = uicontrol(Gp4,'Style','listbox','Units','pixels',...
-        'Position',[1 1 140 180],...
+%     text_ui3= uicontrol(GroupSelection,'Style','text','Position',[260 270 100 20],'string','  Date   ','fontsize',12);
+    listBox4 = uicontrol(GroupSelection,'Style','listbox','Units','characters',...
+        'Position',[64 1 15 17],...
         'BackgroundColor','white',...
         'Max',10,'Min',1, 'String', readproject,'Value',[]);
-    Gp5 = uipanel(GroupSelection,'Title','Gender','FontSize',10,'Units','pixels','Position',[650 100 150 200],'BackgroundColor','w','fontweight','bold');
-    listBox5 = uicontrol(Gp5,'Style','listbox','Units','pixels',...
-        'Position',[1 1 140 180],...
+%     text_ui4= uicontrol(GroupSelection,'Style','text','Position',[360 270 100 20],'string',' Project ','fontsize',12);
+    listBox5 = uicontrol(GroupSelection,'Style','listbox','Units','characters',...
+        'Position',[84 1 15 17],...
         'BackgroundColor','white',...
         'Max',10,'Min',1, 'String', readgender,'Value',[]);
+%     text_ui5= uicontrol(GroupSelection,'Style','text','Position',[460 270 100 20],'string',' Gender  ','fontsize',12);
     % sort age
-    if ~isempty(readage)
-        eta = sort(readage);
-        clear readage
-        for anni = 1:length(eta)
-            readage{anni} = eta(anni);
+    if ~isempty(cell2mat(readage))
+    countage = 1;
+    if(~strcmp(readage{1,1},''))
+    for anni = 1:length(readage) 
+        if ischar(readage{anni})
+        eta(countage) = str2num(readage{anni});  
+        else
+            if isempty((readage{anni}))
+                eta(countage) = 99;  
+            else
+                eta(countage) = (readage{anni});  
+            end
         end
+        countage = countage + 1;     
+    end
+    eta = sort(eta);
+    eta = unique(eta);
+    clear readage
+    for anni = 1:length(eta)
+        readage{anni} = eta(anni);
+    end
+    end
     end
     
     %
-    Gp6 = uipanel(GroupSelection,'Title','Age','FontSize',10,'Units','pixels','Position',[810 100 150 200],'BackgroundColor','w','fontweight','bold');
-    listBox6 = uicontrol(Gp6,'Style','listbox','Units','pixels',...
-        'Position',[1 1 140 180],...
+    listBox6 = uicontrol(GroupSelection,'Style','listbox','Units','characters',...
+        'Position',[104 1 15 17],...
         'BackgroundColor','white',...
         'Max',10,'Min',1, 'String', readage,'Value',[]);
 %     text_ui6= uicontrol(GroupSelection,'Style','text','Position',[560 270 100 20],'string','   Age   ','fontsize',12);
     
+<<<<<<< HEAD
     text_ui7= uicontrol(GroupSelection,'Style','text','Position',[700 70 200 20],'string','Write a name for the Group','fontsize',10);
     text_ui8= uicontrol(GroupSelection,'Style','edit','Position',[700 50 200 20],'string','','fontsize',10);
     
     plotButton = uicontrol(GroupSelection,'Style','pushbutton','Units','pixels','Position',[920 30 40 40], 'String','OK','callback', @groupdefinition);
+=======
+    text_ui7= uicontrol(GroupSelection,'Style','text','Position',[760 270 200 20],'string','Insert a name for the Group','fontsize',10);
+    text_ui8= uicontrol(GroupSelection,'Style','edit','Position',[760 230 200 20],'string','','fontsize',10);
+    
+    plotButton = uicontrol(GroupSelection,'Style','pushbutton','Units','characters','Position',[140 14 20 2], 'String','OK','callback', @groupdefinition);
+    
+>>>>>>> FETCH_HEAD
 else
     
     startindex = 0;
@@ -395,72 +427,77 @@ end
             end
         end
         group_name = get(text_ui8,'String');
-        if(isempty(group_name))
-            set(plotButton,'String', 'OK');
-            disp('Please write a group name to continue');
-            return
-        end
         selection.group_name = group_name;
         %         selection.con = con;
         %         selection.sub = sub;
         %         selection.date = date;
         %         selection.pro = pro;
         
-      
+        
         if(~nbt_determineNBTelementState) %loading information from analysis files
-            dingus_index=zeros(size(dingus));
-            if ~isempty(selection.con)
-                for counter=1:numel(selection.con)
-                    dingus_index(:,2)=dingus_index(:,2)+strcmp(selection.con(counter),dingus(:,2));
+            %--- generate Selected file dir struct
+            startindex = 0;
+            for i = 1:length(d)
+                if  d(i).isdir || strcmp(d(i).name(1),'.') || strcmp(d(i).name(1:2),'..') || strcmp(d(i).name(1:2),'._')
+                    startindex = i+1;
                 end
             end
-            if ~isempty(selection.pro)
-                for counter=1:numel(selection.pro)
-                    dingus_index(:,3)=dingus_index(:,3)+strcmp(selection.pro(counter),dingus(:,3));
+            k = 1;
+            for i = startindex:length(d)
+                if ~isempty(findstr('analysis',d(i).name))
+                    analysis_files(k) = d(i);
+                    k = k +1;
                 end
             end
-            if ~isempty(selection.sub)
-                for counter=1:numel(selection.sub)
-                    dingus_index(:,4)=dingus_index(:,4)+strcmp(selection.sub(counter),dingus(:,4));
+            g =1;
+            for i = 1:length(selection.con)
+                for j = 1:length(selection.sub)
+                    for k = 1:length(selection.date)
+                        for h = 1:length(selection.pro)
+                            SelFiles{g} = strcat(selection.pro(h),'.',selection.sub(j),'.',selection.date(k),'.',selection.con(i),'_analysis.mat');
+                            g = g+1;
+                        end
+                    end
                 end
             end
-            if ~isempty(selection.date)
-                for counter=1:numel(selection.date)
-                    dingus_index(:,5)=dingus_index(:,5)+strcmp(selection.date(counter),dingus(:,5));
-                end
-            end
-            if ~isempty(selection.gender)
-                for counter=1:numel(selection.gender)
-                    dingus_index(:,6)=dingus_index(:,6)+strcmp(selection.gender(counter),dingus(:,6));
-                end
-            else 
-                dingus_index(:,6)=ones(size(dingus_index(:,6)));
-            end
-            if ~isempty(selection.age)
-                for counter=1:numel(selection.age)
-                    dingus_index(:,7)=dingus_index(:,7)+(cell2mat(dingus(:,7))== str2double(cell2mat(selection.age(counter))));
-                end
-            else 
-                dingus_index(:,7)=ones(size(dingus_index(:,7)));
-            end
-            SelFiles=find(dingus_index(:,2).*dingus_index(:,3).*dingus_index(:,4).*dingus_index(:,5).*dingus_index(:,6).*dingus_index(:,7));
-            icounter = 0;
-            disp('NBT is sorting the files...')
-            %Here we check if the analysis files exists
-            for j = 1:length(SelFiles)
-                for i = startindex:length(d)
-                    if strcmp(d(i).name,cell2mat(dingus(SelFiles(j),1))) 
-                        d(i).path = path;
-                        group_name = get(text_ui8,'String');
-                        d(i).group_name = group_name;
-                        icounter = icounter +1; 
-                        SelectedFiles(icounter) = d(i);
-                        break; %no reason to look more
-                    else
-                        if(i == length(d))
-                            %we did not find the analysis file; issue a
-                            %warning
-                            warning(['The analysis file ' cell2mat(dingus(SelFiles(j),1)) ' was not found']);
+            
+            
+            k = 1;
+            for i = startindex:length(d)
+                % read gender and age
+                for j = 1:length(SelFiles)
+                    if strcmp(d(i).name,cell2mat(SelFiles{j}))
+                        
+                        Loaded = load([path '/' d(i).name(1:end-13) '_info.mat']);
+                        
+                        Infofields = fieldnames(Loaded);
+                        Firstfield = Infofields{1};
+                        clear Loaded Infofields;
+                        
+                        SignalInfo = load([path '/' d(i).name(1:end-13) '_info.mat'],Firstfield);
+                        
+                        SignalInfo = eval(strcat('SignalInfo.',Firstfield));
+                        %-check gender
+                        for m = 1:length(selection.gender);
+                            if ~ischar(SignalInfo.subject_gender)
+                                SignalInfo.subject_gender = num2str(SignalInfo.subject_gender);
+                            end
+                            if ~ischar(SignalInfo.subject_age)
+                                SignalInfo.subject_age = num2str(SignalInfo.subject_age);
+                            end
+                            if isequal(SignalInfo.subject_gender,(selection.gender{m}))
+                                for n = 1:length(selection.age)
+                                    if isequal((SignalInfo.subject_age),num2str(selection.age{n}))
+                                        %-check age
+                                        disp('Please wait: NBT is sorting the files...')
+                                        d(i).path = path;
+                                        group_name = get(text_ui8,'String');
+                                        d(i).group_name = group_name;
+                                        SelectedFiles(k) = d(i); % contains exactly the files to be used for the statistics
+                                        k = k +1;
+                                    end
+                                end
+                            end
                         end
                     end
                 end

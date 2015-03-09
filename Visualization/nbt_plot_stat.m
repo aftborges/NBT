@@ -10,7 +10,7 @@
 %   c1 contains biomarker data for each subject, it's a matrix of dimension
 %      n_biomarkersxn_subjects
 %   statdata   is a struct containing
-%             statdata.statfuncname % test name
+%             statdata.test % test name
 %             statdata.statistic % statisticcs (ie. @nanmean)
 %             statdata.func % statistic function (i.e. @ttest)
 %             statdata.p % p-values
@@ -145,12 +145,12 @@ ax=get(gca,'ylim');
 axis tight
 ylim(ax)
 ax2=get(gca,'ylim');
-% xlabel('Biomarker number')
+xlabel('Biomarker number')
 legend([M,S],'Not significant','Significant')
 if isempty(cond1) && isempty(cond2) 
-    ylabel(['Errorbars of ',char(statdata.statfuncname),' for ',regexprep(biomarker,'_',' ')],'interpreter','none')
+    ylabel(['Errorbars of ',cell2mat(statdata.test),' for ',regexprep(biomarker,'_',' ')],'interpreter','none')
 else
-    ylabel(['Errorbars of ',char(statdata.statfuncname),' for the difference between conditions ',regexprep(cond2,'_',' '), ' and ' regexprep(cond1,'_',' '),])
+    ylabel(['Errorbars of ',cell2mat(statdata.test),' for the difference between conditions ',regexprep(cond2,'_',' '), ' and ' regexprep(cond1,'_',' '),])
 
 end
 %     title(regexprep(biomarker,'_',' '),'interpreter','none')

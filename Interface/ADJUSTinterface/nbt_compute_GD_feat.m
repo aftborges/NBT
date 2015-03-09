@@ -56,13 +56,9 @@ for ic=1:num_componenti
         dist=sqrt(sum((d.*d),2));
         
         [y,I]=sort(dist);
-        try
-            repchas=I(2:11); % list of 10 nearest channels to el
-            weightchas=exp(-y(2:11)); % respective weights, computed wrt distance
-        catch %in case we do not have 10 channels
-            repchas=I(2:end); 
-            weightchas=exp(-y(2:end)); 
-        end
+        repchas=I(2:11); % list of 10 nearest channels to el
+        weightchas=exp(-y(2:11)); % respective weights, computed wrt distance
+        
         aux=[aux abs(topografie(ic,el)-mean(weightchas.*topografie(ic,repchas)'))];
                 % difference between el and the average of 10 neighbors
                 % weighted according to weightchas

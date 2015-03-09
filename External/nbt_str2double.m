@@ -1,4 +1,4 @@
-function [num,status,strarray] = nbt_str2double(s,cdelim,rdelim,ddelim)
+function [num,status,strarray] = str2double(s,cdelim,rdelim,ddelim)
 %% STR2DOUBLE converts strings into numeric values
 %%  [NUM, STATUS,STRARRAY] = STR2DOUBLE(STR) 
 %%  

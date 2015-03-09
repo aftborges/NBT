@@ -63,10 +63,7 @@ x = x - center(1);  % center the data
 y = y - center(2);
 z = z - center(3);
 radius = (sqrt(x.^2+y.^2+z.^2));   % assume xyz values are on a sphere
-if ~isempty(radius)
-     wobble = std(radius);              % test if xyz values are on a sphere
-else wobble = [];
-end;
+wobble = std(radius);              % test if xyz values are on a sphere
 fprintf('Radius values: %g (mean) +/- %g (std)\n',mean(radius),wobble);
 newcenter = center;
 
@@ -76,11 +73,7 @@ if  wobble/mean(radius) > 0.01 & optim==1
 	fprintf('Optimizing center position...\n');
 	kk=0;
 	while wobble/mean(radius) > 0.01 & kk<5
-        try
-    		newcenter = fminsearch('spherror',center,options,x,y,z);
-        catch
-    		newcenter = fminsearch('spherror',center,[], [], x,y,z);
-        end;
+		newcenter = fminsearch('spherror',center,options,x,y,z);
 		nx = x - newcenter(1);  % re-center the data
 		ny = y - newcenter(2);
 		nz = z - newcenter(3);

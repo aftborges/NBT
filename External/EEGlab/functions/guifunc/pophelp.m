@@ -38,12 +38,10 @@ if nargin <2
 	nonmatlab = 0;
 end;
 
-if exist('help2html')
+if exist('help22html')
     if length(funct) > 3 && strcmpi(funct(end-3:end), '.txt')
         web(funct);
     else
-        pathHelpHTML = fileparts(which('help2html'));
-        if ~isempty(findstr('NFT', pathHelpHTML)), rmpath(pathHelpHTML); end;
         text1 = help2html(funct);
         if length(funct) > 4 & strcmpi(funct(1:4), 'pop_')
             try,
@@ -59,7 +57,6 @@ if exist('help2html')
         web([ 'text://' text1 ]);
     end;
 else
-    if isempty(funct), return; end;
     doc1 = readfunc(funct, nonmatlab);
     if length(funct) > 4 & strcmpi(funct(1:4), 'pop_')
         try,

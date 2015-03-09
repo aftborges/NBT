@@ -40,12 +40,6 @@ if nargin < 2
     return;
 end;
 
-if isempty(chanlocs) && isstr(chanstr)
-    chaninds = str2num(chanstr);
-    chanlist = chaninds;
-    return;
-end;
-    
 if isstr(chanstr)
     % convert chanstr
     % ---------------
@@ -103,7 +97,7 @@ else
     alllabs  = lower({ chanlocs.labels });
     chanlist = lower(chanlist);
     for ind = 1:length(chanlist)
-        indmatch = find(strcmp(alllabs,chanlist{ind})); %#ok<STCI>
+        indmatch = strmatch(chanlist{ind}, alllabs, 'exact');
         if ~isempty(indmatch)
             for tmpi = 1:length(indmatch)
                 chaninds(end+1) = indmatch(tmpi);

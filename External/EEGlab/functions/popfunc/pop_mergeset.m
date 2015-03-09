@@ -131,10 +131,10 @@ else % INEEG is an EEG struct
                 INEEGX{n}.epoch = repmat(struct(),[1,INEEGX{n}.trials]);
             end
         end
-        for n=1:2
-            % purge all event-related epoch fields from each dataset (EEG.epoch.event* fields)
-            % --------------------------------------------------------------------------------
-            if isstruct(INEEGX{n}.epoch)
+        if ~isempty(INEEGX{1}.epoch)
+            for n=1:2
+                % purge all event-related epoch fields from each dataset (EEG.epoch.event* fields)
+                % --------------------------------------------------------------------------------
                 fn = fieldnames(INEEGX{n}.epoch);
                 INEEGX{n}.epoch = rmfield(INEEGX{n}.epoch,{fn{strmatch('event',fn)}});
                 % copy remaining field names to the other dataset
@@ -147,18 +147,11 @@ else % INEEG is an EEG struct
                 % after this, both sets have an epoch field with the appropriate number of items
                 % and possibly some user-defined fields, but no event* fields.
             end
-        end
-
-        % concatenate epochs
-        % ------------------
-        if isstruct(INEEGX{1}.epoch) && isstruct(INEEGX{2}.epoch)
-            if length(fieldnames(INEEGX{2}.epoch)) > 0
-                INEEGX{1}.epoch(end+1:end+INEEGX{2}.trials) = orderfields(INEEGX{2}.epoch,INEEGX{1}.epoch);
-            else
-                INEEGX{1}.epoch(end+1:end+INEEGX{2}.trials) = INEEGX{2}.epoch;
-            end;
-        end
-        % and write back
+            % concatenate epochs & write back
+            % -------------------------------
+            INEEGX{1}.epoch(end+1:end+INEEGX{2}.trials) = orderfields(INEEGX{2}.epoch,INEEGX{1}.epoch);
+        end;
+        
         INEEG1 = INEEGX{1};
         INEEG2 = INEEGX{2};
         INEEGX = {};
@@ -237,42 +230,30 @@ else % INEEG is an EEG struct
         % concatenate urevents
         % --------------------
         if isfield(INEEG2, 'urevent')
-            if ~isempty(INEEG2.urevent) && isfield(INEEG1.urevent, 'latency')
+            if ~isempty(INEEG2.urevent)
 
                 % insert boundary event
                 % ---------------------
                 disp('Inserting boundary event...');
                 INEEG1.urevent(end+1).type    = 'boundary';
-                try
-                    INEEG1.urevent(end  ).latency = max(INEEG1pnts, INEEG1.urevent(end-1).latency)+0.5;
-                catch
-                    % cko: sometimes INEEG1 has no events / urevents
-                    INEEG1.urevent(end  ).latency = INEEG1pnts+0.5;
-                end
-                    
+                INEEG1.urevent(end  ).latency = max(INEEG1pnts, INEEG1.urevent(end-1).latency)+0.5;
 
                 % update urevent indices for second dataset
                 % -----------------------------------------
                 disp('Concatenating urevents...');
                 orilen    = length(INEEG1.urevent);
-                newlen    = length(INEEG2.urevent);
-                INEEG2event = INEEG2.event;
-                % update urevent index in INEEG2.event
-                tmpevents = INEEG2.event;
-                nonemptymask = ~cellfun('isempty',{tmpevents.urevent});
-                [tmpevents(nonemptymask).urevent] = celldeal(num2cell([INEEG2event.urevent]+orilen));
-                INEEG2.event = tmpevents;
-                % reserve space and append INEEG2.urevent
-                INEEG1.urevent(orilen+newlen).latency = [];
-                INEEG2urevent = INEEG2.urevent;
-                tmpevents = INEEG1.urevent;
-                for f = fieldnames(INEEG2urevent)'
-                    [tmpevents((orilen+1):(orilen+newlen)).(f{1})] = INEEG2urevent.(f{1}); 
+                for e=1:length(INEEG2.event)
+                    INEEG2.event(e).urevent = INEEG2.event(e).urevent + orilen;
+                end;
+
+                allfields = fieldnames(INEEG2.urevent);
+                for i=1:length( allfields )
+                    for e=1:length(INEEG2.urevent)
+                        tmpval = getfield(INEEG2.urevent, { e }, allfields{i});
+                        INEEG1.urevent = setfield(INEEG1.urevent, {orilen + e}, allfields{i}, tmpval);
+                    end
                 end
-                INEEG1.urevent = tmpevents;
             else
-                INEEG1.urevent = [];
-                INEEG2.urevent = [];
                 fprintf('Warning: second dataset has empty urevent structure.\n');
             end
         end;
@@ -281,43 +262,32 @@ else % INEEG is an EEG struct
         % ------------------
         disp('Concatenating events...');
         orilen = length(INEEG1.event);
-        newlen = length(INEEG2.event);
         %allfields = fieldnames(INEEG2.event);
 
         % ensure similar event structures
         % -------------------------------
         if ~isempty(INEEG2.event)
-            if isstruct(INEEG1.event)
-                for f = fieldnames(INEEG1.event)'
-                    if ~isfield(INEEG2.event,f{1})
-                        INEEG2.event(1).(f{1}) = [];
-                    end
+            for f = fieldnames(INEEG1.event)'
+                if ~isfield(INEEG2.event,f{1})
+                    INEEG2.event(1).(f{1}) = [];
                 end
             end
-            if isstruct(INEEG2.event)
-                for f = fieldnames(INEEG2.event)'
-                    if ~isfield(INEEG1.event,f{1})
-                        INEEG1.event(1).(f{1}) = [];
-                    end
+            for f = fieldnames(INEEG2.event)'
+                if ~isfield(INEEG1.event,f{1})
+                    INEEG1.event(1).(f{1}) = [];
                 end
             end
             INEEG2.event = orderfields(INEEG2.event, INEEG1.event);
         end;
 
-        % append
-        INEEG1.event(orilen+(1:newlen)) = INEEG2.event;
-        INEEG2event = INEEG2.event;
-        if isfield(INEEG1.event,'latency') && isfield(INEEG2.event,'latency')
-            % update latency
-            tmpevents = INEEG1.event;
-            [tmpevents(orilen + (1:newlen)).latency] = celldeal(num2cell([INEEG2event.latency] + INEEG1pnts*INEEG1trials));
-            INEEG1.event = tmpevents;
-        end
-        if isfield(INEEG1.event,'epoch') && isfield(INEEG2.event,'epoch')
-            % update epoch index
-            tmpevents = INEEG1.event;
-            [tmpevents(orilen + (1:newlen)).epoch] = celldeal(num2cell([INEEG2event.epoch]+INEEG1trials));
-            INEEG1.event = tmpevents;
+        for e=1:length(INEEG2.event)
+            INEEG1.event(orilen + e) = INEEG2.event(e);
+            if isfield(INEEG1.event,'latency') & isfield(INEEG2.event,'latency')
+                INEEG1.event(orilen + e).latency = INEEG2.event(e).latency + INEEG1pnts * INEEG1trials;
+            end
+            if isfield(INEEG1.event,'epoch') & isfield(INEEG2.event,'epoch')
+                INEEG1.event(orilen + e).epoch = INEEG2.event(e).epoch + INEEG1trials;
+            end
         end
 
         % add discontinuity event if continuous
@@ -331,10 +301,6 @@ else % INEEG is an EEG struct
 
     INEEG1.pnts = size(INEEG1.data,2);
 
-    if ~isfield(INEEG1.event,'epoch') && ~isempty(INEEG1.event) && (size(INEEG1.data,3)>1 || ~isempty(INEEG1.epoch))
-        INEEG1.event(1).epoch = [];
-    end
-    
     % rebuild event-related epoch fields
     % ----------------------------------
     disp('Reconstituting epoch information...');
@@ -350,7 +316,3 @@ else
 end
 
 return
-
-
-function varargout = celldeal(X)
-varargout = X;

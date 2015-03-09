@@ -86,7 +86,8 @@ if isfield(Info.Interface,'noisey_intervals')
 end
 
 interval=1:size(Signal,1);
-set_para([],[]) % ask for parameters and make plot
+%set_para([],[]) % ask for parameters and make plot
+plotting
 
 function plotting
      %--- get figure handle
@@ -137,7 +138,7 @@ function plotting
     end
     if(isempty(color))
         color=caxis;
-        caxis([color(1) color(2)]);
+        caxis([0 color(2)]);
         color = caxis;
     else
         caxis([color(1) color(2)])

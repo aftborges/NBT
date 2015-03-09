@@ -61,7 +61,7 @@ disp('Adding events to remove Gross Artifact portions')
         EEGep = pop_epoch( EEG, {  '5sec'  }, [0 lag], 'newname', [EEG.setname '_ep5'] , 'epochinfo', 'yes');
         
         % removing baseline
-        EEGep = pop_rmbase( EEGep, []);
+        EEGep = pop_rmbase( EEGep, [0  0]);
         EEGep = eeg_checkset(EEGep);
         
         % compute gross artifact epochs

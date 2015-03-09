@@ -4,9 +4,6 @@ for i= 1:size(B_values1,2)
 end
 % check index of biomarker computed for each channel
 IndexbiomPerChans = find(dimens == NCHANNELS);
-if(~isempty(dimens == 0)) %find empty biomarkers
-    dimens = dimens(dimens ~=0);
-end
 dimens2 = sort(dimens);
 if length(IndexbiomPerChans)==length(dimens)
     dimens_diff = 1;
@@ -23,8 +20,8 @@ elseif length(dimens2)>1 & length(dimens2)~=length(IndexbiomPerChans)
         end
     end
     dimens_diff = k; % number of biomarkers with different dimensionality (dimens_diff = all biomarkers have same dimensionality)
-    dim_num(end+1) = dimens2(1); % Is this necessary?
-    biomNotPerChans = find(unique(dim_num) ~= NCHANNELS);
+    dim_num(end+1) = dimens2(1);
+    biomNotPerChans = find(dim_num ~= NCHANNELS);
     dim_num = dim_num(biomNotPerChans);
     % check index of biomarker not computed for each channel (i.e. questionnaire data)
     for i = 1:length(dimens)

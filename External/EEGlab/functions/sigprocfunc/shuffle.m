@@ -49,8 +49,13 @@ if nargin < 2
 end;
 	
 r =size(y, dim);
-a = rand(1,r);
-[tmp i] = sort(a);
+i=1:r;
+for j=1:r,
+  p=fix(1+r*rand);
+  a=i(p);
+  i(p)=i(j);
+  i(j)=a;
+end;
 switch dim
 	case 1
 		x = y(i,:,:,:,:);

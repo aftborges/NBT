@@ -63,20 +63,14 @@ end;
 if nargin < 2 & EEG(1).trials > 1
 	% popup window parameters
 	% -----------------------
-    defaultbase = [num2str(EEG(1).xmin*1000) ' 0'];
-    if EEG(1).xmin*1000 >= 0
-        defaultbase = '[ ]';
-    end;
-    uilist = { { 'style' 'text' 'string' 'Baseline latency range ([min max] in ms) ([ ] = whole epoch):' } ...
-               { 'style' 'edit' 'string'  defaultbase } ...
-               { 'style' 'text' 'string' 'Or remove baseline points vector (ex:1:56):' } ...
-               { 'style' 'edit' 'string' '' } ...
-               { 'style' 'text' 'string' 'Note: press Cancel if you do not want to remove the baseline' } ...
-               };
-    uigeom = { [3 1] [3 1] [1] };
-    [result usrdat] = inputgui( 'uilist', uilist, 'geometry', uigeom, 'title', 'Baseline removal - pop_rmbase()', 'helpcom', 'pophelp(''pop_rmbase'');'); 
-    if isempty(result), return; end;
-    if ~isempty(usrdat) && isnan(usrdat), return; end;
+    promptstr    = {'Baseline latency range (min_ms max_ms) ([] = whole epoch):',...
+         		   strvcat('Else, baseline points vector (ex:1:56) ([] = whole epoch):', ...
+                           '(overwritten by latency range above).') };
+	inistr     = { [num2str(EEG(1).xmin*1000) ' 0'], '' }; % latency range in ms
+	result       = inputdlg2( promptstr, 'Epoch baseline removal -- pop_rmbase()', ...
+                                  1,  inistr, 'pop_rmbase');
+	size_result  = size( result );
+	if size_result(1) == 0 return; end;
 
 	% decode parameters
 	% -----------------
@@ -123,8 +117,7 @@ if exist('pointrange') ~= 1 || isempty(pointrange)
     if ~isempty(timerange) && (timerange(1) < EEG.xmin*1000) & (timerange(2) > EEG.xmax*1000)
         error('pop_rmbase(): Bad time range');
     end;
-    pointrange = round((timerange(1)/1000-EEG.xmin)*EEG.srate+1):ceil((timerange(2)/1000-EEG.xmin)*EEG.srate);
-    if pointrange(end) > EEG.pnts, pointrange(end) = EEG.pnts; end;
+    pointrange = round((timerange(1)/1000-EEG.xmin)*EEG.srate+1):round((timerange(2)/1000-EEG.xmin)*EEG.srate);
 end;	
 
 if ~isempty(pointrange) && ((min(pointrange) < 1) || (max( pointrange ) > EEG.pnts))
@@ -135,35 +128,27 @@ fprintf('pop_rmbase(): Removing baseline...\n');
 %
 % Respect excised data boundaries if continuous data
 % ---------------------------------------------------
-if EEG.trials == 1 && ~isempty(EEG.event) ...
-                     && isfield(EEG.event, 'type') ...
-                        && isstr(EEG.event(1).type)
+if EEG.trials == 1 & ~isempty(EEG.event) ...
+                     & isfield(EEG.event, 'type') ...
+                        & isstr(EEG.event(1).type)
     tmpevent = EEG.event;
 	boundaries = strmatch('boundary', {tmpevent.type});
 	if ~isempty(boundaries) % this is crashing
         fprintf('Pop_rmbase(): finding continuous data discontinuities\n');
         boundaries = round([ tmpevent(boundaries).latency ] -0.5-pointrange(1)+1);
-        boundaries(boundaries>=pointrange(end)-pointrange(1)) = [];
-        boundaries(boundaries<1) = [];
-        boundaries = [0 boundaries pointrange(end)-pointrange(1)+1];
+        boundaries(find(boundaries>=pointrange(end)-pointrange(1))) = [];
+        boundaries(find(boundaries<1)) = [];
+        boundaries = [0 boundaries pointrange(end)-pointrange(1)];
         for index=1:length(boundaries)-1
             tmprange = [boundaries(index)+1:boundaries(index+1)];
-            if length(tmprange) > 1
-                EEG.data(:,tmprange) = rmbase( EEG.data(:,tmprange), length(tmprange), ...
-                                                   [1:length(tmprange)]);
-            elseif length(tmprange) == 1
-                EEG.data(:,tmprange) = 0;
-            end;
+            EEG.data(:,tmprange) = rmbase( EEG.data(:,tmprange), length(tmprange), ...
+                                               [1:length(tmprange)]);
         end;
     else
-        EEG.data = rmbase( EEG.data, EEG.pnts, pointrange );    
+        EEG.data = rmbase( EEG.data(:,:), EEG.pnts, pointrange );    
     end;		
-else
-    for indc = 1:EEG.nbchan
-        tmpmean  = mean(double(EEG.data(indc,pointrange,:)),2);
-        EEG.data(indc,:,:) = EEG.data(indc,:,:) - repmat(tmpmean, [1 EEG.pnts 1]);
-    end;
-%    EEG.data = rmbase( reshape(EEG.data, EEG.nbchan, EEG.pnts*EEG.trials), EEG.pnts, pointrange );
+else 
+    EEG.data = rmbase( EEG.data(:,:), EEG.pnts, pointrange );
 end;
 
 EEG.data = reshape( EEG.data, EEG.nbchan, EEG.pnts, EEG.trials);

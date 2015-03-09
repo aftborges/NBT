@@ -98,16 +98,14 @@ switch fieldbox
   case 'preprocessing'
     for index = 1:EEG.trials
       data.trial{index}  = EEG.data(:,:,index);
+      data.offset(index) = EEG.xmin*EEG.srate+1;                   % should be checked in FIELDTRIP
       data.time{index}   = linspace(EEG.xmin, EEG.xmax, EEG.pnts); % should be checked in FIELDTRIP
     end;
-    data.label   = { tmpchanlocs(1:EEG.nbchan).labels };
-
     
   case 'timelockanalysis'
     data.avg  = mean(EEG.data, 3);   
     data.var  = std(EEG.data, [], 3).^2;   
     data.time = linspace(EEG.xmin, EEG.xmax, EEG.pnts); % should be checked in FIELDTRIP
-    data.label   = { tmpchanlocs(1:EEG.nbchan).labels };
     
   case 'componentanalysis'
     for index = 1:EEG.trials
@@ -117,6 +115,7 @@ switch fieldbox
           data.trial{index}  = EEG.icaact(:,:,index);
       catch
       end;
+      data.offset(index) = EEG.xmin*EEG.srate+1;                   % should be checked in FIELDTRIP
       data.time{index}   = linspace(EEG.xmin, EEG.xmax, EEG.pnts); % should be checked in FIELDTRIP
     end;
     for comp = 1:size(EEG.icawinv,2)

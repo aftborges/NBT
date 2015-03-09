@@ -77,10 +77,7 @@ for index = 1:size(strinori,1) % scan lines
     % type of delimiter
     % -----------------
     if isempty(delimiter)
-        if ~isempty(lines)
-             strouttmp = strvcat(lines{:});
-        else strouttmp = '';
-        end;
+        strouttmp = strvcat(lines{:});
         if isempty(strouttmp)
             strouttmp = ones(1,maxlen)*' ';
         elseif size(strouttmp, 2) < maxlen

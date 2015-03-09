@@ -194,7 +194,7 @@ if ischar(chanlocs1)
                     tmpelec2.label{clist2(index)} = dat.elec1.label{clist1(index)};
                 end;
                 %try,
-                    [ tmp dat.transform ] = warp_chans(dat.elec1, tmpelec2, tmpelec2.label(clist2), 'traditional');
+                    [ tmp dat.transform ] = warp_chans(dat.elec1, dat.elec2, tmpelec2.label(clist2), 'traditional');
                 %catch,
                 %    warndlg2(strvcat('Transformation failed', lasterr));
                 %end;
@@ -211,14 +211,14 @@ end;
 % defaultmesh = 'D:\matlab\eeglab\plugins\dipfit2.0\standard_BEM\standard_vol.mat';
 defaultmesh = 'standard_vol.mat';
 g = finputcheck(varargin, { 'alignfid'   'cell'  {}      {};
-                            'warp'       { 'string','cell' }  { {} {} }      {};
+                            'warp'       { 'string' 'cell' }  { {} {} }      {};
                             'warpmethod' 'string'  {'rigidbody', 'globalrescale', 'traditional', 'nonlin1', 'nonlin2', 'nonlin3', 'nonlin4', 'nonlin5'} 'traditional';
                             'chaninfo1'  'struct' {}    struct('no', {}); % default empty structure
                             'chaninfo2'  'struct' {}     struct('no', {}); 
                             'transform'  'real'   []      [];
-                            'manual'     'string' { 'on','off' } 'on'; % -> pop up window
-                            'autoscale'  'string' { 'on','off' } 'on';
-                            'helpmsg'    'string' { 'on','off' } 'off';
+                            'manual'     'string' { 'on' 'off' } 'on'; % -> pop up window
+                            'autoscale'  'string' { 'on' 'off' } 'on';
+                            'helpmsg'    'string' { 'on' 'off' } 'off';
                             'mesh'       ''      []   defaultmesh });
 if ischar(g), error(g); end;
 
@@ -253,9 +253,6 @@ if ~isempty(g.mesh)
             elseif isfield(g.mesh, 'TRI1')
                 dat.meshpnt = g.mesh.POS;
                 dat.meshtri = g.mesh.TRI1;
-            elseif isfield(g.mesh, 'vertices')
-                dat.meshpnt = g.mesh.vertices;
-                dat.meshtri = g.mesh.faces;
             else
                 error('Unknown Matlab mesh file');
             end;
@@ -329,7 +326,7 @@ else
                     tmpelec2.label{clist2(index)} = elec1.label{clist1(index)};
                 end;
                 try,
-                    [ electransf dat.transform ] = warp_chans(elec1, tmpelec2, tmpelec2.label(clist2), 'traditional');
+                    [ electransf dat.transform ] = warp_chans(elec1, elec2, tmpelec2.label(clist2), 'traditional');
                 catch,
                     warndlg2(strvcat('Transformation failed', lasterr));
                 end;
@@ -443,8 +440,9 @@ if 1
                     'coregister(''redraw'', gcbf);' ];
     cb_elecshow1 = [ 'tmp = get(gcbf, ''userdata'');' ...
                       'tmp.elecshow1 = pop_chansel( tmp.elec1.label, ''select'', tmp.elecshow1 );' ...
-                      'if ~isempty(tmp.elecshow1), set(gcbf, ''userdata'', tmp);' ...
-                      'coregister(''redraw'', gcbf); end; clear tmp;' ];
+                      'set(gcbf, ''userdata'', tmp);' ...
+                      'clear tmp;' ...
+                      'coregister(''redraw'', gcbf);' ];
     cb_elecshow2 = [ 'tmp = get(gcbf, ''userdata'');' ...
                       'tmpstrs = { ''21 elec (10/20 system)'' ''86 elec (10/10 system)'' ''all elec (10/5 system)'' };' ...
                       'tmpres = inputgui( ''uilist'', {{ ''style'' ''text'' ''string'' ''show only'' } ' ...
@@ -530,9 +528,9 @@ function plotelec(elec, elecshow, color, tag);
     
     % make bigger if fiducial
     % ------------------------
-    fidlist = { 'nz' 'lpa' 'rpa' 'nazion' 'left' 'right' 'nasion' 'fidnz' 'fidt9' 'fidt10'};
-    [tmp fids ] = intersect_bc(lower(elec.label(elecshow)), fidlist);
-    nonfids     = setdiff_bc(1:length(elec.label(elecshow)), fids);
+    fidlist = { 'nz' 'lpa' 'rpa' 'nazion' 'left' 'right' 'nasion' };
+    [tmp fids ] = intersect(lower(elec.label(elecshow)), fidlist);
+    nonfids     = setdiff(1:length(elec.label(elecshow)), fids);
     h1 = plot3(X1(nonfids),Y1(nonfids),Z1(nonfids), 'o', 'color', color); hold on;
     set(h1, 'tag', tag, 'marker', '.', 'markersize', 20);
     if ~isempty(fids)
@@ -646,8 +644,8 @@ function [elec1, transf] = warp_chans(elec1, elec2, chanlist, warpmethod)
     %cfg.feedback = 'yes';
     cfg.channel  = chanlist;
     elec3 = electroderealign(cfg);
-    [tmp ind1 ] = intersect_bc( lower(elec1.label), lower(chanlist) );
-    [tmp ind2 ] = intersect_bc( lower(elec2.label), lower(chanlist) );
+    [tmp ind1 ] = intersect( lower(elec1.label), lower(chanlist) );
+    [tmp ind2 ] = intersect( lower(elec2.label), lower(chanlist) );
     
     transf = elec3.m;
     transf(4:6) = transf(4:6)/180*pi;
@@ -666,7 +664,7 @@ function [elec1, transf] = warp_chans(elec1, elec2, chanlist, warpmethod)
 % --------------------------------------------
 function transf = checktransf(transf, elec1, elec2)
     
-    [tmp ind1 ind2] = intersect_bc( elec1.label, elec2.label );
+    [tmp ind1 ind2] = intersect( elec1.label, elec2.label );
     
     transfmat = traditionaldipfit(transf);
     tmppnt = transfmat*[ elec1.pnt ones(size(elec1.pnt,1),1) ]';

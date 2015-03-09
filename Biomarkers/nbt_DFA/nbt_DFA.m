@@ -86,6 +86,7 @@ classdef nbt_DFA < nbt_Biomarker
         end
         
         function plot(DFAobject, ChannelID, DFA_Plot)
+            
             if ~ishandle(DFA_Plot)		%see if any figure handle is set
                 figure(DFA_Plot)
                 DFA_Plot = axes;

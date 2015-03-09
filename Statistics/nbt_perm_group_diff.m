@@ -96,9 +96,9 @@ for i=1:n
 end
 
 if diff>0
-    p=numel(find(perm_diff>diff)+1)/(n+1);
+    p=numel(find(perm_diff>diff))/n;
 else
-    p=numel(find(perm_diff<diff)+1)/(n+1);
+    p=numel(find(perm_diff<diff))/n;
 end
 
 %% plotting

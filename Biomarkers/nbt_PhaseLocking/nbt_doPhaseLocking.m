@@ -13,21 +13,16 @@
 %   interval - vector of dimension 1x2, express the time interval (in sec) one wants
 %               to analyse, i.e. [0 100]
 %   filterorder(opt)
-%   windowleng - length of the sliding window in seconds (by default, no sliding window method is used)
-%   overlap - 20 if 20 % overlap
-%   indexPhase [n m] - small integer
+%   windowleng length of the sliding window in seconds
+%   overlap i.e. 20 if 20 % overlap
+%   indexPhase [n m] small integer
 %
 % Outputs:
 %   PhaseLockingObject - update the Phase Locking Biomarker  
 %
 % Example:
-%    phase lock computed over the entired interval [0 100] s
 %    PhaseLocking8_13Hz =
-%    nbt_doPhaseLocking(Signal,SignalInfo,[8 13],[0 100],[],[],[],[1 1])
-%
-%    phase lock computed with sliding window of 1s with 20% overlap
-%    PhaseLocking8_13Hz =
-%    nbt_doPhaseLocking(Signal,SignalInfo,[8 13],[0 100],[],1,20,[1 1])
+%    nbt_doPhaseLocking(Signal,SignalInfo,[8 13],[0 100])
 %
 % References:
 %   Tass, P. and Rosenblum, MG and Weule, J. and Kurths, J. and Pikovsky, A. and Volkmann, J. and Schnitzler, A. and Freund, H.J.,
@@ -38,7 +33,7 @@
 %   and its application to the EEG of epilepsy patients},Physica D:
 %   Nonlinear Phenomena, 144, 3-4, 358-369, 2000
 %
-%   Michael G. Rosenblum, Arkady S. Pikovsky, and J???rgen Kurths, 
+%   Michael G. Rosenblum, Arkady S. Pikovsky, and Jürgen Kurths, 
 %   From Phase to Lag Synchronization in Coupled Chaotic Oscillators
 %   PHYSICAL REVIEW	LETTERS, VOLUME 78, NUMBER 22, 2 JUNE 1997
 % 
@@ -112,9 +107,9 @@ end
 %% check that the filter order is filtorder<<signal length/(3*2)
 
 if exist('filterorder', 'var')
-%     if filterorder >= size(Signal,1)/(3*2)
-%         error('The signal length must be at least 3 times the filter order')
-%     end
+    if filterorder >= size(Signal,1)/(3*2)
+        error('The signal length must be at least 3 times the filter order')
+    end
 else
         
 filterorder = 2/FrequencyBand(1);
@@ -123,9 +118,8 @@ end
 if ~exist('overlap', 'var') || isempty(overlap)
     overlap = [];%100/20;
 else
-     overlap = (100-overlap)/100;
+     overlap = 100/overlap;
 end
-
 
 if ~exist('windowleng', 'var') 
     windowleng = [];% 500ms
@@ -142,25 +136,16 @@ else
 end
 
 %% check that the higher frequency respects the relationship f_band2/(fs/2)<1
-% if (FrequencyBand(2)/(Fs/2))>1
-%      error('The highest frequency in the frequency band must be minor that the half of the sampling frequency')
-% end
-nchannels = size(Signal(:,:),2);
-signallength = size(Signal(:,:),1);
+if (FrequencyBand(2)/(Fs/2))>1
+     error('The highest frequency in the frequency band must be minor that the half of the sampling frequency')
+end
+
 %% filtering with FIR and hilbert transform
 % we filter the two signals using the same filter
-disp('Zero-Phase Filtering and Hilbert Transform...')
-b1 = fir1(floor(filterorder*Fs),[FrequencyBand(1) FrequencyBand(2)]/(Fs/2));
-for k = 1:nchannels
-    FilteredSignal(:,k) = filtfilt(b1,1,double(Signal(:,k)));
-end
-SignalHilb = hilbert(FilteredSignal);
+disp('Filtering and Hilbert Transform...')
+Signal = hilbert(nbt_filter_fir(Signal(:,:),FrequencyBand(1),FrequencyBand(2),SignalInfo.converted_sample_frequency,filterorder));
 disp('Instantaneous Phase...')
-phase = unwrap(angle(SignalHilb));
-% exclude 10% of the signal before and after because of distorsion
-% introduced by hilbert transform
-perc10w =  floor(signallength*0.1);
-phase = phase(perc10w:end-perc10w,:);
+phase = unwrap(angle(Signal));
 SignalInfo.frequencyRange = FrequencyBand;
 %% compute phase locking
 
@@ -173,6 +158,9 @@ SignalInfo.frequencyRange = FrequencyBand;
 % Hilbert transform (cf. Eq. (6)), the computational speed of the algorithm depends on the window length of N sampling points like .
 %% Initialize the biomarker object
 
+nchannels = size(Signal(:,:),2);
+signallength = size(Signal(:,:),1);
+
 PLV = nan(size(Signal(:,:),2),size(Signal(:,:),2));
 Instphase = phase;
 index1nm = nan(size(Signal(:,:),2),size(Signal(:,:),2));
@@ -180,13 +168,6 @@ index2nm = nan(size(Signal(:,:),2),size(Signal(:,:),2));
 index3nm = nan(size(Signal(:,:),2),size(Signal(:,:),2));
 n = indexPhase(1);
 m = indexPhase(2);
-
-PLV_in_time = [];
-index1nm_in_time = [];
-index2nm_in_time = [];
-index3nm_in_time = [];
-time_int = [];
-
 disp('Computing PLV ...')
 % if (interval(2)-interval(1))>Twind
 if ~isempty(windowleng)
@@ -194,10 +175,10 @@ if ~isempty(windowleng)
     Twind = Nwind/Fs; % length of the window in seconds
     nx = size(Signal(:,:),1);                            % size of signal
     w = hanning(Nwind)';                          % hamming window
-    nw = length(w);   % size of window
-    WindowStep = floor(nw*overlap);
-    
+    nw = length(w);                            % size of window
     PhaseLockingObject =nbt_PhaseLocking(signallength,nchannels);
+    PLV_in_time = nan(nchannels,nchannels,floor((signallength-nw)/(nw/overlap)));
+    time_int = linspace(0,floor((floor((length(Signal)-nw)/(nw/overlap)))*Twind/overlap),floor((length(Signal)-nw)/(nw/overlap)));
 
     for k=1:nchannels
         
@@ -205,22 +186,33 @@ if ~isempty(windowleng)
             disp([' channels ', num2str(k), ' ,' num2str(j), '...'])
             pos=1;
             jump = 0;
-            while (pos+nw-1 <= nx)                       % while enough signal left
+            while (pos+nw <= nx)                       % while enough signal left
                 jump = jump+1;
-                y1 = FilteredSignal(pos:pos+nw-1,k).*w';
-                y2 = FilteredSignal(pos:pos+nw-1,j).*w';
-                h1=hilbert(y1);   
-                h2=hilbert(y2);
-                [phase1w]=unwrap(angle(h1));
-                [phase2w]=unwrap(angle(h2));
-                perc10w =  floor(nw*0.1);
-                phase1w = phase1w(perc10w:end-perc10w);
-                phase2w = phase2w(perc10w:end-perc10w);
+                    phase1 = phase(pos:pos+nw-1,k).*w';           % make window y
+                    phase2 = phase(pos:pos+nw-1,j).*w'; 
+
+%                     h2=hilbert(y2);
+%                     h1=hilbert(y1);
+%                     [phase2]=unwrap(angle(h2));
+%                     [phase1]=unwrap(angle(h1));
+
+                   % since the calculation of the hilbert transform requires integration over
+                    % infinite time; 10% of the calculated instantaneous values are discarded
+                    % on each side of every window
+%                     % discard 10%
+%                     perc10w =  floor(nw/10);
+%                     phase1 = y1(perc10w:end-perc10w);
+%                     phase2 = y2(perc10w:end-perc10w);
                     
                     try
-                    RP=n*phase1w-m*phase2w;
-                    P_L_V(jump)=abs(sum(exp(i*RP)))/length(RP); 
-                    [ind1nm(jump),ind2nm(jump),ind3nm(jump)] = nbt_n_m_detection(phase1w,phase2w,n,m);                    
+                    RP=n*phase1-m*phase2;
+                    P_L_V(jump)=abs(sum(exp(i*RP))/length(RP));  %Relative Phase Value or mean phase coherence 
+                    % phase locking value: measure of the intertrial variability of phase difference
+                    % phase locking value close to 1, means that phase difference
+                    % varies little across the trial
+%                     phaseP_L_V(jump)=angle(sum(exp(i*RP))/length(RP));% Phase of RPV  
+                    % SynchIndex
+                    [ind1nm(jump),ind2nm(jump),ind3nm(jump)] = nbt_n_m_detection(phase1,phase2,n,m);                    
                     
                     catch Er
                         fprintf('Unable to process the Phase Locking \n');
@@ -228,35 +220,43 @@ if ~isempty(windowleng)
                     end
 
                     %%%% process window y %%%%
-                    pos = pos + WindowStep;                 % 20%overlap next window
+                    pos = floor(pos + nw/overlap);                 % 20%overlap next window
                     
             end
-        PLV_in_time(k,j,:) =  P_L_V;
-        time_int = ((1+(nw-1)/2):WindowStep:((pos-WindowStep)+(nw-1)/2))/Fs;
         index1nm(k,j) = mean(ind1nm);
         index2nm(k,j) = mean(ind2nm);
         index3nm(k,j) = mean(ind3nm);
         PLV(k,j) = mean(P_L_V);
-        index1nm_in_time(k,j,:) = ind1nm;
-        index2nm_in_time(k,j,:) = ind2nm;
-        index3nm_in_time(k,j,:) = ind3nm;
-        
+        PLV_in_time(k,j,:) =  P_L_V;
         end
     end
-
 else
     PhaseLockingObject =nbt_PhaseLocking(signallength,nchannels);
+    PLV_in_time = [];
+    time_int = [];
     for k=1:nchannels
 %         disp([' channel ', num2str(k), ' ...'])
         for j=k+1:nchannels
            disp([' channels ', num2str(k), ' ,' num2str(j), '...'])
-
+%             h2=hilbert(Signal1(:,k));
+%             h1=hilbert(Signal1(:,j));
+%             
+%             [phase2]=unwrap(angle(h2));
+%             [phase1]=unwrap(angle(h1));
+%             perc10w =  floor(signallength/10);
+%             phase1 = phase1(perc10w:end-perc10w);
+%             phase2 = phase2(perc10w:end-perc10w);
                 phase1 = phase(:,k);           % make window y
                 phase2 = phase(:,j);
             
             try 
                RP=n*phase1-m*phase2;
-               PLV(k,j)=abs(sum(exp(i*RP)))/length(RP); 
+               PLV(k,j)=abs(sum(exp(i*RP))/length(RP));  %Relative Phase Value or mean phase coherence 
+                    % phase locking value: measure of the intertrial variability of phase difference
+                    % phase locking value close to 1, means that phase difference
+                    % varies little across the trial
+%                phasePLV(k,j)=angle(sum(exp(i*RP))/length(RP));% Phase of PLV          
+               % SynchIndex
                [index1nm(k,j),index2nm(k,j),index3nm(k,j)] = nbt_n_m_detection(phase1,phase2,n,m);
             catch Er
                fprintf('Unable to process the Phase Locking \n');
@@ -269,25 +269,18 @@ end
 
 PhaseLockingObject.Ratio = [n m];
 PhaseLockingObject.PLV = PLV;
-PhaseLockingObject.Instphase = Instphase;
 % SignalInfo.frequencyRange = FrequencyBand;
 PhaseLockingObject.filterorder = filterorder;
 PhaseLockingObject.Ratio = [n m];
 PhaseLockingObject.interval = interval;
 % PhaseLockingObject.synchlag = synchlag;
-
-
-PhaseLockingObject.IndexE = index1nm; %index based on the Shannon entropy
-PhaseLockingObject.IndexCP = index2nm;%based on the conditional probability
-PhaseLockingObject.IndexF = index3nm;%based on the intensity of the first Fourier mode of the distribution 
-PhaseLockingObject.PLV_in_time = PLV_in_time;
-PhaseLockingObject.time_int = time_int;
-PhaseLockingObject.IndexE_in_time = index1nm_in_time;
-PhaseLockingObject.IndexCP_in_time = index2nm_in_time;
-PhaseLockingObject.IndexF_in_time = index3nm_in_time;
-
+PhaseLogkingObject.IndexE = index1nm; %index based on the Shannon entropy
+PhaseLogkingObject.IndexCP = index2nm;%based on the conditional probability
+PhaseLogkingObject.IndexF = index3nm;%based on the intensity of the first Fourier mode of the distribution 
+PhaseLogkingObject.PLV_in_time = PLV_in_time;
+PhaseLogkingObject.time_int = time_int;
 SignalInfo.frequencyRange = FrequencyBand;
-
+PhaseLogkingObject.Instphase = phase;
 %% update biomarker objects (here we used the biomarker template):
 PhaseLockingObject = nbt_UpdateBiomarkerInfo(PhaseLockingObject, SignalInfo);
 end
@@ -370,9 +363,8 @@ end
 % m = ind(nm,2);      
 % RP=n*phase1-m*phase2;
 % % distribution of the cyclic relative phase
-% CRP = rem(RP,2*pi);
-% 
-% Nbins = round(exp(0.626+0.4*log(length(RP)-1)));
+% CRP = mod(2*pi,RP);
+% Nbins = 100;
 % range = linspace(-pi,pi,Nbins);
 % dCRP = hist(CRP,range);
 % dCRP = dCRP/length(CRP);

@@ -113,15 +113,8 @@ I = [];
 
 % remove the event field
 % ----------------------
-if ~isempty(EEG.event), 
-    allfields = fieldnames(EEG.event); 
-    ind1 = strmatch('urevent', allfields, 'exact');
-    ind2 = strmatch('epoch', allfields, 'exact');
-    allfields([ind1 ind2]) = [];
-    try, EEG.eventdescription([ind1 ind2]) = []; catch, end;
-else
-    allfields = { 'type' 'latency' }; 
-end;
+if ~isempty(EEG.event), allfields = fieldnames(EEG.event);
+else                    allfields = { 'type' 'latency' }; end;
     
 if nargin<2
     commandload = [ '[filename, filepath] = uigetfile(''*'', ''Select a text file'');' ...
@@ -130,16 +123,23 @@ if nargin<2
                     'end;' ...
                     'clear filename filepath tagtest;' ];
     uilist = { ...
+        { 'Style', 'text', 'string', 'Event indices to modify', 'fontweight', 'bold' }, ...
+        { 'Style', 'text', 'string', 'Delete old events (else modify existing event indices) ?', 'fontweight', 'bold' } ...
+        { } ...
+        { 'Style', 'edit', 'string', ['1:' int2str(length(EEG.event))] 'tag' 'eventindices'} ...
+        { 'Style', 'checkbox', 'string', 'Yes / NO (NB: unchecked -> modify selected event indices)', 'value', 0, 'callback', ...
+          'set(findobj(gcbf, ''tag'', ''eventindices''), ''enable'', fastif(get(gcbo, ''value''), ''off'', ''on''));' }, ...
+        { }, ...
+        { }, ...   
         { 'Style', 'text', 'string', 'Edit fields:', 'fontweight', 'bold'  }, ...
-        { 'Style', 'text', 'string', 'Edit description', 'fontweight', 'bold'  }, ...
-        { 'Style', 'text', 'string', sprintf('New values (file or array containing %d values)', length(EEG.event)), 'fontweight', 'bold'  }, ...
+        { 'Style', 'text', 'string', 'Field description', 'fontweight', 'bold'  }, ...
+        { 'Style', 'text', 'string', 'Values file|array', 'fontweight', 'bold'  }, ...
+        {   }, ...
         { 'Style', 'text', 'string', 'Delete field', 'fontweight', 'bold'  } ...
              };
-    geometry = { [1.05 1.05 2 0.8] };
+    geometry = { [ 0.63 1.4 0.2] [ 0.63 1.4 0.2] [1] [1.05 1.05 1.1 0.8 0.8] };
 
-    listboxtext = { 'No field selected' };
-    txt_warn = 'warndlg2(strvcat(''Warning: deleting/renaming this field might cause EEGLAB'', ''to be unstable. Some functionalities will also be lost.''));';
-    cb_warn2 = [ 'strtmp = get(gcbo, ''string''); if ~isempty(strmatch(strtmp(get(gcbo, ''value'')), { ''latency'' ''type''}, ''exact'')),' txt_warn 'end;' ];
+    listboxtext = 'No field selected';  
     for index = 1:length(allfields) 
         geometry = { geometry{:} [1 1 1 0.7 0.2 0.32 0.2] };
         description = '';
@@ -149,10 +149,6 @@ if nargin<2
             tmplines = find(description == 10);
             if ~isempty(tmplines), description = description(1:tmplines(1)-1); end;
         catch, end;
-        if strcmp(allfields{index}, 'latency') || strcmp(allfields{index}, 'type')
-             cb_warn  = { 'callback' [ 'if get(gcbo, ''value''),' txt_warn 'end;' ] };
-        else cb_warn = { };
-        end;
         if strcmp(allfields{index}, 'latency')
             tmpfield = [ allfields{index} '(s)' ];
         elseif strcmp(allfields{index}, 'duration')
@@ -170,8 +166,8 @@ if nargin<2
                          'set(gcf, ''userdata'', tmpuserdata); clear tmpuserdata;' ] }, ...
                      { 'Style', 'edit', 'string', '', 'horizontalalignment', 'left', 'tag',  allfields{index} }, ...
                      { 'Style', 'pushbutton', 'string', 'Browse', 'callback', ['tagtest = ''' allfields{index} ''';' commandload ] }, ...
-                     { }, { 'Style', 'checkbox', 'string', '    ', cb_warn{:} }, { } };
-        listboxtext = { listboxtext{:}  allfields{index} }; 
+                     { }, { 'Style', 'checkbox', 'string', '    ', 'visible', fastif(strcmp(allfields{index}, 'epoch'),'off', 'on')}, { } };
+        listboxtext = [ listboxtext '|' allfields{index} ]; 
     end;
     index = length(allfields) + 1;
     uilist   = { uilist{:}, ...
@@ -187,30 +183,31 @@ if nargin<2
                  { 'Style', 'text', 'string', '-> add field'} ...
                  { } ...
                  { 'Style', 'text', 'string', 'Rename field', 'fontweight', 'bold' }, ...
-                 { 'Style', 'popupmenu', 'string', listboxtext 'callback' cb_warn2 }, ...
+                 { 'Style', 'popupmenu', 'string', listboxtext }, ...
                  { 'Style', 'text', 'string', 'as', 'fontweight', 'bold' }, ...
                  { 'Style', 'edit', 'string', '' } ...
                  fastif(isunix,{ 'Style', 'text', 'string', '(Click on field name to select it!)' },{ })};
     geometry = { geometry{:} [1 1 1 0.7 0.72] [1] [1 1.2 0.6 1 2] };
 
     descriptions = EEG.eventdescription;
-    if isempty(descriptions), descriptions = { '' '' }; end;
     [results userdat ]= inputgui( geometry, uilist, 'pophelp(''pop_editeventfield'');', ...
                                   'Edit event field(s) -- pop_editeventfield()', { descriptions{:} '' } );
     if length(results) == 0, return; end;
 
     % decode top inputs
     % -----------------
-    args = { };
+    args = {};
+    if ~isempty( results{1} ), args = { args{:}, 'indices', results{1} }; end;
+    if results{2} == 1       , args = { args{:}, 'delold', 'yes' }; end;
     
     % dealing with existing fields
     %-----------------------------
     for index = 1:length(allfields) 
-        if results{index*2} == 1, args = { args{:}, allfields{index}, [] };
+        if results{index*2+2} == 1, args = { args{:}, allfields{index}, [] };
         else 
-            if ~isempty( results{index*2-1} )
-                if exist(results{index*2-1}) == 2,  args = { args{:}, allfields{index}, [ results{index*2-1} ] }; % file
-                else                                args = { args{:}, allfields{index}, results{index*2-1} }; end;
+            if ~isempty( results{index*2+1} )
+                if exist(results{index*2+1}) == 2,  args = { args{:}, allfields{index}, [ results{index*2+1} ] }; % file
+                else                                args = { args{:}, allfields{index}, results{index*2+1} }; end;
             end;
             try, 
                 if ~strcmp( userdat{index}, EEG.eventdescription{index})
@@ -230,6 +227,7 @@ if nargin<2
     % handle rename 
     % -------------
     if results{end-1} ~= 1, args = { args{:}, 'rename', [ allfields{results{end-1}-1} '->' results{end} ] }; end;  
+    if length(args) < 3, return; end;
 else % no interactive inputs
     args = varargin;
     % scan args to modify array/file format
@@ -373,7 +371,23 @@ EEG = eeg_checkset(EEG, 'eventconsistency');
 
 % generate the output command
 % ---------------------------
-com = sprintf('%s = pop_editeventfield( %s, %s);', inputname(1), inputname(1), vararg2str(args));
+com = sprintf('%s = pop_editeventfield( %s', inputname(1), inputname(1));
+for i=1:2:length(args)
+    if ~isempty( args{i+1} )
+        if isstr( args{i+1} ) com = sprintf('%s, ''%s'', %s', com, args{i}, str2str(args{i+1}) );
+        else    
+			if ~iscell( args{i+1} ) com = sprintf('%s, ''%s'', [%s]', com, args{i}, num2str(args{i+1}) );
+			else 
+				com = sprintf('%s, ''%s'', { ', com, args{i});
+				for index = 1:length( args{i+1}{1} ), com = sprintf('%s ''%s'' ', com, args{i+1}{1}{index}); end;
+				com = sprintf('%s }', com);
+			end;                    
+        end;
+    else
+        com = sprintf('%s, ''%s'', []', com, args{i} );
+    end;
+end;
+com = [com ');'];
 
 % interpret the variable name
 % ---------------------------
@@ -414,7 +428,7 @@ return;
 function event = recomputelatency( event, indices, srate, timeunit);
     if ~isfield(event, 'latency'), return; end;
     for index = indices
-        event(index).latency = event(index).latency*srate*timeunit+1;
+        event(index).latency = round(event(index).latency*srate*timeunit);
     end;
          
 % create new field names

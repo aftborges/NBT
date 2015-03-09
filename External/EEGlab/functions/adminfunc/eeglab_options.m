@@ -24,9 +24,8 @@
 
 % load local file
 % ---------------
-homefolder = '';
-try,    
-    %clear eeg_options; % note: we instead clear this function handle in pop_editoptions()
+try,
+    clear eeg_options;
     
     if iseeglabdeployed
         com1 = readtxtfile(fullfile(eeglabexefolder, 'eeg_optionsbackup.txt'));
@@ -35,30 +34,37 @@ try,
         eval( com2 );
     else
         eeg_optionsbackup;
-        icadefs;
-        
-        % folder for eeg_options file (also update the pop_editoptions)
-        if ~isempty(EEGOPTION_PATH)
-             homefolder = EEGOPTION_PATH;
-        elseif ispc
-             if ~exist('evalc'), eval('evalc = @(x)(eval(x));'); end;
-             homefolder = deblank(evalc('!echo %USERPROFILE%'));
-        else homefolder = '~';
-        end;
-        
-        option_file = fullfile(homefolder, 'eeg_options.m');
-        oldp = pwd;
-        try
-            if ~isempty(dir(option_file))
-                cd(homefolder);
-            else
-                tmpp2 = fileparts(which('eeglab_options.m'));
-                cd(tmpp2);
+        W_MAIN = findobj('tag', 'EEGLAB');
+        if ~isempty(W_MAIN)
+            tmpuserdata = get(W_MAIN, 'userdata');
+            tmp_opt_path = tmpuserdata{3}; % this contain the default path to the option file
+            tmpp = pwd;
+            
+            tmpp = fileparts(which('eeg_options.m'));
+            curpathconflict = 0;
+            if ~strcmpi(tmpp, tmp_opt_path)
+                if ~isempty(findstr(tmp_opt_path, path)), rmpath(tmp_opt_path); end;
+                if strcmpi(pwd, tmpp)
+                    curpathconflict = 1;
+                    fprintf('Warning: conflicting eeg_options.m file in current path (ignored)\n');
+                else
+                    fprintf('Warning: adding path for eeg_options.m, %s\n', tmp_opt_path);
+                end;
+                addpath(tmp_opt_path);
+                clear functions;
             end;
-        catch, end;
-        eeg_options; % default one with EEGLAB
-        cd(oldp);
+            if curpathconflict
+                cd(tmp_opt_path);
+                eeg_options;
+                cd(tmpp);
+            else
+                eeg_options;
+            end;
+        else
+            eeg_options;
+        end;
     end;
+    
     option_savematlab = ~option_savetwofiles;
     
 catch 

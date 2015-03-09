@@ -47,7 +47,8 @@ function [EEG, com] = pop_rmdat( EEG, events, timelims, invertsel );
 
 if nargin < 1
    help pop_rmdat;
-	return;
+	return;EEG = pop_rmdat( EEG,  {  'animal'  'bug' 'response'     },[-1 1] ,0);
+
 end;	
 com = '';
 

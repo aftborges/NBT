@@ -57,7 +57,7 @@ function [EEG, command] = pop_loadbci(filename, srate);
         % ---------------------
         bci = load( filename, '-mat');
         allfields = fieldnames(bci);
-        allfields = setdiff_bc(allfields, 'signal');
+        allfields = setdiff(allfields, 'signal');
         for index = 1:size(bci.signal,2)
             chanlabels{index} = [ 'C' int2str(index) ];
         end;
@@ -102,7 +102,7 @@ function [EEG, command] = pop_loadbci(filename, srate);
         indices = strmatch('ch', fields);
         
         bci = [];
-        for index = setdiff_bc(1:length(fields), indices)
+        for index = setdiff(1:length(fields), indices)
             bci = setfield(bci, fields{index}, tmpdata(index,:));
         end;
         bci.signal = tmpdata(indices,:);
@@ -115,7 +115,7 @@ function [EEG, command] = pop_loadbci(filename, srate);
     uilist = { { 'style' 'text' 'string' 'State name' 'fontweight' 'bold' } ...
                { 'style' 'text' 'string' '    Import' 'fontweight' 'bold'  } ...
                { 'style' 'text' 'string' 'Type of'  'fontweight' 'bold' } };
-    allfields = setdiff_bc(fieldnames(bci), 'signal');
+    allfields = setdiff(fieldnames(bci), 'signal');
     latencyfields = { '-----' };
     for index = 1:length(allfields)
         if ~isempty(findstr( lower(allfields{index}), 'time')) 
@@ -124,23 +124,17 @@ function [EEG, command] = pop_loadbci(filename, srate);
     end;
     for index = 1:length(allfields)
         geom   = { geom{:} [1.3 0.3 0.3 0.3 1] };
-        uilist{end+1} = { 'style' 'text' 'string' allfields{index} };
+        uilist = { uilist{:} { 'style' 'text' 'string' allfields{index} } };
         if ~isempty(findstr( lower(allfields{index}), 'time'))
-            uilist{end+1} = { 'style' 'checkbox' 'value' 0 };
-            uilist{end+1} = { };
-            uilist{end+1} = { };
-            uilist{end+1} = { };
+            uilist = { uilist{:} { 'style' 'checkbox' 'value' 0 } { } { } { } };
         else
-            uilist{end+1} = { 'style' 'checkbox' };
-            uilist{end+1} = { };
-            uilist{end+1} = { };
-            uilist{end+1} = { 'style' 'listbox' 'string' strvcat(latencyfields) };
+            uilist = { uilist{:} { 'style' 'checkbox' } { } { } ...
+                       { 'style' 'listbox' 'string' strvcat(latencyfields) } };
         end;
     end;
     geom   = { geom{:} [1] [0.08 1] };
-    uilist{end+1} = { };
-    uilist{end+1} = { 'style' 'checkbox' 'value' 0 };
-    uilist{end+1} = { 'style' 'text' 'string' 'Attempt to adjust event latencies using sourcetime?' };
+    uilist = { uilist{:} { } { 'style' 'checkbox' 'value' 0 } ...
+               { 'style' 'text' 'string' 'Attempt to adjust event latencies using sourcetime?' } };
     
     result = inputgui( geom, uilist, 'pophelp(''pop_loadbci'')', 'Import BCI2000 data files - pop_loadbci()');
     if isempty(result), return; end;
@@ -151,14 +145,14 @@ function [EEG, command] = pop_loadbci(filename, srate);
     count = 1;
     for index = 1:length(allfields)
         if ~isempty(findstr( lower(allfields{index}), 'time')) 
-            if result{count}, listimport{end+1} = 'event'; listimport{end+1} = { allfields{index} }; end;
+            if result{count}, listimport =  { listimport{:} 'event' { allfields{index} } }; end;
             count = count+1;
         else 
             if result{count}
                 if result{count+1} ~= 1
-                    listimport{end+1} = 'event'; listimport{end+1} = { allfields{index}  allfields{result{count+1}-1} };
+                    listimport =  { listimport{:} 'event' { allfields{index}  allfields{result{count+1}-1} } };
                 else
-                    listimport{end+1} = 'event'; listimport{end+1} = { allfields{index} };
+                    listimport =  { listimport{:} 'event' { allfields{index} } };
                 end;
             end;
             count = count+2;                
@@ -189,7 +183,7 @@ function [EEG, command] = pop_loadbci(filename, srate);
     % ---------------
     tmpevent = find( diff(getfield(bci, 'SourceTime')) ~= 0);
     diffevent = tmpevent(2:end)-tmpevent(1:end-1);
-    blocksize = unique_bc(diffevent);
+    blocksize = unique(diffevent);
     if length(blocksize) > 1, error('Error in determining block size'); 
     else                      fprintf('Blocksize: %d\n', blocksize); 
     end;
@@ -284,7 +278,7 @@ function [EEG, command] = pop_loadbci(filename, srate);
 % $$$     EEG.nbchan = size(EEG.data, 1);
 % $$$     EEG.srate  = srate;
 % $$$     try
-% $$$         eventindices = setdiff_bc(1:length(colnames), indices);
+% $$$         eventindices = setdiff(1:length(colnames), indices);
 % $$$         ISIind = eventindices(3 + 9);
 % $$$         eventindices(3 + [ 1 2 3 4 7 8 9 10 11 12]) = [];
 % $$$         eventindices(1:3) = []; % suppress these event 

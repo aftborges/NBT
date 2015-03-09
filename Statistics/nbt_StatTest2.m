@@ -1,8 +1,5 @@
 function [p]=nbt_StatTest2(A, Grp1, Grp2, Type)
 %Perform group test on the matrix A(channel,subjectID)
-if(strcmp(Type,'none'))
-    p = nan(size(A,1),1);
-end
 for ChId = 1:size(A,1)
     try
     switch Type

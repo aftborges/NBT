@@ -161,20 +161,20 @@ g = finputcheck(varargin, ...
     'timesout'      'real'     []                       []; ...
     'winsize'       'integer'  [0 Inf]                  []; ...
     'tlimits'       'real'     []                       []; ...
-    'detrend'       'string'   {'on','off'}             'off'; ...
-    'causal'        'string'   {'on','off'}             'off'; ...
-    'verbose'       'string'   {'on','off'}             'on'; ...
+    'detrend'       'string'   {'on' 'off'}             'off'; ...
+    'causal'        'string'   {'on' 'off'}             'off'; ...
+    'verbose'       'string'   {'on' 'off'}             'on'; ...
     'freqs'         'real'     [0 Inf]                  []; ...
     'nfreqs'        'integer'  [0 Inf]                  []; ...
-    'freqscale'     'string'   { 'linear','log','' }    'linear'; ...
-    'ffttaper'      'string'   { 'hanning','hamming','blackmanharris','none' }  'hanning';
+    'freqscale'     'string'   { 'linear' 'log' '' }    'linear'; ...
+    'ffttaper'      'string'   { 'hanning' 'hamming' 'blackmanharris' 'none' }  'hanning';
     'wavelet'       'real'     [0 Inf]                  0; ...
     'cycles'        {'real','integer'}    [0 Inf]       0; ...
     'padratio'      'integer'  [1 Inf]                  2; ...
-    'itctype'       'string'   {'phasecoher','phasecoher2','coher'}  'phasecoher'; ...
-    'subitc'        'string'   {'on','off'}             'off'; ...
+    'itctype'       'string'   {'phasecoher' 'phasecoher2' 'coher'}  'phasecoher'; ...
+    'subitc'        'string'   {'on' 'off'}             'off'; ...
     'timestretch'   'cell'     []                       {}; ...
-    'wletmethod'    'string'   {'dftfilt2','dftfilt3'}    'dftfilt3'; ...
+    'wletmethod'    'string'   {'dftfilt2' 'dftfilt3'}    'dftfilt3'; ...
     });
 if isstr(g), error(g); end;
 if isempty(g.freqscale), g.freqscale = 'linear'; end;
@@ -429,7 +429,6 @@ else % wavelet
         % apply filters
         % -------------
         verboseprintf(g.verbose, 'Processing time point (of %d):',length(g.timesout));
-        tmpall = zeros(length(g.win), length(g.indexout), size(data,2));
         for index = 1:length(g.indexout)
             if rem(index,10) == 0,  verboseprintf(g.verbose, ' %d',index); end
             if rem(index,120) == 0, verboseprintf(g.verbose, '\n'); end
@@ -512,13 +511,13 @@ if ~isempty(g.timestretch) && length(g.timestretch{1}) > 0
         % So mytmpall is almost equal to r.*exp(i*theta)
         % whos marksPos refsPos
 
-        M = timewarp(marksPos, refsPos);
+        M = timeWarp(marksPos, refsPos);
         
         TSr = transpose(M*r');
         TStheta = zeros(size(theta,1), size(theta,2));
 
         for freqInd=1:size(TStheta,1)
-            TStheta(freqInd, :) = angtimewarp(marksPos, refsPos, theta(freqInd, :));            
+            TStheta(freqInd, :) = angTimeWarp(marksPos, refsPos, theta(freqInd, :));            
         end
         TStmpall = TSr.*exp(i*TStheta);
 
@@ -528,12 +527,6 @@ if ~isempty(g.timestretch) && length(g.timestretch{1}) > 0
     end
 end
 %time-warp ends
-zerovals = tmpall == 0;
-if any(reshape(zerovals, 1, prod(size(zerovals))))
-    tmpall(zerovals) = Inf;
-    minval = min(tmpall(:)); % remove bug
-    tmpall(zerovals) = minval;
-end;
 
 % compute and subtract ITC
 % ------------------------
@@ -677,11 +670,11 @@ end;
 % --------------------------
 timeindices = round(eeg_lat2point(timevals, 1, srate, tlimits, 1E-3));
 if length(timeindices) < length(unique(timeindices))
-    timeindices = unique_bc(timeindices)
+    timeindices = unique(timeindices)
     verboseprintf(verbose, 'Warning: duplicate times, reduce the number of output times\n');
 end;
 if length(unique(timeindices(2:end)-timeindices(1:end-1))) > 1
-    verboseprintf(verbose, 'Finding closest points for time variable\n');
+    verboseprintf(verbose, 'Finding closest points for time variable');
     verboseprintf(verbose, 'Time values for time/freq decomposition is not perfectly uniformly distributed\n');
 else
     verboseprintf(verbose, 'Distribution of data point for time/freq decomposition is perfectly uniform\n');

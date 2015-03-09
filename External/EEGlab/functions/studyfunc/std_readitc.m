@@ -3,10 +3,26 @@
 % Usage:
 %         >> [STUDY, itcdata, times, freqs] = ...
 %                   std_readitc(STUDY, ALLEEG, varargin);
+% Inputs:
+%       STUDY - studyset structure containing some or all files in ALLEEG
+%      ALLEEG - vector of loaded EEG datasets
 %
-% Note: this function is a helper function that contains a call to the 
-% std_readersp function that reads all 2-D data matrices for EEGLAB STUDY.
-% See the std_readersp help message for more information.
+% Optional inputs:
+%  'channels'  - [cell] list of channels to import {default: all}
+%  'clusters'  - [integer] list of clusters to import {[]|default: all but
+%                the parent cluster (1) and any 'NotClust' clusters}
+%  'freqrange' - [min max] frequency range {default: whole measure range}
+%  'subject'    - [string] select a specific subject {default:all}
+%  'component'  - [integer] select a specific component in a cluster
+%                 {default:all}
+%  'singletrials' - ['on'|'off'] load single trials data (if available)
+%
+% Output:
+%  STUDY    - updated studyset structure
+%  itcdata  - [cell array] ITC data (the cell array size is 
+%             condition x groups)
+%  times    - [float array] array of time points
+%  freqs    - [float array] array of frequencies
 %
 % Author: Arnaud Delorme, CERCO, 2006-
 
@@ -29,3 +45,112 @@
 function [STUDY, erspdata, alltimes, allfreqs, erspbase] = std_readersp(STUDY, ALLEEG, varargin);
 
 [STUDY, erspdata, alltimes, allfreqs] = std_readersp(STUDY, ALLEEG, 'infotype','itc', varargin{:});
+return;
+
+if nargin < 4
+    timewindow = [];
+end;
+if nargin < 5
+    freqrange = [];
+end;
+
+% multiple entry
+% --------------
+if length(comp) > 1
+    for index = 1:length(comp)
+        [tmpitc, logfreqs, timevals, params] = std_readitc(ALLEEG, abset, comp(index), timewindow, freqrange);
+        logitc(index,:,:,:) = tmpitc;
+    end;
+    return;
+end;
+
+for k = 1: length(abset)    
+    
+    if comp < 0
+        filename = fullfile( ALLEEG(abset(k)).filepath,[ ALLEEG(abset(k)).filename(1:end-3) 'datitc']);
+        comp   = -comp;
+        prefix = 'chan';
+    else    
+        filename = fullfile( ALLEEG(abset(k)).filepath,[ ALLEEG(abset(k)).filename(1:end-3) 'icaitc']);
+        prefix = 'comp';
+    end;
+    try
+        tmpersp   = load( '-mat', filename, 'parameters', 'times', 'freqs');
+    catch
+        error( [ 'Cannot read file ''' filename '''' ]);
+    end;
+    
+    tmpersp.parameters = removedup(tmpersp.parameters);
+    params    = struct(tmpersp.parameters{:});
+    params.times = tmpersp.times;
+    params.freqs = tmpersp.freqs;
+    if isempty(comp)
+        logitc    = [];
+        logfreqs  = [];
+        timevals  = [];
+        return;
+    end;
+    tmpitc   = load( '-mat', filename, 'parameters', 'times', 'freqs', ...
+                     [ prefix int2str(comp) '_itc'], ...
+                     [ prefix int2str(comp) '_itcboot']);
+    
+    tlen      = length(tmpitc.times);
+    flen      = length(tmpitc.freqs);
+    itcall{k}     = double(getfield(tmpitc, [ prefix int2str(comp) '_itc']));
+    itcallboot{k} = double(getfield(tmpitc, [ prefix int2str(comp) '_itcboot']));
+
+end
+
+% select plotting or clustering time/freq range
+% ---------------------------------------------
+if ~isempty(timewindow)
+    if timewindow(1) > tmpitc.times(1) | timewindow(end) < tmpitc.times(end)
+        maxind = max(find(tmpitc.times <= timewindow(end)));
+        minind = min(find(tmpitc.times >= timewindow(1)));
+    else
+        minind = 1;
+        maxind = tlen;
+    end
+else
+    minind = 1;
+    maxind = tlen;
+end
+if ~isempty(freqrange)
+    if freqrange(1) > exp(1)^tmpitc.freqs(1) | freqrange(end) < exp(1)^tmpitc.freqs(end)
+        fmaxind = max(find(tmpitc.freqs <= freqrange(end)));
+        fminind = min(find(tmpitc.freqs >= freqrange(1)));
+    else
+        fminind = 1;
+        fmaxind = flen;
+    end
+else
+    fminind = 1;
+    fmaxind = flen;
+end
+
+% Mask ITC
+% ---------
+if ~isempty(itcallboot{1})
+    for cond  = 1:length(abset)
+        %maxitc= repmat(itcallboot{cond}',1,size(itcall{1},2));
+        %itcall{cond}(find(itcall{cond}<maxitc)) = 0;
+    end
+end;
+
+% return parameters
+% ----------------
+for cond  = 1:length(abset)
+    itc = itcall{cond}(fminind:fmaxind,minind:maxind);
+    logitc(:,:,cond) = itc;
+end;
+logfreqs = tmpitc.freqs(fminind:fmaxind);
+timevals = tmpitc.times(minind:maxind);
+
+% remove duplicates in the list of parameters
+% -------------------------------------------
+function cella = removedup(cella)
+    [tmp indices] = unique(cella(1:2:end));
+    if length(tmp) ~= length(cella)/2
+        %fprintf('Warning: duplicate ''key'', ''val'' parameter(s), keeping the last one(s)\n');
+    end;
+    cella = cella(sort(union(indices*2-1, indices*2)));

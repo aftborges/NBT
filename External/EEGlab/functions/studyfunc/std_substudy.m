@@ -53,7 +53,7 @@ end
 opt = finputcheck(varargin, { 'condition' 'cell' {}      {};
                               'dataset'   'integer' {}   [];
                               'group'     'cell' {}      {};
-                              'rmdat'     'string' { 'on','off' }      'on';
+                              'rmdat'     'string' { 'on' 'off' }      'on';
                               'subject'   'cell' {}      {} }, 'std_substudy');
 if isstr(opt), return; end;
 
@@ -84,7 +84,7 @@ end;
 if ~isempty(opt.dataset)
     tagdel = [ tagdel setdiff([1:length(ALLEEG)], opt.dataset) ];
 end;
-tagdel = unique_bc(tagdel);
+tagdel = unique(tagdel);
 
 % find new dataset indices
 % ------------------------

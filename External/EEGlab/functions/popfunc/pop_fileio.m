@@ -11,8 +11,6 @@
 %   'channels'   - [integer array] list of channel indices
 %   'samples'    - [min max] sample point limits for importing data. 
 %   'trials'     - [min max] trial's limit for importing data. 
-%   'memorymapped' - ['on'|'off'] import memory mapped file (useful if 
-%                  encountering memory errors). Default is 'off'.
 %
 % Outputs:
 %   OUTEEG   - EEGLAB data structure
@@ -41,53 +39,38 @@ function [EEG, command] = pop_fileio(filename, varargin);
 EEG = [];
 command = '';
 
-if ~plugin_askinstall('Fileio', 'ft_read_data'), return; end;
-
 if nargin < 1
 	% ask user
-    ButtonName = questdlg2('Do you want to import a file or a folder?', ...
-                           'FILE-IO import', ...
-                           'Folder', 'File', 'File');
-    if strcmpi(ButtonName, 'file')
-        [filename, filepath] = uigetfile('*.*', 'Choose a file or header file -- pop_fileio()'); 
-        drawnow;
-        if filename(1) == 0 return; end;
-        filename = fullfile(filepath, filename);
-    else
-        filename = uigetfile('*.*', 'Choose a folder -- pop_fileio()'); 
-        drawnow;
-        if filename(1) == 0 return; end;
-    end;
+	[filename, filepath] = uigetfile('*.*', 'Choose a file or header file -- pop_fileio()'); 
+    drawnow;
+    
+	if filename == 0 return; end;
+	filename = [filepath filename];
     
     % open file to get infos
     % ----------------------
-    eeglab_options;
-    mmoval = option_memmapdata;
     disp('Reading data file header...');
     dat = ft_read_header(filename);
     uilist   = { { 'style' 'text' 'String' 'Channel list (defaut all):' } ...
                  { 'style' 'edit' 'string' '' } ...
                  { 'style' 'text' 'String' [ 'Data range (in sample points) (default all [1 ' int2str(dat.nSamples) '])' ] } ...
-                 { 'style' 'edit' 'string' '' } };
+                 { 'style' 'edit' 'string' '' }  };
     geom = { [3 1] [3 1] };
     if dat.nTrials > 1
-        uilist{end+1} = { 'style' 'text' 'String' [ 'Trial range (default all [1 ' int2str(dat.nTrials) '])' ] };
-        uilist{end+1} = { 'style' 'edit' 'string' '' };
+        uilist   = { uilist{:} ...
+                 { 'style' 'text' 'String' [ 'Trial range (default all [1 ' int2str(dat.nTrials) '])' ] } ...
+                 { 'style' 'edit' 'string' '' } };
         geom = { geom{:} [3 1] };
     end;
-    uilist   = { uilist{:} { 'style' 'checkbox' 'String' 'Import as memory mapped file (use in case of out of memory error)' 'value' option_memmapdata } };
-    geom = { geom{:} [1] };
-    
-    result = inputgui( geom, uilist, 'pophelp(''pop_fileio'')', 'Load data using FILE-IO -- pop_fileio()');
+    result = inputgui( geom, uilist, 'pophelp(''pop_biosig'')', ...
+                                 'Load data using BIOSIG -- pop_biosig()');
     if length(result) == 0 return; end;
 
     options = {};
-    if length(result) == 3, result = { result{1:2} '' result{3}}; end;
+    result = { result{:} '' };
     if ~isempty(result{1}), options = { options{:} 'channels' eval( [ '[' result{1} ']' ] ) }; end;
     if ~isempty(result{2}), options = { options{:} 'samples'  eval( [ '[' result{2} ']' ] ) }; end;
     if ~isempty(result{3}), options = { options{:} 'trials'   eval( [ '[' result{3} ']' ] ) }; end;
-    if result{4}, options = { options{:} 'memorymapped' fastif(result{4}, 'on', 'off') }; end;
-    
 else
     dat = ft_read_header(filename);
     options = varargin;
@@ -95,10 +78,9 @@ end;
 
 % decode imput parameters
 % -----------------------
-g = finputcheck( options, { 'samples'      'integer' [1 Inf]    [];
-                            'trials'       'integer' [1 Inf]    [];
-                            'channels'     'integer' [1 Inf]    [];
-                            'memorymapped' 'string'  { 'on';'off' } 'off' }, 'pop_fileio');
+g = finputcheck( options, { 'samples'     'integer' [1 Inf]    [];
+                            'trials'      'integer' [1 Inf]    [];
+                            'channels'    'integer' [1 Inf]    [] }, 'pop_fileio');
 if isstr(g), error(g); end;
 
 % import data
@@ -106,24 +88,10 @@ if isstr(g), error(g); end;
 EEG = eeg_emptyset;
 fprintf('Reading data ...\n');
 dataopts = {};
+if ~isempty(g.channels), dataopts = { dataopts{:} 'chanindx', g.channels }; end;
 if ~isempty(g.samples ), dataopts = { dataopts{:} 'begsample', g.samples(1), 'endsample', g.samples(2)}; end;
 if ~isempty(g.trials  ), dataopts = { dataopts{:} 'begtrial', g.trials(1), 'endtrial', g.trials(2)}; end;
-if strcmpi(g.memorymapped, 'off')
-    if ~isempty(g.channels), dataopts = { dataopts{:} 'chanindx', g.channels }; end;
-    alldata = ft_read_data(filename, 'header', dat, dataopts{:});
-else
-    % read memory mapped file
-    g.datadims = [ dat.nChans dat.nSamples dat.nTrials ];
-    disp('Importing as memory mapped array, this may take a while...');
-    if isempty(g.channels), g.channels = [1:g.datadims(1)]; end;
-    if ~isempty(g.samples ), g.datadims(2) = g.samples(2) - g.samples(1); end;
-    if ~isempty(g.trials  ), g.datadims(3) = g.trials(2)  - g.trials(1); end;
-    g.datadims(1) = length(g.channels);
-    alldata = mmo([], g.datadims);
-    for ic = 1:length(g.channels)
-        alldata(ic,:,:) = ft_read_data(filename, 'header', dat, dataopts{:}, 'chanindx', g.channels(ic));
-    end;
-end;
+alldata = ft_read_data(filename, 'header', dat, options{:});
 
 % convert to seconds for sread
 % ----------------------------

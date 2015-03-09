@@ -31,8 +31,6 @@
 %  'plottopo'  = [min max] plot topography within the time limits defined
 %                in this function. If several lines are given as input, one
 %                scalp map is plot for each line.
-%  'traceinfo' = [string|cell array] information shown on the command line
-%                when the user click on a specific trace. Default none.
 %
 % Authors: Arnaud Delorme, 2004, Bhaktivedanta Institute
 
@@ -60,14 +58,13 @@ function plotcurve( times, R, varargin);
 	end;
 	g = finputcheck( varargin, { 'maskarray' ''        []       [];
                              'val2mask'      'real'    []           R;
-                             'highlightmode' 'string'  { 'background','bottom' } 'background';
-                             'plotmean'      'string'  { 'on','off' }            'off';
-                             'plotindiv'     'string'  { 'on','off' }            'on';
-                             'traceinfo'   { 'string' 'cell' } { { } {} }        'off';
-                             'logpval'       'string'  { 'on','off' }            'off';
+                             'highlightmode' 'string'  { 'background' 'bottom' } 'background';
+                             'plotmean'      'string'  { 'on' 'off' }            'off';
+                             'plotindiv'     'string'  { 'on' 'off' }            'on';
+                             'logpval'       'string'  { 'on' 'off' }            'off';
                              'title'         'string'  []                        '';
                              'xlabel'        'string'  []                        '';
-                             'plotmode'      'string'  {'single','topo'}         'single';
+                             'plotmode'      'string'  {'single' 'topo'}         'single';
                              'ylabel'        'string'  []                        '';
                              'legend'        'cell'    []                        {};
                              'colors'        'cell'    []                        {};
@@ -157,25 +154,11 @@ function plotcurve( times, R, varargin);
            plot(times,R(ind,:), 'k', 'linewidth', 2);
       elseif ~isempty(g.colors),
            tmp = plot(times,R(ind,:), 'k'); 
-           tmpcol = g.colors{mod(ind-1, length(g.colors))+1};
-           if length(tmpcol) > 1, tmpstyle = tmpcol(2:end); tmpcol = tmpcol(1); else tmpstyle = '-'; end;
-           set(tmp, 'color', tmpcol, 'linestyle', tmpstyle); 
-           
-           if ~isempty(g.traceinfo)
-               if isstr(g.traceinfo) && strcmpi(g.traceinfo, 'on')
-                   set(tmp, 'ButtonDownFcn', [ 'disp(''Trace ' int2str(ind) ''');' ]);
-               elseif iscell(g.traceinfo)
-                   try
-                       set(tmp, 'ButtonDownFcn', g.traceinfo{ind});
-                   catch,
-                       error('Trace info cell array does not contain the same number of element as trace in the graph')
-                   end;
-               end;
-           end;
+           set(tmp, 'color', g.colors{mod(ind-1, length(g.colors))+1}); 
            
            % change the line style when number of plots exceed number of colors in g.colors
-           %lineStyles = {'-', '--',':','-.'};
-           %set(tmp,'LineStyle',lineStyles{min(ceil(ind/length(g.colors)),length(lineStyles))});
+           lineStyles = {'-', '--',':','-.'};
+           set(tmp,'LineStyle',lineStyles{min(ceil(ind/length(g.colors)),length(lineStyles))});
           
            hold on;
       else plot(times,R(ind,:));

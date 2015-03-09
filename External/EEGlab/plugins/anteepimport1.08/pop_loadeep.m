@@ -93,7 +93,7 @@ if nargin < 1
 	% popup window parameters
 	% -----------------------
     uigeom     = { [1 0.5] [1.09 0.13 0.4]};
-    uilist   = { { 'style' 'text' 'string' 'Time interval in s (i.e. [0 100]; not compatible with importing triggers):' } ...
+    uilist   = { { 'style' 'text' 'string' 'Time interval in seconds (i.e. [0 100]; default all):' } ...
                  { 'style' 'edit' 'string' '' } ...
                  { 'style' 'text' 'string' 'Check to import triggers from EEProbe trigger file (*.trg)' } ...
                  { 'style' 'checkbox' 'string' '' } {} };
@@ -156,12 +156,12 @@ if ~isempty(findstr('triggerfile', lower(options)))
             j = 1;
             for i = 1:length(trg)
                 % adjust latency (#samples) for srate and offset 'timer(1)'
-                %trg_latency = ( (trg(i).time/1000.0) - EEG.xmin ) * EEG.srate + 1;
-                %if trg_latency >= 0.5 && trg_latency < EEG.pnts*EEG.trials
+                trg_latency = ( (trg(i).time/1000.0) - EEG.xmin ) * EEG.srate + 1;
+                if trg_latency >= 0.5 && trg_latency < EEG.pnts*EEG.trials
                     EEG.event(j).type = trg(i).code;
-                    EEG.event(j).latency = trg(i).offset+1;
+                    EEG.event(j).latency = trg_latency;
                     j = j + 1;
-                %end;
+                end;
             end;
             if j < length(trg)
                 fprintf('pop_loadeep warning: %d/%d events had out-of-bounds latencies and were removed\n', ...

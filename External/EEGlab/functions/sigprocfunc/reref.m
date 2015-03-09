@@ -108,12 +108,12 @@ g = finputcheck(varargin, { 'icaweight'   'real'    []          [];
                             'icaweights'  'real'    []          [];
                             'icasphere'   'real'    []          [];
                             'icachansind' 'integer'    []       [];
-                            'method'     'string'  { 'standard','withref' }  'standard';
-                            'refstate'   { 'string','integer' } { { 'common','averef' } [1 size(data,1)] }     'common'; % ot used but kept for backward compatib.
+                            'method'     'string'  { 'standard' 'withref' }  'standard';
+                            'refstate'   { 'string' 'integer' } { { 'common' 'averef' } [1 size(data,1)] }     'common'; % ot used but kept for backward compatib.
                             'exclude'    'integer' [1 size(data,1)]          [];
-                            'refloc'     { 'cell','struct' }  { [] [] }   {};
-                            'keepref'    'string'  {'on','off' }             'off';
-                            'elocs'      {'integer','struct'}  []            [] });
+                            'refloc'     { 'cell' 'struct' }  { [] [] }   {};
+                            'keepref'    'string'  {'on' 'off' }             'off';
+                            'elocs'      {'integer' 'struct'}  []            [] });
 if isstr(g), error(g); end;
 if ~isempty(g.icaweight)
     g.icaweights = g.icaweight;
@@ -150,7 +150,7 @@ if ~isempty(g.refloc) == 1
             data(end+length(g.refloc),:) = 0;
             for iLocs = 1:length(g.refloc)
                 g.elocs(end+1).labels = g.refloc(iLocs).labels;
-                fieldloc = fieldnames(g.elocs);
+                fieldloc = fieldnames(g.refloc);
                 for ind = 1:length(fieldloc)
                     g.elocs(end) = setfield(g.elocs(end), fieldloc{ind}, getfield(g.refloc(iLocs), fieldloc{ind}));
                 end;
@@ -162,7 +162,7 @@ end;
 
 % exclude some channels
 % ---------------------
-chansin   = setdiff_bc([1:dim1], g.exclude);
+chansin   = setdiff([1:dim1], g.exclude);
 nchansin  = length(chansin);
 
 % return mean data
@@ -183,7 +183,7 @@ else
     if ~isempty(ref) % not average reference   
         refmatrix = eye(nchansin); % begin with identity matrix
         tmpref = ref;
-        for index = length(g.exclude):-1:1
+        for index = 1:length(g.exclude)
             tmpref(find(g.exclude(index) < tmpref)) = tmpref(find(g.exclude(index) < tmpref))-1;
         end;
         for index = 1:length(tmpref)

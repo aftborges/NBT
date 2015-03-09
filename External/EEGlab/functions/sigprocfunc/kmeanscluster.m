@@ -1,4 +1,6 @@
 function [g, c, tmp, m]=kMeansCluster(m,k,isRand)
+%%%%%%%%%%%%%%%%
+%                                                        
 % kMeansCluster - Simple k means clustering algorithm                                                              
 % Author: Kardi Teknomo, Ph.D.                                                                  
 %                                                                                                                    

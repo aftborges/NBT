@@ -174,27 +174,27 @@ end
 % -------------
 if isempty(datadd), error('First edit box (datasets to add) can not be empty'); end;
 g = finputcheck( options, ... 
-                 { 'chans'    'integer'  []               [1:ALLEEG(datadd(1)).nbchan];
+                 { 'chans'    'integer'  [1:ALLEEG(datadd(1)).nbchan] 0;
                    'title'    'string'   []               '';
                    'alpha'    'float'    []               [];
-                   'geom'     'string'  {'scalp';'array'} fastif(flag, 'scalp', 'array');
-                   'addstd'   'string'  {'on';'off'}      fastif(isempty(datsub), 'on', 'off');
-                   'substd'   'string'  {'on';'off'}     'off';
-                   'diffstd'  'string'  {'on';'off'}     'on';
-                   'addavg'   'string'  {'on';'off'}     fastif(isempty(datsub), 'on', 'off');
-                   'subavg'   'string'  {'on';'off'}     'off';
-                   'diffavg'  'string'  {'on';'off'}     'on';
-                   'addall'   'string'  {'on';'off'}     'off';
-                   'suball'   'string'  {'on';'off'}     'off';
-                   'diffall'  'string'  {'on';'off'}     'off';
-                   'std'      'string'  {'on';'off';'none'}     'none';
-                   'diffonly' 'string'  {'on';'off';'none'}     'none';
-                   'allerps'  'string'  {'on';'off';'none'}     'none';
+                   'geom'     'string'  {'scalp' 'array'} fastif(flag, 'scalp', 'array');
+                   'addstd'   'string'  {'on' 'off'}      fastif(isempty(datsub), 'on', 'off');
+                   'substd'   'string'  {'on' 'off'}     'off';
+                   'diffstd'  'string'  {'on' 'off'}     'on';
+                   'addavg'   'string'  {'on' 'off'}     fastif(isempty(datsub), 'on', 'off');
+                   'subavg'   'string'  {'on' 'off'}     'off';
+                   'diffavg'  'string'  {'on' 'off'}     'on';
+                   'addall'   'string'  {'on' 'off'}     'off';
+                   'suball'   'string'  {'on' 'off'}     'off';
+                   'diffall'  'string'  {'on' 'off'}     'off';
+                   'std'      'string'  {'on' 'off' 'none'}     'none';
+                   'diffonly' 'string'  {'on' 'off' 'none'}     'none';
+                   'allerps'  'string'  {'on' 'off' 'none'}     'none';
                    'lowpass'  'float'    [0 Inf]         [];
                    'tlim'     'float'    []              [];
                    'ylim'     'float'    []              [];
                    'tplotopt' 'cell'     []              {};
-                   'mode'     'string'  {'ave';'rms'}    'ave';
+                   'mode'     'string'  {'ave' 'rms'}    'ave';
                    'multcmp'  'integer'  [0 Inf]         [] });
 if isstr(g), error(g); end;
 if length(datadd) == 1
@@ -252,8 +252,7 @@ xmin   = ALLEEG(datadd(1)).xmin;
 xmax   = ALLEEG(datadd(1)).xmax;
 nbchan = ALLEEG(datadd(1)).nbchan;
 chanlocs = ALLEEG(datadd(1)).chanlocs;
-unionIndices = union_bc(datadd, datsub);
-for index = unionIndices(:)'
+for index = union(datadd, datsub)
     if ALLEEG(index).pnts ~= pnts,     error(['Dataset '  int2str(index) ' does not have the same number of points as others']); end;
     if ALLEEG(index).xmin ~= xmin,     error(['Dataset '  int2str(index) ' does not have the same xmin as others']); end;
     if ALLEEG(index).xmax ~= xmax,     error(['Dataset '  int2str(index) ' does not have the same xmax as others']); end;
@@ -434,7 +433,7 @@ function [erptoplot, erpstd, colors, colstd, legend] = preparedata( erpind, plot
         else granderp    = sqrt(mean(erpind.^2,3));
              legend      = { legend{:} [ tag 'RMS' ] };
         end;
-        colors    = { colors{:}  {coloravg;'linewidth';2 }};
+        colors    = { colors{:}  {coloravg 'linewidth' 2 }};
         erptoplot = [ erptoplot granderp];
     end;
 
@@ -446,7 +445,7 @@ function [erptoplot, erpstd, colors, colstd, legend] = preparedata( erpind, plot
             erptoplot = [ erptoplot granderp+std1 ];
             erpstd    = granderp-std1;
             legend    = { legend{:} [ tag 'Standard dev.' ] };
-            colors    = { colors{:} { coloravg;'linestyle';':' } };
+            colors    = { colors{:} { coloravg 'linestyle' ':' } };
             colstd    = { { coloravg 'linestyle' ':' } };
         else 
             disp('Warning: cannot show standard deviation without showing average');

@@ -29,8 +29,6 @@
 %                figure ('off'). If 'figure','off' does not display gui controls,
 %                Useful for incomporating a cluster dipplot into a complex figure. 
 %                {default: 'on'}. 
-%   'groups'   - ['on'|'off'] use different colors for different groups.
-%                {default: 'off'}.
 % Outputs:
 %   STUDY      - the input STUDY set structure modified with plotted cluster 
 %                mean dipole, to allow quick replotting (unless cluster means 
@@ -43,7 +41,6 @@
 %  See also  pop_clustedit(), dipplot()        
 %
 % Authors:  Hilit Serby, Arnaud Delorme, Scott Makeig, SCCN, INC, UCSD, June, 2005
-%          'groups' added by Makoto Miyakoshi on June 2012.
 
 % Copyright (C) Hilit Serby, SCCN, INC, UCSD, June 08, 2005, hilit@sccn.ucsd.edu
 %
@@ -67,12 +64,8 @@ function STUDY = std_dipplot(STUDY, ALLEEG, varargin)
 cls = []; % plot all clusters in STUDY
 figureon = 1; % plot on a new figure
 mode = 'apart';
-
-STUDY = pop_dipparams(STUDY, 'default');
-opt_dipplot = {'projlines',STUDY.etc.dipparams.projlines, 'axistight', STUDY.etc.dipparams.axistight, 'projimg', STUDY.etc.dipparams.projimg, 'normlen', 'on', 'pointout', 'on', 'verbose', 'off', 'dipolelength', 0,'spheres','on'};
-
+opt_dipplot = {'projlines','off', 'normlen', 'on', 'pointout', 'on', 'verbose', 'off', 'dipolelength', 0,'spheres','on'};
 %, 'spheres', 'on'
-groupval = 'off';
 for k = 3:2:nargin
     switch varargin{k-2}
         case 'clusters'
@@ -90,19 +83,22 @@ for k = 3:2:nargin
             end
             if length(cls) == 1, mode = 'apart'; else mode = 'together'; end;
         case 'comps'
-            STUDY = std_plotcompdip(STUDY, ALLEEG,  cls, varargin{k-1}, opt_dipplot{:});
+            STUDY = std_plotcompdip(STUDY, ALLEEG,  cls, varargin{k-1});
             return;
         case 'plotsubjects', % do nothing
         case 'mode', mode = varargin{k-1};
-        case 'groups', groupval = varargin{k-1};
         case 'figure'
             if strcmpi(varargin{k-1},'off') 
                 opt_dipplot{end + 1} = 'gui';
                 opt_dipplot{end + 1} = 'off';
                 figureon = 0;
+            else
+                opt_dipplot{end + 1} = 'projimg';
+                opt_dipplot{end + 1} = 'on';
             end
     end
 end
+
 % select clusters to plot
 % -----------------------
 if isempty(cls)
@@ -155,7 +151,6 @@ if strcmpi(mode, 'apart')  % case each cluster on a separate figure
                    dip_ind = [dip_ind k];
                end
             end % finished going over cluster comps
-            
             STUDY.cluster(cls(clus)).dipole = computecentroid(cluster_dip_models);
             cluster_dip_models(end + 1) = STUDY.cluster(cls(clus)).dipole;
            
@@ -173,13 +168,6 @@ if strcmpi(mode, 'apart')  % case each cluster on a separate figure
            options{end+1} = {comp_to_disp{dip_ind } [STUDY.cluster(cls(clus)).name ' mean']};
            options{end+1} = 'color';
            options{end+1} = dip_color;
-           
-           % if 'groups'==1, overwrite cluster_dip_models, dip_color and dipnames in option -makoto
-           if strcmpi(groupval, 'on')
-               [cluster_dip_models, options] = dipgroups(ALLEEG, STUDY, cls, comp_to_disp, cluster_dip_models, options);
-               break
-           end
-  
            if strcmpi(ALLEEG(abset).dipfit.coordformat, 'spherical')
                options{end+1} = 'sphere';
                options{end+1} = max_r;
@@ -197,7 +185,7 @@ if strcmpi(mode, 'apart')  % case each cluster on a separate figure
                set(fig_h,'Name', [STUDY.cluster(cls(clus)).name ' - ' num2str(length(unique(STUDY.cluster(cls(clus)).sets(1,:)))) ...
                        ' sets - ' num2str(length(STUDY.cluster(cls(clus)).comps)) ' components (' num2str(ndip) ' dipoles)' ],'NumberTitle','off');
            else
-               dipplot(cluster_dip_models, options{:},'view', [0.5 -0.5 0.5]);
+               dipplot(cluster_dip_models, options{:},'view', [0.5 -0.5 0.5],'spheres', 'on', 'projlines', 'on');
                for gind = 1:length(options) % remove the 'gui' 'off' option
                    if isstr(options{gind}) 
                        if strfind(options{gind}, 'gui')
@@ -351,7 +339,7 @@ end % finished case of 'all' clusters
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function STUDY = std_plotcompdip(STUDY, ALLEEG, cls, comp_ind, varargin)
+function STUDY = std_plotcompdip(STUDY, ALLEEG, cls, varargin)
 if ~exist('cls')
     error('std_plotcompdip: you must provide a cluster number as an input.');
 end
@@ -362,6 +350,8 @@ if nargin == 3 % no components indices were given
     % Default plot all components of the cluster
     [STUDY] = std_dipplot(STUDY, ALLEEG, 'clusters', cls);
     return
+else
+    comp_ind = varargin{1}; 
 end
 
 for ci = 1:length(comp_ind)
@@ -396,11 +386,11 @@ for ci = 1:length(comp_ind)
         end
         dipplot(cluster_dip_models, 'sphere', max_r, 'mri', ALLEEG(abset).dipfit.mrifile,'coordformat', ALLEEG(abset).dipfit.coordformat , ...
            'normlen' ,'on', 'pointout' ,'on','color', {'b', 'r'}, 'dipnames', {comp_to_disp [ STUDY.cluster(cls).name ' mean' ] },...
-            'spheres', 'on', 'verbose', 'off', varargin{:});
+            'spheres', 'on', 'verbose', 'off', 'projlines', 'on');
     else
        dipplot(cluster_dip_models, 'meshdata', ALLEEG(abset).dipfit.hdmfile, 'mri', ALLEEG(abset).dipfit.mrifile,'coordformat', ALLEEG(abset).dipfit.coordformat , ...
           'normlen' ,'on', 'pointout' ,'on','color', {'b', 'r'}, 'dipnames', {comp_to_disp [STUDY.cluster(cls).name ' mean']}, ...
-          'spheres', 'on', 'verbose', 'off', varargin{:});
+          'spheres', 'on', 'verbose', 'off', 'projlines', 'on');
     end
     fig_h = gcf;
     set(fig_h,'Name', [subject ' / ' 'IC' num2str(comp) ', ' STUDY.cluster(cls).name],'NumberTitle','off');
@@ -501,82 +491,3 @@ function dipole = computecentroid(alldipoles)
         if isfield(alldipoles, 'maxr')
             dipole.maxr = alldipoles(1).max_r;
         end;
-        
-function [cluster_dip_models, options] = dipgroups(ALLEEG, STUDY, cls, comp_to_disp, cluster_dip_models, options);
-
-    % first, extract the subject number
-    for n = 1:length(comp_to_disp)
-        subjectnum(n,1) = str2num(comp_to_disp{n}(1:3));
-    end
-
-    % second, extract group info
-    for n = 1:length(subjectnum)
-        subj_group{n,1} = ALLEEG(1,subjectnum(n)).group;
-    end
-
-    % third, replace the group names with numbers
-    for n = 1:length(subj_group)
-        for m = 1:length(STUDY.group)
-            if strcmp(subj_group{n,1}, STUDY.group{1,m})
-                subj_groupnum(n,1) = m;
-                break
-            end
-        end
-    end
-
-    % fourth, compute centroid for each group
-    for n = 1:length(STUDY.group)
-        samegroupIC = find(subj_groupnum==n);
-        cluster_dip_models(1,length(subj_groupnum)+n) = computecentroid(cluster_dip_models(1, samegroupIC));
-    end
-
-    % fifth, use subj_groupnum as a type of dipole color
-
-        %%%%%%%%%%%%%%%%%%%%% color list %%%%%%%%%%%%%%%%%%%%%
-        % This color list was developped for std_envtopo
-        % 16 colors names officially supported by W3C specification for HTML
-        colors{1,1}  = [1 1 1];            % White
-        colors{2,1}  = [1 1 0];            % Yellow
-        colors{3,1}  = [1 0 1];            % Fuchsia
-        colors{4,1}  = [1 0 0];            % Red
-        colors{5,1}  = [0.75  0.75  0.75]; % Silver
-        colors{6,1}  = [0.5 0.5 0.5];      % Gray
-        colors{7,1}  = [0.5 0.5 0];        % Olive
-        colors{8,1}  = [0.5 0 0.5];        % Purple
-        colors{9,1}  = [0.5 0 0];          % Maroon
-        colors{10,1} = [0 1 1];            % Aqua
-        colors{11,1} = [0 1 0];            % Lime
-        colors{12,1} = [0 0.5 0.5];        % Teal
-        colors{13,1} = [0 0.5 0];          % Green
-        colors{14,1} = [0 0 1];            % Blue
-        colors{15,1} = [0 0 0.5];          % Navy
-        colors{16,1} = [0 0 0];            % Black
-        % Silver is twice brighter because silver is used for a background color
-        colors{5,1} = [0.875 0.875 0.875];
-        % Choosing and sorting 12 colors for line plot, namely Red, Blue, Green, Fuchsia, Lime, Aqua, Maroon, Olive, Purple, Teal, Navy, and Gray
-        selectedcolors = colors([4 13 14 3 11 10 9 7 8 12 15 6]);
-
-    % determine the new dip colors
-    for n = 1:length(subj_groupnum)
-        dip_color{1,n}=selectedcolors{subj_groupnum(n,1)+1};
-    end
-    for n = 1:length(STUDY.group)
-        dip_color{1,end+1}= selectedcolors{n+1};
-    end
-    
-    for n = 1:length(options)
-        if      strcmp(options{1,n}, 'color')
-            options{1,n+1} = dip_color;
-        elseif  strcmp(options{1,n}, 'dipnames')
-            dipnames = options{1,n+1};
-            for m = 1:length(STUDY.group)
-                dipnames{1,length(subj_groupnum)+m}= [STUDY.group{1,m} ' mean'];
-            end
-            options{1,n+1} = dipnames;
-        end
-    end
-        
-
-   
-
-

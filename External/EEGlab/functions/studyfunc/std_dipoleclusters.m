@@ -100,7 +100,7 @@ end;
     % extract IC cluster and data path info from STUDY structure
     clear clustcps fullpaths gdcomps
     x = cell(1,length(unique({STUDY.datasetinfo.subject})));
-    subjs = unique_bc({STUDY.datasetinfo.subject});
+    subjs = unique({STUDY.datasetinfo.subject});
     origlist = cell(1,length(unique({STUDY.datasetinfo.subject})));
     sets = cell(1,length(unique({STUDY.datasetinfo.subject})));
     for clust = 1:length(STUDY.cluster)
@@ -111,7 +111,7 @@ end;
             subjidx = strmatch(STUDY.datasetinfo(currset).subject,subjs);
             clustcps{clust}{subjidx}(end+1) = currcomp;
             origlist{subjidx} = [origlist{subjidx} currcomp];
-            [origlist{subjidx} idx] = unique_bc(origlist{subjidx});
+            [origlist{subjidx} idx] = unique(origlist{subjidx});
             sets{subjidx} = currset;
         end;    
     end;
@@ -218,7 +218,7 @@ end;
             if strcmp(centroid,'only')
                 dipplot(centrstr,'image','mri','gui','off','dipolelength',0,'dipolesize',40,'normlen','on','spheres','on','color',centcols,'projlines','off','projimg',prjimg,'coordformat',EEG.dipfit.coordformat);hold on; view(90,0);      
                 if ~isempty(find(centrstr2(1).posxyz)) % only if there were bilaterals
-                    dipplot(centrstr2,'image','mri','gui','off','dipolelength',0,'dipolesize',40,'normlen','on','spheres','on','color',centcols,'projlines','off','projimg',prjimg,'coordformat',EEG.dipfit.coordformat);hold on; view(90,0); camzoom(.8)   
+                    mydipplot(centrstr2,'image','mri','gui','off','dipolelength',0,'dipolesize',40,'normlen','on','spheres','on','color',centcols,'projlines','off','projimg',prjimg,'coordformat',EEG.dipfit.coordformat);hold on; view(90,0); camzoom(.8)   
                 else
                     camzoom(1)  
                 end;
@@ -226,7 +226,7 @@ end;
                 dipplot(allbesa,'image','mri','gui','off','dipolelength',0,'dipolesize',25,'normlen','on','spheres','on','color',colset,'projlines','off','projimg',prjimg,'coordformat',EEG.dipfit.coordformat);hold on; view(90,0);     
                 dipplot(centrstr,'image','mri','gui','off','dipolelength',0,'dipolesize',40,'normlen','on','spheres','on','color',centcols2,'projlines','off','projimg',prjimg,'coordformat',EEG.dipfit.coordformat);hold on; view(90,0); camzoom(.8)  
                 if ~isempty(find(centrstr2(1).posxyz)) % only if there were bilaterals
-                    dipplot(centrstr2,'image','mri','gui','off','dipolelength',0,'dipolesize',40,'normlen','on','spheres','on','color',centcols2,'projlines','off','projimg',prjimg,'coordformat',EEG.dipfit.coordformat);hold on; view(90,0);camzoom(.8)   
+                    mydipplot(centrstr2,'image','mri','gui','off','dipolelength',0,'dipolesize',40,'normlen','on','spheres','on','color',centcols2,'projlines','off','projimg',prjimg,'coordformat',EEG.dipfit.coordformat);hold on; view(90,0);camzoom(.8)   
                 else
                     camzoom(1)  
                 end;

@@ -19,10 +19,6 @@
 %
 % Authors: Scott Makeig & Luca Finelli, CNL/Salk Institute-SCCN, August 21, 2002
 %
-% Note: this function overload the function from the statistics toolbox. In
-%       case the statistic toolbox is present, the function from the
-%       statistics toolbox is being called instead.
-%
 % See also: 
 %   pop_sample(), eeglab() 
 
@@ -42,20 +38,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function q = quantile(data,varargin); 
-
-% detect overloaded method in stat toolbox
-curPath = fileparts(which('quantile'));
-rmpath(curPath);
-path2   = fileparts(which('quantile'));
-addpath(curPath);
-if ~isempty(path2)
-    addpath(path2);
-    q = quantile(data,varargin{:});
-    return;
-else
-    pc = varargin{1};
-end;
+function q = quantile(data,pc); 
 
 if nargin < 2
 	help quantile;

@@ -66,7 +66,7 @@ if size(EEG.data,3)==1 % epochs must be extracted
         
         EEGep = pop_epoch( EEG, {  '5sec'  }, [0 lag], 'newname', [EEG.setname '_ep5'] , 'epochinfo', 'yes');
         % removing baseline
-        EEGep = pop_rmbase( EEGep, []);
+        EEGep = pop_rmbase( EEGep, [0  0]);
         EEGep = eeg_checkset(EEGep);
         
 

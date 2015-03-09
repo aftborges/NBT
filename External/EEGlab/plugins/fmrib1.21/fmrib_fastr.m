@@ -145,9 +145,8 @@
 
 
 
-function EEG=fmrib_fastr(EEG,lpf,L,Window,Trigs,strig,anc_chk,tc_chk,Volumes,Slices,varargin)
-
-EEG.data = double(EEG.data);
+function EEG=fmrib_fastr(EEG,lpf,L,Window,Trigs,strig,anc_chk,tc_chk,...
+   Volumes,Slices,varargin)
 
 tic;
 % Check Input & Intialize Params
@@ -473,19 +472,6 @@ while sec<=sections
     SCount=SCount+1;
     sec=sec+1;
 end
-
-% test prcorr2
-try
-    prcorr2(rand(1,100), rand(1,100))
-catch,
-    tmpfile = which('prcorr2');
-    [tmppath tmpfilenoext] = fileparts(tmpfile);
-    tmpfilenoext = fullfile(tmppath,tmpfilenoext);
-    delete(tmpfile);
-    disp( [ 'Removing file ' tmpfile ]);
-    disp( [ 'Try recompiling the mex file by typing' ]);
-    disp( [ 'mex ' tmpfilenoext '.c' ]);
-end;
 
 %----------------
 SCount=1;

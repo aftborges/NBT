@@ -120,7 +120,12 @@ end;
 
 % update the component indices
 % ----------------------------
-STUDY = std_selectdesign(STUDY, ALLEEG, STUDY.currentdesign);
+STUDY.cluster(1).setinds = {};
+STUDY.cluster(1).allinds = {};
+for index = 1:length(STUDY.cluster)
+    STUDY.cluster(index) = std_setcomps2cell(STUDY, index);
+end;
+
 disp('Done.');
 
 % remove cluster information

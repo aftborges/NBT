@@ -25,10 +25,10 @@ if ~exist('eyechannels','var') || isempty(eyechannels)
 end
 if isempty(varargin)
     lag=2;
-    thr = 3.5;
+    thr = 2.5;
 elseif ~isempty(varargin) && length(varargin) == 1
     lag = varargin{1}; % get epoch length
-    thr = 3.5;
+    thr = 2.5;
 elseif ~isempty(varargin) && length(varargin) == 2
     lag = varargin{1}; % get epoch length
     thr = varargin{2}; % get faster z-score threshold
@@ -56,7 +56,7 @@ EEG=eeg_checkset(EEG,'eventconsistency');
 
 EEG = pop_epoch( EEG, {  [num2str(lag) 'sec']  }, [0 lag], 'newname', [EEG.setname '_ep' num2str(lag)] , 'epochinfo', 'yes');
 % removing baseline
-EEG = pop_rmbase( EEG, []);
+EEG = pop_rmbase( EEG, [0  0]);
 EEG = eeg_checkset(EEG);
 
 
@@ -67,7 +67,7 @@ topografie=EEG.icawinv'; %computes IC topographies
 
 disp('Normalizing topographies...')
 disp('Scaling time courses...')
-EEG.icaact = eeg_getica(EEG);
+
 for i=1:size(EEG.icawinv,2) % number of ICs
     
     ScalingFactor=norm(topografie(i,:));
@@ -96,9 +96,8 @@ GDSF = nbt_compute_GD_feat(topografie,EEG.chanlocs(EEG.icachansind),size(EEG.ica
 
 
 %SED - Spatial Eye Difference
-if (~isempty(eyechannels))
 [SED,medie_left,medie_right]=nbt_computeSED_NOnorm(topografie,EEG.chanlocs(EEG.icachansind),size(EEG.icawinv,2),eyechannels);
-end
+
 
 %SAD - Spatial Average Difference
 [SAD,var_front,var_back,mean_front,mean_back]=nbt_computeSAD(topografie,EEG.chanlocs(EEG.icachansind),size(EEG.icawinv,2),size(EEG.icawinv,1));
@@ -167,21 +166,17 @@ nuovaV=maxvar./meanvar;
 
 
 soglia_GDSF=nbt_EM(GDSF);
-if (~isempty(eyechannels))
 soglia_SED=nbt_EM(SED);
-end
 soglia_SAD=nbt_EM(SAD);
 soglia_K=nbt_EM(meanK);
-soglia_V=nbt_EM(nbt_removeMaxMin(nuovaV));
+soglia_V=nbt_EM(nuovaV);
 soglia_DV = nbt_EM(diff_var);
 soglia_K = nbt_EM(meanK);
 
 
 %% Horizontal eye movements (HEM)
-if (~isempty(eyechannels))
 horiz=intersect(intersect(find(SED>=soglia_SED),find(medie_left.*medie_right<0)),...
     (find(nuovaV>=soglia_V)));
-end
 %% Vertical eye movements (VEM)
 
 vert=intersect(intersect(find(SAD>=soglia_SAD),find(medie_left.*medie_right>0)),...
@@ -191,12 +186,9 @@ blink=intersect ( intersect( find(SAD>=soglia_SAD),find(medie_left.*medie_right>
     intersect ( find(meanK>=soglia_K),find(diff_var>0) ));
 %% Generic Discontinuities (GD)
 disc=intersect(find(GDSF>=soglia_GDSF),find(nuovaV>=soglia_V));
-if (~isempty(eyechannels))
+
 ADJUSTicaRej = nonzeros( union (union(blink,horiz) , union(vert,disc)) )';
-else
-    ADJUSTicaRej = nonzeros( union (blink , union(vert,disc)) )';
- SED = [];
-end
+
 IcsRejected = union(FASTERicaRej,ADJUSTicaRej);
 EEG= EEGold;
 

@@ -5,8 +5,8 @@
 %              non-orthogonal independent components may not add to 100%, and individual component 
 %              pvaf could be < 0%.
 % Usage:
-%              >> [pv] = eeg_pvaf(EEG,comps);s
-%              >> [pvaf,pvafs,vars] = eeg_pvaf(EEG, comps,'key', val);
+%              >> [pv] = eeg_pvaf(EEG,comps);
+%              >> [pvaf,pvafs,vars] = eeg_pvaf(EEG,comps,artcomps,omitchans,fraction,'plot');
 % Inputs:
 %    EEG       - EEGLAB dataset. Must have icaweights, icasphere, icawinv, icaact.
 %    comps     - vector of component indices to sum {default|[] -> progressive mode}
@@ -65,7 +65,7 @@ g = finputcheck(varargin, { 'artcomps'   'integer'    []         [];
                             'omitchans'  'integer'    []         [];
                             'chans'      'integer'    []         [];
                             'fraction'   'real'       []         1;
-                            'plot'       'string'     { 'on';'off';'def' } 'def' }, 'eeg_pvaf');
+                            'plot'       'string'     { 'on' 'off' 'def' } 'def' }, 'eeg_pvaf');
 if isstr(g), error(g); end;
 
 numcomps = size(EEG.icaact,1);
@@ -82,7 +82,7 @@ end
 numchans = EEG.nbchan;
 chans = 1:numchans;
 if ~isempty(g.chans)
-    g.omitchans = setdiff_bc([1:EEG.nbchan], g.chans);
+    g.omitchans = setdiff([1:EEG.nbchan], g.chans);
 end;
 if ~isempty(g.omitchans)
  if max(g.omitchans)>numchans
@@ -145,7 +145,7 @@ if progressive
 end
 
 if ~isempty(g.artcomps)
-   [a b c] = intersect_bc(g.artcomps,comps);
+   [a b c] = intersect(g.artcomps,comps);
    if ~isempty(a)
       if ~progressive
         if length(a)>1

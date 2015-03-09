@@ -21,7 +21,7 @@
 %
 % ChangeLog - see version control log at NBT website for details.
 %
-% Copyright (C) 2011  Simon-Shlomo Poil  (Neuronal Oscillations and Cognition group,
+% Copyright (C) <2010>  <Main Author>  (Neuronal Oscillations and Cognition group,
 % Department of Integrative Neurophysiology, Center for Neurogenomics and Cognitive Research,
 % Neuroscience Campus Amsterdam, VU University Amsterdam)
 %
@@ -64,23 +64,61 @@ try
 catch
 end
 if(isempty(varargin))
+<<<<<<< HEAD
     NBT_version = nbt_GetVersion;
+=======
+    %% get NBT version THIS TAKES LOTS OF TIME!!!!
+    %     try
+    %         [m,s] =system('bzr revno');
+    %         if(m ~= 0 | length(s)> 5 )
+    %             s = textread('rev.txt');
+    %         end
+    %     catch
+    %         s = textread('rev.txt');
+    %     end
+    %     try
+    %         NBT_version = ['NBT version ' int2str(s)];
+    %     catch
+    %         NBT_version = 'NBT';
+    %     end
+    
+    try
+        filepath = fileparts(which('NBT.m'));
+        filename = dir(fullfile(filepath, 'Contents.m'));
+        
+        if isempty(filename), throwerro; end;
+        
+        fid = fopen(filename.name, 'r');
+        fgetl(fid);
+        versionline = fgetl(fid);
+%         NBT_version = ['NBT version ' versionline(11:end)];
+        NBT_version = ['NBT version student '];
+        fclose(fid);
+    catch
+        NBT_version= 'NBT';
+    end
+>>>>>>> FETCH_HEAD
     
     %% Make menu
+    %'Position',[200 400 500 0.5]
+    %'position',[390.0000  456.7500  500   88.5000]
     if(standalone)
-    NBTMenu = figure('Units','pixels', 'name',NBT_version,'numbertitle','off', 'Userdata', {[] []},'Tag','NBT','DockControls','off','Position',[390.0000  456.7500 810  88.5000], ...
+    NBTMenu = figure('Units','pixels', 'name',NBT_version,'numbertitle','off', 'Userdata', {[] []},'Tag','NBT','DockControls','off','Position',[390.0000  456.7500 700  88.5000], ...
         'MenuBar','none','NextPlot','new','Resize','off');
    
+<<<<<<< HEAD
    %make sure the GUI is onscreen
      NBTMenu=nbt_movegui(NBTMenu);
 
+=======
+>>>>>>> FETCH_HEAD
         try
             nbt_set_name(evalin('base','Signal'),evalin('base','SignalInfo'));
         catch
             nbt_set_name([])
         end
     else
-    NBTMenu = figure('Units','pixels', 'name',['Undocked NBT (EEGLAB) ' NBT_version],'numbertitle','off', 'Userdata', {[] []},'Tag','NBT','DockControls','off','Position',[390.0000  456.7500  810  0.5], ...
+    NBTMenu = figure('Units','pixels', 'name',NBT_version,'numbertitle','off', 'Userdata', {[] []},'Tag','NBT','DockControls','off','Position',[390.0000  456.7500  700  0.5], ...
         'MenuBar','none','NextPlot','new','Resize','off');
         
     end
@@ -92,10 +130,6 @@ end
 
 if (standalone)
     %%  NBT standalone GUI
-    %define "use NBTelements" check box
-    uicontrol(NBTMenu, 'Style', 'Checkbox','String', 'Use NBTelements','Position',[10 10 200 20],'Tag','NBTelementSwitch')
-    
-    %define menu
     FileSub = uimenu(NBTMenu,'label', ' &File ');
     uimenu( FileSub, 'label', 'Load NBT Signal', 'callback', '[Signal,SignalInfo,SignalPath]=nbt_load_file;nbt_set_name(Signal, SignalInfo);');
     uimenu( FileSub, 'label', 'Import files into NBT format', 'callback', ['nbt_import_files']);
@@ -111,17 +145,14 @@ if (standalone)
     VisSub=uimenu( NBTMenu, 'label', ' &Visualization');
     uimenu(VisSub,'label', 'Plot Signals', 'callback', 'nbt_plot(Signal,SignalInfo)');
     uimenu(VisSub,'label', 'Plot time-frequency plot and power spectrum of one channel', 'callback', 'nbt_plot_TF_and_spectrum_one_channel(Signal,SignalInfo)')
-    ch_loc = uimenu(VisSub,'label', 'Channel locations');
-    uimenu(ch_loc,'label','by name', 'callback','nbt_EEGLABwrp(@nbt_plotchanloc,Signal,SignalInfo, SignalPath,0,''name'');');
-    uimenu(ch_loc,'label','by number', 'callback','nbt_EEGLABwrp(@nbt_plotchanloc,Signal,SignalInfo, SignalPath,0,''number'');');
    
     PreProc = uimenu(NBTMenu, 'label', '&Pre-processing');
     uimenu(PreProc,'label', 'Remove artifacts current NBT Signal', 'callback', 'SignalInfo=nbt_get_artifacts(Signal,SignalInfo,SignalPath);');
-    uimenu(PreProc,'label', 'Remove artifacts multiple NBT Signals', 'callback', 'nbt_NBTcompute(@nbt_get_artifacts);');
-    uimenu(PreProc,'label', 'Find & add bad channel to Info.BadChannels','callback',['[Signal,SignalInfo] = nbt_EEGLABwrp(@nbt_FindBadChannels, Signal, SignalInfo, SignalPath,0);']);
-    uimenu(PreProc,'label', 'Re-reference to average reference (exclude bad channels)','callback', ['[Signal, SignalInfo] = nbt_EEGLABwrp(@nbt_ReRef,Signal, SignalInfo, [],0,[]);']);
+    %uimenu(PreProc,'label', 'Remove artifacts multiple NBT Signals', 'callback', 'nbt_NBTcompute(@nbt_get_artifacts);');
+    %uimenu(PreProc,'label', 'Find & add bad channel to Info.BadChannels','callback',['[Signal,SignalInfo] = nbt_EEGLABwrp(@nbt_FindBadChannels, Signal, SignalInfo, SignalPath,0);']);
    ICAsub = uimenu(PreProc, 'label', '&ICA');
     uimenu(ICAsub,'label', 'Run ICA on good channels only','callback',['[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_filterbeforeICA, Signal, SignalInfo, SignalPath,0, ''EEG.data = nbt_filter_firHp(EEG.data,0.5,EEG.srate,4);'',4);[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_rejectICAcomp, Signal, SignalInfo, SignalPath, 0,''EEG.data = nbt_filter_firHp(EEG.data,0.5,EEG.srate,4);'',4,1);']);
+<<<<<<< HEAD
     uimenu(ICAsub,'label', 'Filter ICA components', 'callback',['[Signal, SignalInfo] = nbt_EEGLABwrp(@nbt_rejectICAcomp, Signal, SignalInfo, SignalPath, 0,''EEG.data = nbt_filter_firHp(EEG.data,0.5,EEG.srate,4);'',4,1);'],'Tag','NBTICAfilter');
     VisICAsub = uimenu(ICAsub, 'label', '&Visualize ICA');
     uimenu(VisICAsub, 'label', 'Plot component activations', 'callback', '[Signal, SignalInfo]=nbt_EEGLABwrp2(@pop_eegplot, Signal, SignalInfo, SignalPath,0, 0, 1, 1);')
@@ -135,59 +166,55 @@ if (standalone)
     AutoCleanMenuSetup = uimenu(AutoCleanMenuSub,'label','Setup');
     uimenu(AutoCleanMenuSetup,'label', 'Set Eye Channels','callback','nbt_setEyeCh');
     uimenu(AutoCleanMenuSetup,'label', 'Set Non-EEG Channel', 'callback', 'nbt_setNonEEGCh');
+=======
+    uimenu(ICAsub,'label', 'Filter ICA components', 'callback',['[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_rejectICAcomp, Signal, SignalInfo, SignalPath, 0,''EEG.data = nbt_filter_firHp(EEG.data,0.5,EEG.srate,4);'',4,1);'],'Tag','NBTICAfilter');
+    VisICAsub = uimenu(ICAsub, 'label', '&Visualize ICA');
+    uimenu(VisICAsub, 'label', 'Plot component activations', 'callback', '[Signal, SignalInfo]=nbt_EEGLABwrp2(@pop_eegplot, Signal, SignalInfo, SignalPath,0, 0, 1, 1);')
+    uimenu(VisICAsub, 'label', 'Reject component by map', 'callback', '[Signal, SignalInfo]=nbt_EEGLABwrp2(@pop_selectcomps, Signal, SignalInfo, SignalPath,1);')
+%    uimenu(ICAsub, 'label', 'Plot spectra and maps', 'callback', '[Signal, SignalInfo]=nbt_EEGLABwrp2(@pop_spectopo, Signal, SignalInfo, SignalPath,1, 0);')
+   % uimenu(VisICAsub, 'label', 'Component statistics', 'callback', '[Signal, SignalInfo]=nbt_EEGLABwrp2(@pop_signalstat, Signal, SignalInfo, SignalPath,1,1);') 
+    uimenu(ICAsub,'label', 'Add to bad channel list, one channel ICA components', 'callback','[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_MarkICBadChannel,Signal,SignalInfo,SignalPath,0);');
+   uimenu(ICAsub,'label', 'Reject filtered ICA components','callback',['[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_rejectICAcomp,Signal,SignalInfo,SignalPath,0,[],[],2);'],'Enable','off','Tag','NBTICAreject');
+   uimenu(PreProc,'label', 'Re-reference to average reference (exclude bad channels)','callback', ['[Signal, SignalInfo] = nbt_EEGLABwrp2(@nbt_AverageReference, Signal, SignalInfo, SignalPath,0);']);
     
-    uimenu(AutoCleanMenuSub,'label', 'NBT Auto clean signals','callback', 'nbt_NBTcompute(@nbt_AutoClean)');
-    uimenu(AutoCleanMenuSub,'label', 'Run FASTER', 'callback','FASTER_GUI');
-    uimenu(AutoCleanMenuSub,'label', 'Auto reject ICA components', 'callback',['[Signal, SignalInfo] = nbt_EEGLABwrp(@nbt_AutoRejectICA,Signal,SignalInfo,SignalPath,0,[],1);'],'Enable','on');
-%     uimenu(ICAsub,'label', 'Mark ICA components as bad', 'callback','[Signal, SignalInfo] = nbt_EEGLABwrp(@nbt_MarkICBadChannel,Signal,SignalInfo,SignalPath,0);');
-%     
+>>>>>>> FETCH_HEAD
+    
     CompBio = uimenu(NBTMenu, 'label', ' &Compute biomarkers ');
     perSignal = uimenu(CompBio, 'label', ' &For current NBT Signal');
     uimenu(perSignal,'label', 'Amplitudes', 'callback', 'nbt_runAmplitude(Signal,SignalInfo,SignalPath)');
-    uimenu(perSignal,'label', 'Correlations', 'callback', 'nbt_runCorrelations(Signal,SignalInfo,SignalPath)');
+%     uimenu(perSignal,'label', 'Correlations', 'callback', 'nbt_get_correlations(Signal,SignalInfo,SignalPath)');
     uimenu(perSignal,'label', 'DFA', 'callback', ['SettingsDFA = [];nbt_runDFA_gui(Signal, SignalInfo, SignalPath);clear SettingsDFA']);
-    uimenu(perSignal,'label', 'Coherence', 'callback',['SettingsCoher = [];nbt_runCoher_gui(Signal, SignalInfo, SignalPath);clear SettingsCoher']);
-    uimenu(perSignal,'label', 'Phase Locking Value', 'callback', ['SettingsPLV = [];nbt_runPhaseLocking_gui(Signal, SignalInfo, SignalPath);clear SettingsPLV']);
+%     uimenu(perSignal,'label', 'Coherence', 'callback',['SettingsCoher = [];nbt_runCoher_gui(Signal, SignalInfo, SignalPath);clear SettingsCoher']);
+%     uimenu(perSignal,'label', 'Phase Locking Value', 'callback', ['SettingsPLV = [];nbt_runPhaseLocking_gui(Signal, SignalInfo, SignalPath);clear SettingsPLV']);
     
-    perFolder = uimenu(CompBio, 'label', ' &For multiple NBT Signals');
-    uimenu(perFolder,'label', 'Amplitudes', 'callback', 'nbt_NBTcompute(@nbt_runAmplitude)');
-    uimenu(perFolder,'label', 'Amplitude correlations', 'callback', ['AmplitudeCorrSettings=[];nbt_NBTcompute(@nbt_doAmplitudeCorr_gui);clear AmplitudeCorrSettings;']);
-    uimenu(perFolder,'label', 'Frequency Stability', 'callback', ['FreqStabilitySettings=[];nbt_NBTcompute(@nbt_doFreqStability_gui);clear FreqStabilitySettings;']);
-    uimenu(perFolder,'label', 'Coherence', 'callback',['SettingsCoher = []; nbt_NBTcompute(@nbt_runCoher_gui);clear SettingsCoher']);
-    uimenu(perFolder,'label', 'Correlations', 'callback', 'nbt_NBTcompute(@nbt_runCorrelations)');
-    uimenu(perFolder,'label', 'DFA', 'callback',['SettingsDFA = [];nbt_NBTcompute(@nbt_runDFA_gui);clear SettingsDFA']);
-    uimenu(perFolder,'label', 'MFDFA', 'callback', ['SettingsMFDFA=[];nbt_NBTcompute(@nbt_MFDFA_gui);clear SettingsMFDFA;']);
-    uimenu(perFolder,'label', 'Life- & waitingtime', 'callback', ['OscBurstSettings=[];nbt_NBTcompute(@nbt_doOscBursts_gui);clear OscBurstSettings;']);
-    uimenu(perFolder,'label', 'Phase Locking Value', 'callback', ['SettingsPLV = [];nbt_NBTcompute(@nbt_runPhaseLocking_gui); clear SettingsPLV']);
-    uimenu(perFolder,'label', 'Spectral biomarkers', 'callback', ['FrequencyBandsInput=[];nbt_NBTcompute(@nbt_runPeakFit);clear FrequencyBandsInput']);
-    uimenu(perFolder,'label', 'Cross-Frequency PLV', 'callback', ['FrequencyBands=[];nbt_NBTcompute(@nbt_runCrossPhaseLocking_gui);clear FrequencyBands;']);
+%     perFolder = uimenu(CompBio, 'label', ' &For multiple NBT Signals');
+%     uimenu(perFolder,'label', 'Amplitudes', 'callback', 'nbt_NBTcompute(@nbt_get_amplitude)');
+%     uimenu(perFolder,'label', 'Spectral biomarkers', 'callback',
+%     'nbt_NBTcompute(@nbt_runPeakFit)');
+%     uimenu(perFolder,'label', 'Correlations', 'callback', 'nbt_NBTcompute(@nbt_get_correlations)');
+%     uimenu(perFolder,'label', 'DFA', 'callback',['SettingsDFA = [];nbt_NBTcompute(@nbt_runDFA_gui);clear SettingsDFA']);
+    %uimenu(perFolder,'label', 'Coherence', 'callback',['SettingsCoher = []; nbt_NBTcompute(@nbt_runCoher_gui);clear SettingsCoher']);
+    %uimenu(perFolder,'label', 'Phase Locking Value', 'callback', ['SettingsPLV = [];nbt_NBTcompute(@nbt_runPhaseLocking_gui); clear SettingsPLV']);
+    
     uimenu(CompBio,'label', 'List biomarkers in current signal', 'callback', 'nbt_list_biomarkers(SignalInfo,SignalPath)');
     
     Stat = uimenu(NBTMenu, 'label', ' &Biomarker statistics');
     uimenu(Stat, 'label', ' &Current Signal', 'callback',  ['nbt_statistics_group([SignalPath  SignalInfo.file_name ''.mat''])'  ]);
-    uimenu(Stat, 'label', ' &Statistics GUI','callback', 'nbt_selectrunstatistics;');
+    uimenu(Stat, 'label', ' &Statistics GUI','callback', 'nbt_Main_statistics;');
 %     uimenu(Stat, 'label', ' &Within a group','callback', 'nbt_stat_group;');
 %     uimenu(Stat, 'label', ' &Between two conditions','callback', 'nbt_stat_conditions;');
 %     uimenu(Stat, 'label', ' &Between two groups','callback', 'nbt_stat_groups;');
 %     uimenu(Stat,'label', 'List of Performed Tests', 'callback', 'nbt_list_statistics');
     
     
-    nbt_commonMenu
-    
-    StartEEGlab = uimenu(NBTMenu, 'label', '&EEGlab','Separator', 'on');
-    uimenu(StartEEGlab, 'label', ' Start EEGlab ','callback',['nbt_dockmenu'],'Tag','NBTdock');
+%     nbt_commonMenu
+%     
+%     StartEEGlab = uimenu(NBTMenu, 'label', '&EEGlab','Separator', 'on');
+%     uimenu(StartEEGlab, 'label', ' Start EEGlab ','callback',['nbt_dockmenu'],'Tag','NBTdock');
     
     movegui(NBTMenu,'center')
     
-    try
-    if(evalin('base', 'isfield(SignalInfo.Interface.EEG,''NBTEEGtmp'')'))
-        hh = findobj('Tag','NBTICAfilter');
-        set(hh,'Enable','off');
-        hh = findobj('Tag','NBTICAreject');
-        set(hh,'Enable','on');
-    end
-    catch
-    end
+
     
 else
     %% Menu in EEGLAB
@@ -210,8 +237,8 @@ else
     ICAsub = uimenu(PreProc, 'label', '&ICA');
     uimenu(ICAsub,'label', 'Run ICA on good channels only','callback',['[ALLEEG EEG CURRENTSET]= eeg_store(ALLEEG, EEG,CURRENTSET);EEG = nbt_filterbeforeICA(EEG, ''EEG.data = nbt_filter_firHp(EEG.data,0.5,EEG.srate,4);'',4);[ALLEEG EEG CURRENTSET]= eeg_store(ALLEEG, EEG,CURRENTSET); eeglab redraw']);
     uimenu(ICAsub,'label', 'Filter ICA components', 'callback',['EEG = nbt_rejectICAcomp(EEG,''EEG.data = nbt_filter_firHp(EEG.data,0.5,EEG.srate,4);'',4,1);'],'Tag','NBTICAfilter');
-    uimenu(ICAsub,'label', 'Reject filtered ICA components','callback',['EEG = nbt_rejectICAcomp(EEG,[],[],2);[ALLEEG, EEG] = eeg_store(ALLEEG, EEG, CURRENTSET);'],'Enable','off','Tag','NBTICAreject');
-    uimenu(ICAsub,'label', 'Auto reject ICA components', 'callback',['EEG  = nbt_AutoRejectICA(EEG,[],1);[ALLEEG, EEG] = eeg_store(ALLEEG, EEG,CURRENTSET);'],'Enable','on');
+    uimenu(ICAsub,'label', 'Reject filtered ICA components','callback',['EEG = nbt_rejectICAcomp(EEG,[],[],2);'],'Enable','off','Tag','NBTICAreject');
+    uimenu(ICAsub,'label', 'Auto reject ICA components', 'callback',['EEG  = nbt_AutoRejectICA(EEG,[],1);'],'Enable','on');
     uimenu(ICAsub,'label', 'Mark ICA components as bad', 'callback','EEG=nbt_MarkICBadChannel(EEG);');
     
     VisSub=uimenu( NBTMenu, 'label', '&Visualization tools');
@@ -219,7 +246,9 @@ else
     uimenu(VisSub,'label', 'Plot bad channels', 'callback', 'nbt_plotBadChannels(EEG)');
     
     Stat = uimenu(NBTMenu, 'label', '&Biomarker statistics');
-    uimenu(Stat, 'label', ' &Statistics GUI','callback', 'nbt_selectrunstatistics;');
+    uimenu(Stat, 'label', ' &Within a group','callback', 'nbt_stat_group;');
+    uimenu(Stat, 'label', ' &Between two conditions','callback', 'nbt_stat_conditions;');
+    uimenu(Stat, 'label', ' &Between two groups','callback', 'nbt_stat_groups;');
     
     
     nbt_commonMenu
@@ -237,16 +266,13 @@ end
     function nbt_commonMenu %nested function
         dbSub = uimenu(NBTMenu, 'label', '&Database tools');
         uimenu( dbSub, 'label', 'NBTdatabase','callback',['nbt_NBTdb']);
-        dbElements = uimenu( dbSub, 'label', 'NBTelements');
-           uimenu(dbElements,'label', 'Connect NBTelements', 'callback', 'nbt_ConnectNBTelements');
-           uimenu(dbElements,'label', 'Import Biomarkrs', 'callback', 'nbt_importBiomarkers');
-           uimenu(dbElements,'label', 'Query database', 'callback', 'nbt_NBTelementGUIcmd');
+        uimenu( dbSub, 'label', 'NBTelements','callback',['nbt_NBTelement_gui']);
         
         HelpMenu = uimenu(NBTMenu, 'label', '&Help');
         uimenu(HelpMenu, 'label','NBT wiki', 'callback','web http://www.nbtwiki.net -browser');
         uimenu(HelpMenu, 'label','Tutorials', 'callback','web http://www.nbtwiki.net/doku.php?id=tutorial:start -browser');
         uimenu(HelpMenu, 'label','Documentation', 'callback','web http://www.nbtwiki.net/doku.php?id=nbtdocumentation:start -browser');
-        uimenu(HelpMenu, 'label','Get involved', 'callback','web http://www.nbtwiki.net/doku.php?id=nbtdev:start -browser');
+        uimenu(HelpMenu, 'label','How to contribute', 'callback','web http://www.nbtwiki.net/doku.php?id=nbtdev:start -browser');
         uimenu(HelpMenu, 'label','Copyrights','Separator', 'on',  'callback','web http://www.nbtwiki.net/doku.php?id=copyrights -browser');
         uimenu(HelpMenu, 'label', 'About NBT','Separator', 'on', 'callback',['help NBT']);
     end

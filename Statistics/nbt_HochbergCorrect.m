@@ -6,7 +6,7 @@ i = Num;
 while pvalues(i) > Pb
 Pb = ((i)*0.05)/Num;
 i= i-1;
-if i <= 1
+if i == 1
     break;
 end
 end

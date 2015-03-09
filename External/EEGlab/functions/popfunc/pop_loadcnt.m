@@ -63,7 +63,7 @@
 
 % 01-25-02 reformated help & license -ad 
 
-function [EEG, command] = pop_loadcnt(filename, varargin);
+function [EEG, command] = pop_loadcnt(filename, varargin); 
 command = '';
 EEG = [];
 
@@ -73,26 +73,23 @@ if nargin < 1
 	[filename, filepath] = uigetfile('*.CNT;*.cnt', 'Choose a CNT file -- pop_loadcnt()'); 
     drawnow;
 	if filename == 0 return; end;
-    
+
 	% popup window parameters
 	% -----------------------
-    callback16 = 'set(findobj(gcbf, ''tag'', ''B32''), ''value'', ~get(gcbo, ''value'')); set(findobj(gcbf, ''tag'', ''AD''), ''value'', ~get(gcbo, ''value''));';
-    callback32 = 'set(findobj(gcbf, ''tag'', ''B16''), ''value'', ~get(gcbo, ''value'')); set(findobj(gcbf, ''tag'', ''AD''), ''value'', ~get(gcbo, ''value''));';
-    callbackAD = 'set(findobj(gcbf, ''tag'', ''B16''), ''value'', ~get(gcbo, ''value'')); set(findobj(gcbf, ''tag'', ''B32''), ''value'', ~get(gcbo, ''value''));';
-    uigeom       = { [1.3 0.5 0.5 0.5] [1 0.5] [1.09 0.13 0.4] [1 0.5] [1 0.5] 1 } ;
-    uilist       = { { 'style' 'text' 'string' 'Data format 16 or 32 bit (Default = Autodetect)' } ...
-                     { 'style' 'checkbox' 'tag' 'B16' 'string' '16-bits' 'value' 0 'callback' callback16 } ...
-                     { 'style' 'checkbox' 'tag' 'B32' 'string' '32-bits' 'value' 0 'callback' callback32 } ...
-                     { 'style' 'checkbox' 'tag' 'AD' 'string' 'Autodetect' 'value' 1 'callback' callbackAD } ...
-                     { 'style' 'text' 'string' 'Time interval in s (i.e. [0 100]):' } ...
-                     { 'style' 'edit' 'string' '' 'callback' 'warndlg2([ ''Events latency might be innacurate when'' 10 ''importing time intervals (this is an open issue)'']);' } ...                  
+    callback16 = 'set(findobj(gcbf, ''tag'', ''32''), ''value'', ~get(gcbo, ''value''));';
+    callback32 = 'set(findobj(gcbf, ''tag'', ''16''), ''value'', ~get(gcbo, ''value''));';
+    uigeom       = { [1.3 0.5 0.5] [1 0.5] [1.09 0.13 0.4] [1 0.5] [1 0.5] } ;
+    uilist       = { { 'style' 'text' 'string' 'Data format' } ...
+                     { 'style' 'checkbox' 'tag' '16' 'string' '16-bits' 'value' 1 'callback' callback16 } ...
+                     { 'style' 'checkbox' 'tag' '32' 'string' '32-bits' 'value' 0 'callback' callback32 } ...
+                     { 'style' 'text' 'string' 'Time interval in seconds (i.e. [0 100]; default all):' } ...
+                     { 'style' 'edit' 'string' '' } ...                  
                      { 'style' 'text' 'string' 'Check to Import keystrokes:' } ...
                      { 'style' 'checkbox' 'string' '' } { } ...                     
                      { 'style' 'text' 'string' 'loadcnt() ''key'', ''val'' params' } ...
                      { 'style' 'edit' 'string' '' } ...
-                     { 'style' 'text' 'string' [ 'Large files, enter a file name for memory mapping (xxx.fdt)' ]  } ...
-                     { 'style' 'edit' 'string' '' } ...
-                     { 'style' 'text' 'string' '    Note: requires to enable memory mapping in EEGLAB memory options and only works for 32-bit files' } };                  
+                     { 'style' 'text' 'string' 'Large files, enter a file name for memory mapping (xxx.fdt)' } ...
+                     { 'style' 'edit' 'string' '' } };                  
 	result = inputgui( uigeom, uilist, 'pophelp(''pop_loadcnt'')', 'Load a CNT dataset');    
 	if length( result ) == 0 return; end;
 
@@ -100,19 +97,18 @@ if nargin < 1
 	% -----------------
     options = [];
     if result{1}, options = [ options ', ''dataformat'', ''int16''' ];
-    elseif result{2}, options = [ options ', ''dataformat'', ''int32''' ];
-    elseif result{3}, options = [ options ', ''dataformat'', ''auto''' ];
+    else          options = [ options ', ''dataformat'', ''int32''' ];
     end;
-    if ~isempty(result{4}), 
-        timer =  eval( [ '[' result{4} ']' ]);
+    if ~isempty(result{3}), 
+        timer =  eval( [ '[' result{3} ']' ]);
         options = [ options ', ''t1'', ' num2str(timer(1)) ', ''lddur'', '  num2str(timer(2)-timer(1)) ]; 
     end;   
-    if result{5}, options = [ options ', ''keystroke'', ''on''' ]; end;
-    if ~isempty(result{6}), options = [ options ',' result{6} ]; end;
-    % Conditional pass if ~isempty(result{7}), options = ... 
-    % [options ', ''memmapfile''', result{7} ] ; end ;
+    if result{4}, options = [ options ', ''keystroke'', ''on''' ]; end;
+    if ~isempty(result{5}), options = [ options ',' result{5} ]; end;
+    % Conditional pass if ~isempty(result{6}), options = ... 
+    % [options ', ''memmapfile''', result{6} ] ; end ;
     % Always pass the memmapfile paramter? 
-    options = [ options ', ''memmapfile'', ''', result{7} '''' ] ;
+    options = [ options ', ''memmapfile'', ', 'result{6}' ] ;
 else
 	options = vararg2str(varargin);
 end;

@@ -8,13 +8,13 @@
 %
 % Optional inputs:
 %   'components' - [numeric vector] components of the EEG structure for which 
-%                  activation spectogram will be computed. Note that because 
+%                  activation ERPs will be computed. Note that because 
 %                  computation of component spectra is relatively fast, all 
 %                  components spectra are computed and saved. Only selected 
 %                  component are returned by the function to Matlab
 %                  {default|[] -> all}
 %   'channels'   - [cell array] channels of the EEG structure for which 
-%                  activation spectogram will be computed. Note that because 
+%                  activation spectrum will be computed. Note that because 
 %                  computation of spectrum is relatively fast, all channels 
 %                  spectrum are computed and saved. Only selected channels 
 %                  are returned by the function to Matlab
@@ -32,9 +32,11 @@
 %   freqs     - a vector of frequencies at which the spectra have been computed. 
 %
 % Files output or overwritten for ICA: 
-%               [dataset_filename].icaspecgram,
+%               [dataset_filename].icaspec,   % raw spectrum of ICA components
+%               [dataset_filename].icaspecm   % spectrum with the mean baseline removed
 % Files output or overwritten for data: 
-%               [dataset_filename].datspecgram, 
+%               [dataset_filename].datspec, 
+%               [dataset_filename].datspecm
 % 
 % See also  spectopo(), std_erp(), std_ersp(), std_map(), std_preclust()
 %
@@ -101,13 +103,13 @@ if nargin < 1
 end;
 
 [opt moreopts] = finputcheck(varargin, { 'components' 'integer' []             [];
-                                         'channels'   { 'cell','integer' }  { [] [] }     {}
-                                         'recompute'  'string'  { 'on','off' } 'off';
+                                         'channels'   { 'cell' 'integer' }  { [] [] }     {}
+                                         'recompute'  'string'  { 'on' 'off' } 'off';
                                          'winsize'    'integer' []             3; % 3 seconds
                                          'rmcomps'    'integer' []             [];
                                          'interp'     'struct'  { }            struct([]);
                                          'overlap'    'integer' []             0;  
-                                         'plot'       'string'  { 'off','on' } 'off';
+                                         'plot'       'string'  { 'off' 'on' } 'off';
                                          'freqrange'  'real'    []             [];
                                          'timerange'  'real'    []             [];
                                          'filter'     'real'    []             []}, ...    % 11 points
@@ -206,9 +208,11 @@ options   = { 0 'winsize', opt.winsize, 'baseline', [0 Inf], 'timesout', wincent
 %cycles    = linspace(3,8,100);
 %options   = { [3 0.8] 'winsize', opt.winsize, 'baseline', [0 Inf], 'timesout', wincenter, ...
 %              'freqs' freqs 'cycles' cycles 'plotersp', 'off', 'plotitc', 'off' };
+warning off;
 for ic = 1:length(opt.indices)
     [ersp(:,:,ic) itc powebase t f] = newtimef(X(opt.indices(ic), :), EEG.pnts, [EEG.xmin EEG.xmax]*1000, EEG.srate, options{:}, moreopts{:});
 end;
+warning on;
 
 % interpolate and smooth in time
 % ------------------------------
@@ -252,10 +256,10 @@ if strcmpi(opt.plot, 'on')
     figure; imagesc(t, log(f), erspinterp);
     ft = str2num(get(gca,'yticklabel'));
     ft = exp(1).^ft;
-    ft = unique_bc(round(ft));
+    ft = unique(round(ft));
     ftick = get(gca,'ytick');
     ftick = exp(1).^ftick;
-    ftick = unique_bc(round(ftick));
+    ftick = unique(round(ftick));
     ftick = log(ftick);
     set(gca,'ytick',ftick);
     set(gca,'yticklabel', num2str(ft));

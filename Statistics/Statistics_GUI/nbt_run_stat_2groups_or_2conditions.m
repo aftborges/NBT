@@ -19,23 +19,21 @@
 %  s updated version of the input structure
 %
 % Example:
-%
+%  
 %
 % References:
-%
-% See also:
+% 
+% See also: 
 %  nbt_plot_2conditions_topo
-
+  
 %------------------------------------------------------------------------------------
 % Originally created by Giuseppina Schiavone (2012), see NBT website (http://www.nbtwiki.net) for current email address
 %------------------------------------------------------------------------------------
-%% ChangeLog - see version control log at NBT website for details.
-%$ Version 1.1 - 25. Oct 2012: Modified by Piotr Sokol, piotr.a.sokol@gmail.com$
-%%
+%
 % ChangeLog - see version control log at NBT website for details.
 %
-% Copyright (C) <year>  <Main Author>  (Neuronal Oscillations and Cognition group,
-% Department of Integrative Neurophysiology, Center for Neurogenomics and Cognitive Research,
+% Copyright (C) <year>  <Main Author>  (Neuronal Oscillations and Cognition group, 
+% Department of Integrative Neurophysiology, Center for Neurogenomics and Cognitive Research, 
 % Neuroscience Campus Amsterdam, VU University Amsterdam)
 %
 % Part of the Neurophysiological Biomarker Toolbox (NBT)
@@ -63,19 +61,18 @@ statistic=s.statistic;
 statfunc =s.statfunc;
 statfuncname=s.statfuncname;
 statname=s.statname;
-s.group_ind=evalin('caller','group_ind');
-s.group_name=evalin('caller','group_name');
 nchans_o_nregs = size(B1,1);
 s.biom_name = biom;
 
-if strcmp(char(statname),'nanmedian') %this should better be a switch>.
+if strcmp(char(statfunc),'nanmedian')
     warning('This test is not design for multiple groups');
-elseif strcmp(char(statname),'nanmean')
-    warning('This test is not design for multiple groups');
+<<<<<<< HEAD
 elseif strcmp(char(statname),'dotplotmedian')
     nbt_DotPlot(figure, 0.1, 0.025, 0, @nanmedian, {Group1.selection.group_name; Group2.selection.group_name; 'Biomarker value'},'',B1,1:size(B1,2), 1:size(B1,1), B2, 1:size(B2,2),1:size(B2,1));
 elseif strcmp(char(statname),'dotplotmean')
      nbt_DotPlot(figure, 0.1, 0.025, 0, @nanmean, {Group1.selection.group_name; Group2.selection.group_name; 'Biomarker value'},'',B1,1:size(B1,2), 1:size(B1,1), B2, 1:size(B2,2),1:size(B2,1))
+=======
+>>>>>>> FETCH_HEAD
 elseif strcmp(char(statfunc),'lillietest')
     warning('This test is not design for multiple groups');
 elseif strcmp(char(statfunc),'swtest')
@@ -84,6 +81,7 @@ elseif strcmp(char(statfunc),'ttest')
     
     % make sure the subjects are really paired in the two groups
     try
+<<<<<<< HEAD
     n_subjects1 = size(Group1.fileslist,2);
     n_subjects2 = size(Group2.fileslist,2);
         
@@ -114,15 +112,25 @@ elseif strcmp(char(statfunc),'ttest')
         end
         s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
 
+=======
+    for i = 1:nchans_o_nregs
+        [h,p(i),C(i,:),stats] = ttest(B1(i,:),B2(i,:));
+        statvalues(i) = stats.tstat;
+    end    
+    s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
+    catch
+        warning('The two groups do not have the same number of subjects')
+    end
+>>>>>>> FETCH_HEAD
 elseif strcmp(char(statfunc),'signrank')
     try
-        B = B2-B1;
-        for i = 1:nchans_o_nregs
-            [p(i),h,stats] = signrank(B1(i,:),B2(i,:));
-            C(i,:)=bootci(1000,statistic,B(i,:));
-            statvalues(i) = stats.signedrank;
-        end
-        s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
+    B = B2-B1;
+    for i = 1:nchans_o_nregs
+        [p(i),h,stats] = signrank(B1(i,:),B2(i,:));
+        C(i,:)=bootci(1000,statistic,B(i,:));
+        statvalues(i) = stats.signedrank;
+    end
+    s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
     catch
         warning('The two groups do not have the same number of subjects')
     end
@@ -130,69 +138,27 @@ elseif strcmp(char(statfunc),'ttest2')
     for i = 1:nchans_o_nregs
         [h,p(i),C(i,:),stats] = ttest2(B1(i,:),B2(i,:));
         statvalues(i) = stats.tstat;
-    end
+    end  
     s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
 elseif strcmp(char(statfunc),'ranksum')
-    for i = 1:nchans_o_nregs
+     for i = 1:nchans_o_nregs
         [p(i),h,stats] = ranksum(B1(i,:),B2(i,:));
-        try
-            C(i,:)=bootci(1000,{@median_diff,B1(i,:),B2(i,:)});
-        catch
-            warning('Confidence Interval computed with bootci requires same sample size')
-            C = [];
-        end
+        C(i,:)=bootci(1000,{@median_diff,B1(i,:),B2(i,:)});
         statvalues(i) = stats.ranksum;
-    end
+     end
+    s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
     
-    s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,[],unit);
-    
-elseif strcmp(char(statfunc),'nbt_permutationtest')
+elseif strcmp(char(statfunc),'nbt_perm_group_diff')
     if strcmp(char(statname),'mean')
         for i = 1:nchans_o_nregs
-            [p(i)]=nbt_permutationtest(B1(i,:),B2(i,:),5000,0,@mean);
-            try
-                C(i,:)=bootci(1000,{@median_diff,B1(i,:),B2(i,:)});
-            catch
-                warning('Confidence Interval computed with bootci requires same sample size')
-                C = [];
-            end
+            [p(i)] = nbt_perm_group_diff(B1(i,:),B2(i,:),'mean',5000,0);
         end
-        s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
     elseif strcmp(char(statname),'median')
         for i = 1:nchans_o_nregs
-            [p(i)]=nbt_permutationtest(B1(i,:),B2(i,:),5000,0,@median);
-            try
-                C(i,:)=bootci(1000,{@median_diff,B1(i,:),B2(i,:)});
-            catch
-                warning('Confidence Interval computed with bootci requires same sample size')
-                C = [];
-            end
+            [p(i)] = nbt_perm_group_diff(B1(i,:),B2(i,:),'median',5000,0);
         end
-        s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
-    elseif strcmp(char(statname),'pairedmean')
-        for i = 1:nchans_o_nregs
-            [p(i)]=nbt_permutationtest(B1(i,:),B2(i,:),5000,1,@mean);
-            try
-                C(i,:)=bootci(1000,{@median_diff,B1(i,:),B2(i,:)});
-            catch
-                warning('Confidence Interval computed with bootci requires same sample size')
-                C = [];
-            end
-        end
-        s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
-    elseif strcmp(char(statname), 'pairedmedian')
-        for i = 1:nchans_o_nregs
-            [p(i)]=nbt_permutationtest(B1(i,:),B2(i,:),5000,1,@median);
-            try
-                C(i,:)=bootci(1000,{@median_diff,B1(i,:),B2(i,:)});
-            catch
-                warning('Confidence Interval computed with bootci requires same sample size')
-                C = [];
-            end
-        end
-        s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit);
     end
-    %     s.C = C;
+%     s.C = C;
     s.p = p;
     s.c1 = B1;
     s.c2 = B2;
@@ -207,7 +173,7 @@ elseif strcmp(char(statfunc),'nbt_perm_corr')
     for i = 1:nchans_o_nregs
         [p(i)] = nbt_perm_corr(B1(i,:),B2(i,:),[],5000,0);
     end
-    
+
     for i = 1:nchans_o_nregs
         corrB1(i) = corr(B1(i,:)','rows','pairwise');
         corrB2(i) = corr(B2(i,:)','rows','pairwise');
@@ -222,6 +188,7 @@ elseif strcmp(char(statfunc),'nbt_perm_corr')
         s.diff_biom = B2-B1;
     end
     s.diff_mean_or_med_biom = s.meanc2-s.meanc1;% difference of correlation coeff
+<<<<<<< HEAD
 elseif strcmp(char(statfunc),'zscore')
     dim = 2;
     sigma = nanstd(B2,1,dim);
@@ -249,33 +216,34 @@ elseif strcmp(char(statfunc),'zscore')
 %     s.vals1=z1;
 %     s.vals2=z2;
       
+=======
+>>>>>>> FETCH_HEAD
 end
 
-    function[d]=median_diff(M,N)
+function[d]=median_diff(M,N)
         m1=nanmedian(M);
         m2=nanmedian(N);
         d=m2-m1;
-    end
+end
 
 
 %-------------------------------------------------
-    function s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit)
-        chanloc = Group1.chansregs.chanloc;
-        unit = unit;
-        s.C = C;
-        s.p = p;
-        s.statvalues = statvalues;
-        s.c1 = B1;
-        s.c2 = B2;
-        s.unit = unit;
-        s.meanc1 = statistic(B1,2);
-        s.meanc2 = statistic(B2,2);
-        if size(B1,2) == size(B2,2)
-            s.diff_biom = B2-B1;
-        end
-        s.diff_mean_or_med_biom = s.meanc2-s.meanc1;
-        % you can comment the next line, because you can also plot same
-        % data using the p-value max figure
-        %             nbt_plot_2conditions_topo(Group1,Group2,chanloc,s,unit,biom,regions);
-    end
+     function s = plot_group(Group1,Group2,B1,B2,C,p,s,biom,regions,unit)
+            chanloc = Group1.chansregs.chanloc;
+            unit = unit;
+            s.C = C;
+            s.p = p;
+            s.c1 = B1;
+            s.c2 = B2;
+            s.unit = unit;
+            s.meanc1 = statistic(B1,2);
+            s.meanc2 = statistic(B2,2);
+            if size(B1,2) == size(B2,2)
+                s.diff_biom = B2-B1;
+            end
+            s.diff_mean_or_med_biom = s.meanc2-s.meanc1;
+            % you can comment the next line, because you can also plot same
+            % data using the p-value max figure
+%             nbt_plot_2conditions_topo(Group1,Group2,chanloc,s,unit,biom,regions);
+     end
 end

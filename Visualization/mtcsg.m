@@ -100,10 +100,13 @@ if nargout == 0
             end
             if length(t)==1
                 imagesc([0 1/f(2)],f,im);axis xy; colormap(jet)
+                
             else
                 imagesc(t,f,im);axis xy; colormap(jet)
+               
             end
         end; end;
+     
     xlabel('Time (seconds)')
     ylabel('Frequency (Hz)')
 elseif nargout == 1,

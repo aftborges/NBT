@@ -6,8 +6,7 @@
 % Usage:    
 %            >> [erp, times] = std_erp(EEG, 'key', 'val', ...);
 % Inputs:
-%   EEG          - a loaded epoched EEG dataset structure. May be an array
-%                  of such structure containing several datasets.
+%   EEG          - a loaded epoched EEG dataset structure. 
 %
 % Optional inputs:
 %   'components' - [numeric vector] components of the EEG structure for which 
@@ -24,27 +23,6 @@
 %                  {default|[] -> none}
 %   'recompute'  - ['on'|'off'] force recomputing ERP file even if it is 
 %                  already on disk.
-%   'trialindices' - [cell array] indices of trials for each dataset.
-%                  Default is all trials.
-%   'recompute'  - ['on'|'off'] force recomputing data file even if it is 
-%                  already on disk.
-%   'rmcomps'    - [integer array] remove artifactual components (this entry
-%                  is ignored when plotting components). This entry contains 
-%                  the indices of the components to be removed. Default is none.
-%   'interp'     - [struct] channel location structure containing electrode
-%                  to interpolate (this entry is ignored when plotting 
-%                  components). Default is no interpolation.
-%   'fileout'    - [string] name of the file to save on disk. The default
-%                  is the same name (with a different extension) as the 
-%                  dataset given as input.
-%  'savetrials'  - ['on'|'off'] save single-trials ERSP. Requires a lot of disk
-%                  space (dataset space on disk times 10) but allow for refined
-%                  single-trial statistics.
-%
-% ERP specific options:
-%   'rmbase'     - [min max] remove baseline. This option does not affect
-%                  the original datasets.
-%
 % Outputs:
 %   erp          - ERP for the requested ICA components in the selected 
 %                  latency window. ERPs are scaled by the RMS over of the
@@ -103,13 +81,13 @@ end;
 g = finputcheck(options, { 'components' 'integer' []         [];
                            'channels'   'cell'    {}         {};
                            'rmbase'     'real'    []         [];
-                           'trialindices' { 'integer','cell' } []         [];
+                           'trialindices' { 'integer' 'cell' } []         [];
                            'rmcomps'    'cell'    []         cell(1,length(EEG));
                            'fileout'    'string'  []         '';
-                           'savetrials' 'string'  { 'on','off' } 'off';
+                           'savetrials' 'string'  { 'on' 'off' } 'off';
                            'interp'     'struct'  { }        struct([]);
-                           'timerange'  'real'    []         [];        % the timerange option is deprecated and has no effect
-                           'recompute'  'string'  { 'on','off' } 'off' }, 'std_erp');
+                           'recompute'  'string'  { 'on' 'off' } 'off';
+                           'timerange'  'real'    []         [] }, 'std_erp');
 if isstr(g), error(g); end;
 if isempty(g.trialindices), g.trialindices = cell(length(EEG)); end;
 if ~iscell(g.trialindices), g.trialindices = { g.trialindices }; end;
@@ -121,6 +99,8 @@ end
 if isempty(g.components)
     g.components = 1:numc;
 end
+
+EEG_etc = [];
 
 % % THIS SECTION WOULD NEED TO TEST THAT THE PARAMETERS ON DISK ARE CONSISTENT
 %
@@ -170,9 +150,26 @@ end
 options = {};
 if ~isempty(g.rmcomps), options = { options{:} 'rmcomps' g.rmcomps }; end;
 if ~isempty(g.interp),  options = { options{:} 'interp' g.interp }; end;
-if isempty(g.channels)
-     X = eeg_getdatact(EEG, 'component', [1:size(EEG(1).icaweights,1)], 'trialindices', g.trialindices );
-else X = eeg_getdatact(EEG, 'channel'  , [1:EEG(1).nbchan], 'trialindices', g.trialindices, 'rmcomps', g.rmcomps, 'interp', g.interp);
+X       = [];
+for dat = 1:length(EEG)
+    if strcmpi(prefix, 'comp')
+        tmpdata = eeg_getdatact(EEG(dat), 'component', [1:size(EEG(dat).icaweights,1)], 'trialindices', g.trialindices{dat} );
+    else
+        EEG(dat).data = eeg_getdatact(EEG(dat), 'channel', [1:EEG(dat).nbchan], 'rmcomps', g.rmcomps{dat}, 'trialindices', g.trialindices{dat});
+        EEG(dat).trials = size(EEG(dat).data,3);
+        EEG(dat).event  = [];
+        EEG(dat).epoch  = [];
+        if ~isempty(g.interp), 
+            EEG(dat) = eeg_interp(EEG(dat), g.interp, 'spherical'); 
+        end;
+        tmpdata = EEG(dat).data;
+    end;
+    if isempty(X), X = tmpdata;
+    else
+        if size(X,1) ~= size(tmpdata,1), error('Datasets to be concatenated do not have the same number of channels'); end;
+        if size(X,2) ~= size(tmpdata,2), error('Datasets to be concatenated do not have the same number of time points'); end;
+        X(:,:,end+1:end+size(tmpdata,3)) = tmpdata; % concatenating trials
+    end;
 end;
 
 % Remove baseline mean
@@ -183,71 +180,58 @@ timevals = EEG(1).times;
 if ~isempty(g.timerange)
     disp('Warning: the ''timerange'' option is deprecated and has no effect');
 end;
-if ~isempty(X)
-    if ~isempty(g.rmbase)
-        disp('Removing baseline...');
-        options = { options{:} 'rmbase' g.rmbase };
-        [tmp timebeg] = min(abs(timevals - g.rmbase(1)));
-        [tmp timeend] = min(abs(timevals - g.rmbase(2)));
-        if ~isempty(timebeg)
-            X = rmbase(X,pnts, [timebeg:timeend]);
-        else
-            X = rmbase(X,pnts);
-        end
+if ~isempty(g.rmbase)
+    disp('Removing baseline...');
+    options = { options{:} 'rmbase' g.rmbase };
+    [tmp timebeg] = min(abs(timevals - g.rmbase(1)));
+    [tmp timeend] = min(abs(timevals - g.rmbase(2)));
+    if ~isempty(timebeg)
+        X = rmbase(X,pnts, [timebeg:timeend]);
+    else
+        X = rmbase(X,pnts);
     end
-    X = reshape(X, [ size(X,1) pnts trials ]);
-    if strcmpi(prefix, 'comp')
-        if strcmpi(g.savetrials, 'on')
-            X = repmat(sqrt(mean(EEG(1).icawinv.^2))', [1 EEG(1).pnts size(X,3)]) .* X;
-        else
-            X = repmat(sqrt(mean(EEG(1).icawinv.^2))', [1 EEG(1).pnts]) .* mean(X,3); % calculate ERP
-        end;
-    elseif strcmpi(g.savetrials, 'off')
-        X = mean(X, 3);
+end
+X = reshape(X, [ size(X,1) pnts trials ]);
+if strcmpi(prefix, 'comp')
+    if strcmpi(g.savetrials, 'on')
+        X = repmat(sqrt(mean(EEG(1).icawinv.^2))', [1 EEG(1).pnts size(X,3)]) .* X;
+    else
+        X = repmat(sqrt(mean(EEG(1).icawinv.^2))', [1 EEG(1).pnts]) .* mean(X,3); % calculate ERP
     end;
+elseif strcmpi(g.savetrials, 'off')
+    X = mean(X, 3);
 end;
 
 % Save ERPs in file (all components or channels)
 % ----------------------------------------------
 if isempty(timevals), timevals = linspace(EEG(1).xmin, EEG(1).xmax, EEG(1).pnts)*1000; end; % continuous data
-fileNames = computeFullFileName( { EEG.filepath }, { EEG.filename });
 if strcmpi(prefix, 'comp')
-    savetofile( filename, timevals, X, 'comp', 1:size(X,1), options, {}, fileNames, g.trialindices);
+    savetofile( filename, timevals, X, 'comp', 1:size(X,1), options);
     %[X,t] = std_readerp( EEG, 1, g.components, g.timerange);
 else
     if ~isempty(g.interp)
-        savetofile( filename, timevals, X, 'chan', 1:size(X,1), options, { g.interp.labels }, fileNames, g.trialindices);
+        savetofile( filename, timevals, X, 'chan', 1:size(X,1), options, { g.interp.labels });
     else
         tmpchanlocs = EEG(1).chanlocs;
-        savetofile( filename, timevals, X, 'chan', 1:size(X,1), options, { tmpchanlocs.labels }, fileNames, g.trialindices);
+        savetofile( filename, timevals, X, 'chan', 1:size(X,1), options, { tmpchanlocs.labels });
     end;
     %[X,t] = std_readerp( EEG, 1, g.channels, g.timerange);
-end;
-
-% compute full file names
-% -----------------------
-function res = computeFullFileName(filePaths, fileNames);
-for index = 1:length(fileNames)
-    res{index} = fullfile(filePaths{index}, fileNames{index});
 end;
 
 % -------------------------------------
 % saving ERP information to Matlab file
 % -------------------------------------
-function savetofile(filename, t, X, prefix, comps, params, labels, dataFiles, dataTrials);
+function savetofile(filename, t, X, prefix, comps, params, labels);
     
     disp([ 'Saving ERP file ''' filename '''' ]);
     allerp = [];
     for k = 1:length(comps)
         allerp = setfield( allerp, [ prefix int2str(comps(k)) ], squeeze(X(k,:,:)));
     end;
-    if nargin > 6 && ~isempty(labels)
+    if nargin > 6
         allerp.labels = labels;
     end;
-    allerp.times       = t;
-    allerp.datatype    = 'ERP';
-    allerp.parameters  = params;
-    allerp.datafiles   = dataFiles;
-    allerp.datatrials  = dataTrials;
-    
+    allerp.times      = t;
+    allerp.datatype   = 'ERP';
+    allerp.parameters = params;
     std_savedat(filename, allerp);

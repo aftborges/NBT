@@ -120,14 +120,12 @@ function [ STUDY, ALLEEG ] = std_preclust(STUDY, ALLEEG, cluster_ind, varargin)
     pnts  = ALLEEG(STUDY.datasetinfo(1).index).pnts;
     srate = ALLEEG(STUDY.datasetinfo(1).index).srate;
     xmin  = ALLEEG(STUDY.datasetinfo(1).index).xmin;
-    xmax  = ALLEEG(STUDY.datasetinfo(1).index).xmax;
     for index = 1:length(STUDY.datasetinfo)
         ind = STUDY.datasetinfo(index).index;
         if srate ~= ALLEEG(ind).srate, error(sprintf('Dataset %d does not have the same sampling rate as dataset 1', ind)); end;
         if ~all([ ALLEEG.trials ] == 1)
-            if abs(xmin-ALLEEG(ind).xmin) > 1e-7, warning(sprintf('Dataset %d does not have the same time limit as dataset 1', ind)); end;
-            if abs(xmax-ALLEEG(ind).xmax) > 1e-7, warning(sprintf('Dataset %d does not have the same time limit as dataset 1', ind)); end;
-            if pnts ~= ALLEEG(ind).pnts, error(sprintf('Dataset %d does not have the same number of point as dataset 1', ind)); end;
+            if xmin  ~= ALLEEG(ind).xmin, warning(sprintf('Dataset %d does not have the same time limit as dataset 1', ind)); end;
+            if pnts  ~= ALLEEG(ind).pnts, error(sprintf('Dataset %d does not have the same number of point as dataset 1', ind)); end;
         end;
     end;
     
@@ -254,9 +252,9 @@ function [ STUDY, ALLEEG ] = std_preclust(STUDY, ALLEEG, cluster_ind, varargin)
         % check that all datasets are in preclustering for current design
         % ---------------------------------------------------------------
         tmpstruct = std_setcomps2cell(STUDY, STUDY.cluster(cluster_ind).sets, STUDY.cluster(cluster_ind).comps);
-        alldatasets = unique_bc(STUDY.cluster(cluster_ind).sets(:));
+        alldatasets = unique(STUDY.cluster(cluster_ind).sets(:));
         
-        if length(alldatasets) < length(STUDY.datasetinfo) && cluster_ind == 1
+        if length(alldatasets) < length(STUDY.datasetinfo)
             error( [ 'Some datasets not included in preclustering' 10 ... 
                      'because of partial STUDY design. You need to' 10 ...
                      'use a STUDY design that includes all datasets.' ]);

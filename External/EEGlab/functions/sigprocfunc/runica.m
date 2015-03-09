@@ -417,7 +417,7 @@ wts_passed = 0;                      % flag weights passed as argument
          end
       elseif strcmp(Keyword,'specgram') | strcmp(Keyword,'spec')
 
-         if ~exist('specgram') < 2 % if ~exist or defined workspace variable
+         if exist('specgram') < 2 % if ~exist or defined workspace variable
            fprintf(...
    'runica(): MATLAB Sig. Proc. Toolbox function "specgram" not found.\n')
            return
@@ -630,18 +630,8 @@ end
 %%%%%%%%%%%%%%%%% Remove overall row means of data %%%%%%%%%%%%%%%%%%%%%%%
 %
 icaprintf(verb,fid,'Removing mean of each channel ...\n');
-
-%BLGBLGBLG replaced
-% rowmeans = mean(data');
-% data = data - rowmeans'*ones(1,frames);      % subtract row means
-%BLGBLGBLG replacement starts
-rowmeans = mean(data,2)'; %BLG
-% data = data - rowmeans'*ones(1,frames);      % subtract row means
-for iii=1:size(data,1) %avoids memory errors BLG
-    data(iii,:)=data(iii,:)-rowmeans(iii);
-end
-%BLGBLGBLG replacement ends
-
+rowmeans = mean(data');
+data = data - rowmeans'*ones(1,frames);      % subtract row means
 icaprintf(verb,fid,'Final training data range: %g to %g\n', min(min(data)),max(max(data)));
 
 %
@@ -649,33 +639,8 @@ icaprintf(verb,fid,'Final training data range: %g to %g\n', min(min(data)),max(m
 %
 if strcmp(pcaflag,'on')
     icaprintf(verb,fid,'Reducing the data to %d principal dimensions...\n',ncomps);
-    
-    %BLGBLGBLG replaced
-    %[eigenvectors,eigenvalues,data] = pcsquash(data,ncomps);
+    [eigenvectors,eigenvalues,data] = pcsquash(data,ncomps);
     % make data its projection onto the ncomps-dim principal subspace
-    %BLGBLGBLG replacement starts
-    %[eigenvectors,eigenvalues,data] = pcsquash(data,ncomps);
-    % no need to re-subtract row-means, it was done a few lines above!
-    PCdat2 = data';                    % transpose data
-    [PCn,PCp]=size(PCdat2);                  % now p chans,n time points
-    PCdat2=PCdat2/PCn;
-    PCout=data*PCdat2;
-    clear PCdat2;
-    
-    [PCV,PCD] = eig(PCout);                  % get eigenvectors/eigenvalues
-    [PCeigenval,PCindex] = sort(diag(PCD));
-    PCindex=rot90(rot90(PCindex));
-    PCEigenValues=rot90(rot90(PCeigenval))';
-    PCEigenVectors=PCV(:,PCindex);
-    %PCCompressed = PCEigenVectors(:,1:ncomps)'*data;
-    data = PCEigenVectors(:,1:ncomps)'*data;
-    
-    eigenvectors=PCEigenVectors;
-    eigenvalues=PCEigenValues; %#ok<NASGU>
-    
-    clear PCn PCp PCout PCV PCD PCeigenval PCindex PCEigenValues PCEigenVectors
-    %BLGBLGBLG replacement ends
-    
 end
 
 %
@@ -809,7 +774,7 @@ step=0;
 laststep=0;
 blockno = 1;  % running block counter for kurtosis interrupts
 
-rng('shuffle');  % set the random number generator state to
+rand('state',sum(100*clock));  % set the random number generator state to
                                % a position dependent on the system clock
 % interupt figure
 % --------------- 

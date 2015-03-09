@@ -35,10 +35,10 @@
 % See Readme.txt for additional copyright information.
 %--------------------------------------------------------------------------
 
-function EEG=nbt_FindBadChannels(EEG,flag, NonEEGCh)
-error(nargchk(1, 3, nargin))
+function EEG=nbt_FindBadChannels(EEG,flag)
+error(nargchk(1, 2, nargin))
 auto =1;
-if(~(exist('flag')==1) || isempty(flag))
+if(~(exist('flag')==1))
     flag = input('Do you want to use Joint probability, Kurtosis, Faster toolbox, Correlation method, PCA method, or abnormal Spectra? (Write J, K, F, C, P or S) ','s');
     auto = 0;
 end
@@ -64,19 +64,10 @@ elseif(strcmp('P',flag) || strcmp('p',flag))
     eigzs = zscore(eigvec(:,1));
     indelec(find(abs(eigzs)>1.5*iqr(eigzs)))= 1;
 elseif(strcmp('F',flag) || strcmp('f',flag))
-    if(exist('NonEEGCh', 'var')) %remove Non-EEG channels
-        list_properties = channel_properties(EEG,nbt_negSearchVector(1:(size(EEG.data,1)),NonEEGCh),EEG.ref);
-    else 
-        list_properties = channel_properties(EEG,1:(size(EEG.data,1)),EEG.ref);
-    end
+    list_properties = channel_properties(EEG,1:(size(EEG.data,1)),EEG.ref);
     rejection_options.measure=ones(1,size(list_properties,2));
     rejection_options.z=3*ones(1,size(list_properties,2));
     [indelec] = min_z(list_properties,rejection_options);
-    if(exist('NonEEGCh','var')) %put the channels back *set NonEEGCh as bad
-       tmpindelec = ones(size(EEG.data,1),1);
-       tmpindelec(nbt_negSearchVector(1:(size(EEG.data,1)), NonEEGCh),1) = indelec;
-       indelec = tmpindelec;
-    end
 elseif (strcmp('C',flag) || strcmp('c',flag))
     data = nbt_filter_fir(EEG.data',0.5,70,EEG.srate,4);
     data = data';
@@ -96,8 +87,6 @@ end
 
 disp('Bad channels:');
 disp(find(indelec));
-
-
 
 if(~auto)
     if(~isempty(find(indelec)))

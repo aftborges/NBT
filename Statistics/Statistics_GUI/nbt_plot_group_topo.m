@@ -82,10 +82,10 @@ if isempty(regions)
     set(gca,'fontsize',fontsize)
 %---plot grand average condition 1 per channel(Actual Channels)
     subplot(2,3,5)
-    nbt_plot_EEG_channels(meanc1,cmin,cmax,chanloc,coolWarm,[]);
+    nbt_plot_EEG_channels(meanc1,cmin,cmax,chanloc)
     axis square
-    cb = findobj(gcf,'tag','Colorbar');
-    set(get(cb(end),'title'),'String',unit);
+    cb = colorbar('westoutside');
+    set(get(cb,'title'),'String',unit);
     caxis([cmin,cmax])
     set(gca,'fontsize',fontsize)
     
@@ -119,7 +119,7 @@ if isempty(regions)
     text(0.5,y,'Interpolated topoplot','horizontalalignment','center')
     axis off
 
-    subplot(2,3,2);text(0.5,0.5,[char(statdata.statfunc),' for ',regexprep(biomarker,'_',' ')],'horizontalalignment','center','fontweight','bold')
+    subplot(2,3,2);text(0.5,0.5,[cell2mat(statdata.test),' for ',regexprep(biomarker,'_',' ')],'horizontalalignment','center','fontweight','bold')
     axis off
 
     subplot(2,3,2)
@@ -155,7 +155,7 @@ else
   if standard == 1
       nbt_plot_subregions(meanc1,1,cmin,cmax,chans_reg); % improve his function for more regions
   else
-      nbt_plot_EEG_channels(meanc1,cmin,cmax,chanloc,coolWarm,[]);
+      nbt_plot_EEG_channels(chns_for_topo,cmin,cmax,chanloc);
   end
   axis square
   cb = colorbar('westoutside');
@@ -183,7 +183,7 @@ else
 %--- tiles and info
     y=0.1;
 
-    subplot(2,3,2);text(0.5,0.5,[char(statdata.statfunc),' for ',regexprep(biomarker,'_',' ')],'horizontalalignment','center','fontweight','bold')
+    subplot(2,3,2);text(0.5,0.5,[cell2mat(statdata.test),' for ',regexprep(biomarker,'_',' ')],'horizontalalignment','center','fontweight','bold')
     axis off
 
     subplot(2,3,1);text(0.5,y,[char(statdata.statistic),' per subregions'],'horizontalalignment','center')
@@ -197,8 +197,7 @@ end
 %---- check if the selected regions are equal to the default regions for
 %129 EEG channels
 function standard = checkregions(chans_reg)
-
-if length(chans_reg) == 6    
+    
     if chans_reg{1} == [1 2 3 4 8 9 10 14 15 16 17 18 19 21 22 23 24 25 26 27 32 33 122 123 124 125 126 127 128]
         if chans_reg{2} == [28 34 35 38 39 40 41 43 44 45 46 47 48 49 50 51 56 57]
             if chans_reg{3} == [5 6 7 11 12 13 20 29 30 31 36 37 42 54 55 79 80 87 93   104 105 106 111 112 118] 
@@ -224,8 +223,5 @@ if length(chans_reg) == 6
     else
         standard = 0;
     end
-else 
-    standard = 0;
-end
 end
 end

@@ -23,26 +23,20 @@
 function std_savedat( tmpfile, structure)
 
     delims = find( tmpfile == '.');
-    if ~isfield(structure, 'datafile') && ~isfield(structure, 'datafiles') 
-        structure.datafile = [ tmpfile(1:delims(end)-1) '.set' ];
-    end;
+    structure.datafile = [ tmpfile(1:delims(end)-1) '.set' ];
+    v = version;
     
     % fix reading problem (bug 764)
     tmpfile2  = which(tmpfile);
     if isempty(tmpfile2), tmpfile2 = tmpfile; end;    
     tmpfile = tmpfile2;
     
-    eeglab_options;
-    if option_saveversion6
-        try
-            save('-v6' , tmpfile, '-struct', 'structure');
-        catch
-            fields = fieldnames(structure);
-            for i=1:length(fields)
-                eval([ fields{i} '=structure.'  fields{i} ';']);
-            end;
-            save('-mat', tmpfile, fields{:});
-        end;
+    if v(1) > '6'
+        save('-v6' , tmpfile, '-struct', 'structure');
     else
-        save('-v7.3' , tmpfile, '-struct', 'structure');
+        fields = fieldnames(structure);
+        for i=1:length(fields)
+            eval([ fields{i} '=structure.'  fields{i} ';']);
+        end;
+        save('-mat', tmpfile, fields{:});
     end;

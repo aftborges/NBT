@@ -108,7 +108,7 @@ CURRENTSET = OLDSET;
 com = sprintf('[ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, %s); ', vararg2str( { OLDSET varargin{:} } ));
 
 [g varargin] = finputcheck(varargin, { ...
-                    'gui'           'string'     { 'on';'off' }   'on'; % []=none; can be multiple numbers
+                    'gui'           'string'     { 'on' 'off' }   'on'; % []=none; can be multiple numbers
                     'retrieve'      'integer'    []               []; % []=none; can be multiple numbers
                     'study'         'integer'    [0 1]            0;  % important because change behavior for modified datasets
                     }, 'pop_newset', 'ignore');
@@ -131,9 +131,8 @@ if length(EEG) > 1
     % ***************************************************
         if strcmpi(EEG(1).saved, 'justloaded')
             for ieeg = 1:length(EEG)
-                [ALLEEG TMP OLDSET] = pop_newset(ALLEEG, EEG(ieeg), OLDSET);
+                [ALLEEG TMP CURRENTSET] = eeg_store(ALLEEG, EEG(ieeg), 0);
             end;
-            CURRENTSET = OLDSET;
             EEG = TMP;
         else
             [ALLEEG EEG CURRENTSET] = eeg_store(ALLEEG, EEG);
@@ -333,10 +332,9 @@ elseif length(varargin) == 0 & length(EEG) == 1 & strcmpi(g.gui, 'on') % if seve
                            '   ''dataset or study can be kept in memory. This will also affect the'',' ...
                            '   ''dataset at this position in the study.''));' ...
                            'end;' ];
-            uilist{end+1} = { 'Style', 'checkbox'  , 'string', '', 'callback', cb_loadold 'tag' 'cb_loadold' };
-            uilist{end+1} = { 'Style', 'text',       'string', 'Reload copy from disk (will be done after optional saving above)' };
-            uilist{end+1} = {};
-            uilist{end+1} = {};
+            uilist = { uilist{:} ...
+                 { 'Style', 'checkbox'  , 'string', '', 'callback', cb_loadold 'tag' 'cb_loadold' } ...
+                 { 'Style', 'text',       'string', 'Reload copy from disk (will be done after optional saving above)' } {} {} };
              geometry = { geometry{:} [0.12 1.6 0.2 0.2] };
         end;
     end;
@@ -492,9 +490,10 @@ for ind = 1:2:length(args)
 	 case { 'save' 'savenew' }, [filepath filename ext] = fileparts( args{ind+1} );
                         EEG = pop_saveset(EEG, [ filename ext ], filepath);
 	 case 'saveold',    [filepath filename ext] = fileparts( args{ind+1} );
-                        TMPEEG = pop_saveset(ALLEEG(OLDSET), [ filename ext ], filepath);
-                        [ALLEEG] = eeg_store(ALLEEG, TMPEEG, OLDSET);
+                        EEG = pop_saveset(ALLEEG(OLDSET), [ filename ext ], filepath);
+                        [ALLEEG EEG] = eeg_store(ALLEEG, EEG, OLDSET);
                         ALLEEG(OLDSET).saved = 'yes';
+                        EEG.saved            = 'yes';
 	 case 'overwrite' , if strcmpi(args{ind+1}, 'on') | strcmpi(args{ind+1}, 'yes')
                             overWflag = 1; % so it can be done at the end
                         end;
@@ -541,7 +540,7 @@ else
             [ALLEEG, EEG] = eeg_store( ALLEEG, EEG, OLDSET);
         end;
     else
-        if strcmpi(EEG.saved, 'yes') || strcmpi(EEG.saved, 'justloaded')
+        if strcmpi(EEG.saved, 'yes')
             [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG, 0); % 0 means that it is saved on disk
         else
             [ALLEEG, EEG, CURRENTSET] = eeg_store( ALLEEG, EEG);

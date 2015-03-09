@@ -3,11 +3,8 @@
 % Usage:
 %         >> inds = std_chaninds(STUDY,  channames);
 %         >> inds = std_chaninds(EEG, channames);
-%         >> inds = std_chaninds(chanlocs, channames);
 % Inputs:
-%         STUDY    - studyset structure containing a changrp substructure.
-%         EEG      - EEG structure containing channel location structure
-%         chanlocs - channel location structure
+%         STUDY - studyset structure containing a changrp substructure.
 %     channames - [cell] channel names
 %
 % Outputs:
@@ -31,19 +28,16 @@
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-function finalinds = std_chaninds(instruct, channames);
+function finalinds = std_chaninds(STUDY, channames);
 
     finalinds   = [];
-    if isfield(instruct, 'chanlocs')
-        EEG = instruct;
+    if isfield(STUDY, 'chanlocs')
+        EEG = STUDY;
         tmpchanlocs = EEG.chanlocs;
         tmpallchans = lower({ tmpchanlocs.labels });
-    elseif isfield(instruct, 'filename')
-        tmpallchans = lower({ instruct.changrp.name });
     else
-        tmpallchans = instruct;
+        tmpallchans = lower({ STUDY.changrp.name });
     end;
-    if ~iscell(channames), channames = { channames }; end;
     
     if isempty(channames), finalinds = [1:length(tmpallchans)]; return; end;
     for c = 1:length(channames)
@@ -51,7 +45,7 @@ function finalinds = std_chaninds(instruct, channames);
             chanind = channames(c);
         else
             chanind = strmatch( lower(channames{c}), tmpallchans, 'exact');
-            if isempty(chanind), warning(sprintf([ 'Channel "%s" and maybe others was not' 10 'found in pre-computed data file' ], channames{c})); end;
+            if isempty(chanind), error(sprintf([ 'Channel "%s" and maybe others was not' 10 'found in pre-computed data file' ], channames{c})); end;
         end;
         finalinds   = [ finalinds chanind ];
     end;

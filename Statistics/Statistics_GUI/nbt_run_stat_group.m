@@ -26,9 +26,7 @@
 %------------------------------------------------------------------------------------
 % Originally created by Giuseppina Schiavone (2012), see NBT website (http://www.nbtwiki.net) for current email address
 %------------------------------------------------------------------------------------
-%% ChangeLog - see version control log at NBT website for details.
-%$ Version 1.1 - 25. Oct 2012: Modified by Piotr Sok??, piotr.a.sokol@gmail.com$
-%%
+%
 % ChangeLog - see version control log at NBT website for details.
 %
 % Copyright (C) <year>  <Main Author>  (Neuronal Oscillations and Cognition group, 
@@ -63,64 +61,36 @@ statfuncname=s.statfuncname;
 statname=s.statname;
 nchans_o_nregs = size(B,1);
 s.biom_name = biom;
-s.group_ind=evalin('caller','group_ind');
-s.group_name=evalin('caller','group_name');
-s.unit=unit;
-s.c1=B;
 
 if strcmp(char(statfunc),'nanmedian')
-    s.C = [];
-    s.p = [];
-    s.c1 = [];
-    s.meanc1 = statistic(B,2);
-    nbt_plot_group(Group,s,biom,regions,unit);
-elseif strcmp(char(statfunc),'nanmean')
-    s.C = [];
-    s.p = [];
-    s.c1 = [];
-    s.meanc1 = statistic(B,2);
-    nbt_plot_group(Group,s,biom,regions,unit);
+      nbt_plot_group(Group,B,[],[],statistic,statfuncname,biom,regions,unit);
+    
 elseif strcmp(char(statfunc),'lillietest')
     for i = 1:nchans_o_nregs
         [h,p(i),statvalues(i)] = lillietest(B(i,:));
     end
-    C = [];
-    s.C = [];
-    s.p = p;
-    s.c1 = statvalues;
-    s.meanc1 = [];
-    nbt_plot_histfit(B,p,regions)
+    C = [];    
+    nbt_plot_histfit(B,p,regions)    
 elseif strcmp(char(statfunc),'swtest')
     for i = 1:nchans_o_nregs
         [h,p(i),statvalues(i)] = swtest(B(i,:));
     end
     C = [];
-    s.C = [];
-    s.p = p;
-    s.c1 = statvalues;
-    s.meanc1 = [];
     nbt_plot_histfit(B,p,regions)
 elseif strcmp(char(statfunc),'ttest')
     for i = 1:nchans_o_nregs
         [h,p(i),C(i,:),stats] = ttest(B(i,:));
         statvalues(i) = stats.tstat;
     end    
-    s.C = C;
-    s.p = p;
-    s.c1 = B;
-    s.meanc1 = statistic(B,2);
-    nbt_plot_group(Group,s,biom,regions,unit);
+    
+    nbt_plot_group(Group,B,C,p,statistic,statfuncname,biom,regions,unit);
 elseif strcmp(char(statfunc),'signrank')
     for i = 1:nchans_o_nregs
         [p(i),h,stats] = signrank(B(i,:));
         C(i,:)=bootci(1000,statistic,B(i,:));
         statvalues(i) = stats.signedrank;
-                    s.C = C;
-            s.p = p;
-            s.c1 = B;
-            s.meanc1 = statistic(B,2);
     end
-    nbt_plot_group(Group,s,biom,regions,unit);
+    nbt_plot_group(Group,B,C,p,statistic,statfuncname,biom,regions,unit);
 elseif strcmp(char(statfunc),'ttest2')
     warning('This test requires more than 1 group');
 elseif strcmp(char(statfunc),'ranksum')
@@ -129,6 +99,7 @@ elseif strcmp(char(statfunc),'nbt_perm_group_diff')
     warning('This test requires more than 1 group');
 elseif strcmp(char(statfunc),'nbt_perm_corr')
     warning('This test requires more than 1 group');
+<<<<<<< HEAD
 elseif strcmp(char(statfunc),'zscore')
 %     B = abs(B); % absolute values for a difference group e.g.
     dim = 2;
@@ -140,6 +111,8 @@ elseif strcmp(char(statfunc),'zscore')
     s.mu=mu;
     s.sigma=sigma;
     s.vals=z;
+=======
+>>>>>>> FETCH_HEAD
 end
 
 % -----------------------------------------------
@@ -211,17 +184,19 @@ end
     end
 
 %-------------------------------------------------
-     function [s] = nbt_plot_group(Group,s,biom,regions,unit)
+     function [s] = nbt_plot_group(Group,B,C,p,statistic,statfuncname,biom,regions,unit)
             chanloc = Group.chansregs.chanloc; 
-%             s.C = C;
-%             s.p = p;
-%             s.c1 = B;
-%             s.meanc1 = statistic(B,2);
-
-
+            s.C = C;
+            s.p = p;
+            s.c1 = B;
+            s.meanc1 = statistic(B,2);
+            s.test = {statfuncname};
+            s.statistic = statistic;
+            s.unit = unit;
+            s.biom = biom;
             if isempty(regions) 
-                if(~isempty(s.p))
-                    nbt_plot_stat(s.c1,s,biom)
+                if(~isempty(p))
+                    nbt_plot_stat(B,s,biom)
                 end
 %                 set(gca,'XTick',1:1:size(B,1))
 %                 set(gca,'XTickLabel',1:1:size(B,1),'fontsize',5)
@@ -229,15 +204,15 @@ end
                 nbt_plot_group_topo(chanloc,s,biom,unit,regions)
 
             else
-                if(~isempty(s.p))
-                    nbt_plot_stat(s.c1,s,biom)
+                if(~isempty(p))
+                    nbt_plot_stat(B,s,biom)
                 end
-                set(gca,'XTick',1:1:size(s.c1,1))
-                set(gca,'XTickLabel','','fontsize',5)
-                for l = 1:length(regions)
-                    text(l,0,regexprep(regions(l).reg.name,'_',' '),'rotation',45,'horizontalalignment','right','fontsize',6)
-                end
-                xlabel('regions','fontsize',12)
+%                 set(gca,'XTick',1:1:size(B,1))
+%                 set(gca,'XTickLabel','','fontsize',5)
+%                 for l = 1:length(regions)
+%                     text(l,0,regexprep(regions(l).reg.name,'_',' '),'rotation',45,'horizontalalignment','right','fontsize',6)
+%                 end
+%                 xlabel('regions','fontsize',12)
                 nbt_plot_group_topo(chanloc,s,biom,unit,regions)
             end
      end

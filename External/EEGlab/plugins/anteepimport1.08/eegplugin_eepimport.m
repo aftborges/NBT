@@ -28,6 +28,8 @@
 %
 % See also: eeglab(), pop_loadeep(), loadeep(), read_eep_cnt(), pop_loadeep_avg(), loadeep_avg(), read_eep_avr()
 
+%123456789012345678901234567890123456789012345678901234567890123456789012
+
 % Copyright (C) 2005 ANT Software, The Netherlands, eeprobe@ant-neuro.com / info@ant-neuro.com
 %
 % This program is free software; you can redistribute it and/or modify
@@ -74,7 +76,7 @@
 
 function vers = eegplugin_eepimport(fig, trystrs, catchstrs)
 
-    vers = 'eepimport1.09';
+    vers = 'eepimport1.06';
 
     if nargin < 3
         error('eegplugin_eepimport requires 3 arguments');

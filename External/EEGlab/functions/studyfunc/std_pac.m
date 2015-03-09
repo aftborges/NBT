@@ -83,14 +83,14 @@ end;
 options = {};
 [g timefargs] = finputcheck(varargin, { ...
                         'components1'    'integer'     []      [];
-                        'channels1'      { 'cell','integer' }  { [],[] }     {};
+                        'channels1'      { 'cell' 'integer' }  { [] [] }     {};
                         'components2'    'integer'     []      [];
-                        'channels2'      { 'cell','integer' }  { [],[] }     {};
+                        'channels2'      { 'cell' 'integer' }  { [] [] }     {};
                         'outputfile'    'string'      []      '';
                         'powbase'       'real'        []      [];
-                        'plot'          'string'      { 'on','off' }      'off';
-                        'recompute'     'string'      { 'on','off' }      'off';
-                        'getparams'     'string'      { 'on','off' }      'off';
+                        'plot'          'string'      { 'on' 'off' }      'off';
+                        'recompute'     'string'      { 'on' 'off' }      'off';
+                        'getparams'     'string'      { 'on' 'off' }      'off';
                         'timerange'     'real'        []      []; 
                         'freqrange'     'real'        []      [];
                         'padratio'      'real'        []      1;
@@ -315,7 +315,7 @@ timevals = tmppac.times(minind:maxind);
 % remove duplicates in the list of parameters
 % -------------------------------------------
 function cella = removedup(cella)
-    [tmp indices] = unique_bc(cella(1:2:end));
+    [tmp indices] = unique(cella(1:2:end));
     if length(tmp) ~= length(cella)/2
         %fprintf('Warning: duplicate ''key'', ''val'' parameter(s), keeping the last one(s)\n');
     end;

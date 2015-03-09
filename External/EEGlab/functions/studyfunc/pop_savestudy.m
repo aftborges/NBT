@@ -76,24 +76,8 @@ end
 % -------------------
 g = finputcheck(options,  { 'filename'   'string'   []     STUDY.filename;
                             'filepath'   'string'   []     STUDY.filepath;
-                            'savemode'   'string'   { 'standard','resave' } 'standard' });
+                            'savemode'   'string'   { 'standard' 'resave' } 'standard' });
 if isstr(g), error(g); end;
-
-% fields to remove
-% ----------------
-fields = { 'erptimes'  'erpdata' ...
-           'specfreqs' 'specdata'  ...
-           'erspdata'  'ersptimes' 'erspfreqs' 'erspdatatrials' 'erspsubjinds' 'erspbase'    'ersptrialinfo' ...
-           'itcdata'   'itcfreqs' 'itctimes' ...
-           'erpimdata' 'erpimevents' 'erpimtrials' 'erpimtimes' };
-for fInd = 1:length(fields)
-    if isfield(STUDY.changrp, fields{fInd})
-        STUDY.changrp = rmfield(STUDY.changrp, fields{fInd});
-    end;
-    if isfield(STUDY.changrp, fields{fInd})
-        STUDY.cluster = rmfield(STUDY.cluster, fields{fInd});
-    end;
-end;    
 
 % resave mode
 % -----------
@@ -124,9 +108,11 @@ STUDY.filename = g.filename;
 STUDYfile = fullfile(STUDY.filepath,STUDY.filename);
 STUDYTMP = STUDY;
 STUDY = std_rmalldatafields(STUDY);
-eeglab_options;
-if option_saveversion6, save('-v6' , STUDYfile, 'STUDY');
-else                    save('-v7.3' , STUDYfile, 'STUDY');
+v = version;
+if v(1) > '6'
+    save('-v6' , STUDYfile, 'STUDY');
+else
+    save('-mat', STUDYfile, 'STUDY');
 end;
 STUDY = STUDYTMP;
 
