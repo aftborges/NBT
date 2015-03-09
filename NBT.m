@@ -1,4 +1,4 @@
-
+<<<<<<< HEAD
 % NBT Toolbox v.0.5.2-alpha, see https://github.com/NeurophysiologicalBiomarkerToolbox/NBT 
 % See our webpage http://www.nbtwiki.net/ for more information
 % Copyright (C) 2008-2014 The developers, see http://www.nbtwiki.net/doku.php?id=copyrights 
@@ -8,21 +8,21 @@
 % NBT is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the % GNU General Public License for more details.
 % NBT is designed and distributed for research purposes only. NBT should not be used for medical purposes. The authors accept no responsibility for its use in this manner. 
 
-
+=======
 % NBT Toolbox -- pre-alpha 
 % Use the NBTwiki at http://www.nbtwiki.net
 % Copyright (C) 2008-2011 Neuronal Oscillations and Cognition group, Department of Integrative
 %  Neurophysiology, Center for Neurogenomics and Cognitive Research, Neuroscience Campus Amsterdam, VU University Amsterdam.
 % Main development team: Simon-Shlomo Poil, Rick Jansen, Klaus Linkenkaer-Hansen.
-
+>>>>>>> FETCH_HEAD
 
 function NBT()
 nbt_gui
 disp('NBT Toolbox ')
 help NBT
-
+<<<<<<< HEAD
 disp(nbt_GetVersion);
 end
-
-
-
+=======
+end
+>>>>>>> FETCH_HEAD
